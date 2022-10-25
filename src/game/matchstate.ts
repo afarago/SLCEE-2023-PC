@@ -1,4 +1,6 @@
+import 'core-js/features/array/at';
 import cloneDeep from "lodash/cloneDeep";
+
 import * as model from "./model";
 import { DrawCardPile } from "./drawcardpile";
 import { Match } from "./match";

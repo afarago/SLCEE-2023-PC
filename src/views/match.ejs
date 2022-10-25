@@ -14,7 +14,7 @@
       <table>
         <% match.moves.reduceRight( (_,move) => { %>
         <tbody class="movebody">
-          <% let hevent = move.events.at(0); %>
+          <% let hevent = move.events[0]; %>
           <tr class="moveheader player<%= hevent.currentPlayerIndex %>">
             <td class="bar"></td>
             <td>

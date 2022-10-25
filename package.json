@@ -23,11 +23,14 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.24.0",
+    "build": "^0.1.4",
+    "core-js": "^3.26.0",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
     "lodash.clonedeep": "^4.5.0",
     "materialize-css": "^1.0.0",
+    "run": "^1.4.0",
     "vue": "^2.7.13"
   },
   "devDependencies": {

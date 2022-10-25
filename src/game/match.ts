@@ -1,3 +1,5 @@
+import 'core-js/features/array/at';
+
 import * as model from "./model";
 import * as matchevent from "./matchevent";
 import { Move } from "./move";
