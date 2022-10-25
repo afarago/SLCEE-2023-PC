@@ -1,0 +1,121 @@
+[
+  {
+    "ts": 123456,
+    "etype": "E_MATCHSTARTED",
+    "players": [
+      { "uid": 142, "name": "Pooh" },
+      { "uid": 143, "name": "Eeyore" }
+    ],
+    "context": 1001
+  },
+  {
+    "ts": 123463,
+    "etype": "E_STARTTURN",
+    "player": 142,
+    "context": 1001
+  },
+  {
+    "ts": 123457,
+    "etype": "A_DRAW",
+    "player": 142,
+    "data": {
+      "card": { "suit": "anchor", "value": 3 }
+    },
+    "context": 1002
+  },
+  {
+    "ts": 123458,
+    "etype": "A_DRAW",
+    "player": 142,
+    "data": {
+      "card": {
+        "suit": "map",
+        "value": 3
+        // followupInfo: {
+        //     mapCards: [
+        //         {suit:"anchor", value:4},
+        //         {suit:"anchor", value:5},
+        //         {suit:"kraken", value:5}
+        //     ]
+        // }
+      }
+    },
+    "context": 1003
+  },
+  {
+    "ts": 123459,
+    "etype": "E_CARDPLAYED_EFFECT", // followup // maybe add a 'context'?
+    "player": 142,
+    "data": {
+      "map": [
+        { "suit": "anchor", "value": 4 },
+        { "suit": "anchor", "value": 5 },
+        { "suit": "kraken", "value": 5 }
+      ]
+    },
+    "context": 1003
+  },
+  {
+    "ts": 123459,
+    "etype": "A_CARDPLAYED_FOLLOWUP",
+    "player": 142,
+    "data": { "map": { "suit": "kraken", "value": 5 }, "context": 1003 },
+    // -- now the kraken-5 is placed to the play area
+    "context": 1004
+  },
+  {
+    "ts": 123459,
+    "etype": "E_CARDPLAYED_EFFECT",
+    "player": 142,
+    "data": {
+      "kraken": [
+        { "suit": "mermaid", "value": 4 },
+        { "suit": "hook", "value": 5 }
+      ],
+      "context": 1004
+      // -- now the mermaid4 and the hook5 is placed to the playarea
+      // -- busted
+    },
+    "context": 1004
+  },
+  {
+    "ts": 123459,
+    "etype": "E_CARDPLAYED_EFFECT",
+    "player": 142,
+    "data": {
+      "hook": { "suit": "mermaid", "value": 4 }
+    },
+    "context": 1004
+  },
+  {
+    "ts": 123461,
+    "etype": "A_DRAW",
+    "player": 142,
+    "data": {
+      "card": {
+        "suit": "kraken",
+        "value": 3
+      }
+    },
+    "context": 1005
+  },
+  {
+    "ts": 123462,
+    "etype": "E_ENDTURN",
+    "player": 142,
+    "data": { "isBusted": true },
+    "context": 1005
+  },
+  {
+    "ts": 123463,
+    "etype": "E_STARTTURN",
+    "player": 143,
+    "context": 1005
+  },
+  {
+    "ts": 123464,
+    "etype": "...",
+    "player": 143,
+    "context": 1006
+  }
+]
