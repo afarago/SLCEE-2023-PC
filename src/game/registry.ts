@@ -13,15 +13,17 @@ export default class Registry {
   public getMatches(): model.Match[] {
     return this.matches;
   }
-  public getPlayers(): model.Player[] {
-    return this.players;
-  }
-
   public addMatch(match: model.Match) {
     this.matches.push(match);
   }
-
   public getMatchById(id: model.MatchId): model.Match {
     return this.matches.find((e) => e.id == id);
+  }
+  
+  public getPlayers(): model.Player[] {
+    return this.players;
+  }
+  public getPlayerById(id: model.PlayerId): model.Player {
+    return this.players.at(id);
   }
 }

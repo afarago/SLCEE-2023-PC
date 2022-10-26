@@ -16,7 +16,7 @@
           <td><%= match.moves.length %></td>
           <td>
             <%- match.players.map((player, idx)=>{ return (match.currentPlayer !== player) ?
-            players[player].name : "<b>"+players[player].name+"</b>";}).join(" | "); %>
+            players.at(player)?.name : "<b>"+players.at(player)?.name+"</b>";}).join(" | "); %>
           </td>
         </tr>
         <% }); %>

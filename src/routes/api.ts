@@ -65,14 +65,14 @@ export const register = (app: express.Application) => {
     new model.Player(2, "Ethan"),
     new model.Player(3, "Priya")
   );
-  Coordinator.Instance.actionStartMatch(
-    [0, 1],
-    [
-      ["Mermaid", 2],
-      ["Anchor", 2],
-      ["Mermaid", 3],
-    ]
-  ); //TODO: remove
+  // Coordinator.Instance.actionStartMatch(
+  //   [0, 1],
+  //   [
+  //     ["Mermaid", 2],
+  //     ["Anchor", 2],
+  //     ["Mermaid", 3],
+  //   ]
+  // ); //TODO: remove
 
   //-- add set rreplacer
   app.set("json replacer", utils.fnSetMapSerializer);
@@ -82,7 +82,7 @@ export const register = (app: express.Application) => {
       const data = req.body;
 
       if (!data.players) throw new Error("Missing players from input parameters.");
-      if (!(data.players instanceof Array) || (data.players as Array<number>).length != 2)
+      if (!(data.players instanceof Array))
         throw new Error("Missing players from input parameters.");
       let players = new Array<model.PlayerId>(...data.players);
       let drawPile = data.drawPile;
@@ -102,9 +102,10 @@ export const register = (app: express.Application) => {
     // oidc.ensureAuthenticated(),
     async (req: any, res) => {
       try {
-        const matches = Registry.Instance.getMatches();
-        //!!
-        return res.json(matches);
+        const matches = Object.values(Registry.Instance.getMatches());
+        const params = req.body;
+
+        return res.json(matches.map((match) => utils.apifyMatch(match, params)));
       } catch (err) {
         // tslint:disable-next-line:no-console
         console.error(err);

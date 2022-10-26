@@ -41,7 +41,12 @@ export default class Coordinator {
   }
 
   public actionStartMatch(players: model.PlayerId[], initialDrawPile?: Array<any>): model.Match {
-    console.log(">START_MATCH");
+    console.log(">START_MATCH", players);
+
+    //-- check if all players exists and there is exactly 2 players
+    if (players.length != 2 || !players.every((p) => !!Registry.Instance.getPlayerById(p)))
+      throw new Error("Invalid players specified, please check settings.");
+
     let match = new model.Match(Coordinator.matchNumberGenerator++, players);
     match.moves = new Array<model.Move>();
 
