@@ -10,7 +10,12 @@
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"]
-    }
+    },
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2017.TypedArrays",
+    ]
   },
   "include": ["src/**/*"],
   "exclude": ["src/public"]

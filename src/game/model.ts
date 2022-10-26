@@ -1,3 +1,4 @@
+import "core-js/es/array/at";
 /* tslint:disable:max-classes-per-file */
 
 import * as utils from "../utils";

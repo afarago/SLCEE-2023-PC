@@ -1,3 +1,4 @@
+import "core-js/es/array/at";
 import * as model from "./model";
 
 export default class Registry {

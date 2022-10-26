@@ -22,7 +22,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "array.prototype.at": "^1.1.0",
     "axios": "^0.24.0",
     "build": "^0.1.4",
     "dotenv": "^10.0.0",
@@ -32,6 +31,7 @@
     "materialize-css": "^1.0.0"
   },
   "devDependencies": {
+    "ts-polyfill": "^3.8.2",
     "@types/axios": "^0.14.0",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.14",

@@ -1,4 +1,5 @@
 /* tslint:disable:max-classes-per-file */
+import "core-js/es/array/at";
 import * as model from "./model";
 
 export const OMatchEventType = {

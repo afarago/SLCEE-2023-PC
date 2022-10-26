@@ -1,3 +1,5 @@
+import "core-js/es/array/at";
+
 import * as model from "./model";
 import * as matchevent from "./matchevent";
 import { MatchState } from "./matchstate";

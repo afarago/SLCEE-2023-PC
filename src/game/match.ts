@@ -1,3 +1,6 @@
+import "core-js/es/array/at";
+//import 'ts-polyfill/lib/es2017-typed-arrays';
+
 import * as model from "./model";
 import * as matchevent from "./matchevent";
 import { Move } from "./move";
