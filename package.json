@@ -22,16 +22,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "array.prototype.at": "^1.1.0",
     "axios": "^0.24.0",
     "build": "^0.1.4",
-    "core-js": "^3.26.0",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
     "lodash.clonedeep": "^4.5.0",
-    "materialize-css": "^1.0.0",
-    "run": "^1.4.0",
-    "vue": "^2.7.13"
+    "materialize-css": "^1.0.0"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
@@ -42,7 +40,6 @@
     "@types/materialize-css": "^1.0.11",
     "@types/node": "^17.0.45",
     "@types/shelljs": "^0.8.11",
-    "@types/vue": "^2.0.0",
     "fs-extra": "^10.1.0",
     "nodemon": "^2.0.20",
     "npm-run-all": "^4.1.5",

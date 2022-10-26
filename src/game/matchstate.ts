@@ -1,4 +1,3 @@
-import 'core-js/features/array/at';
 import cloneDeep from "lodash/cloneDeep";
 
 import * as model from "./model";

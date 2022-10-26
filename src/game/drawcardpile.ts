@@ -1,4 +1,3 @@
-import 'core-js/features/array/at';
 import {
   Card,
   CardAbbreviation,
