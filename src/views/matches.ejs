@@ -2,21 +2,20 @@
 <html>
   <%- include('partials/head.ejs', {pageTitle: "Matches"}) %>
   <body>
-    <%- include('partials/nav.ejs') %> <% function matchTable(title, hasValidCurrent) { %>
+    <%- include('partials/nav.ejs') %> <% function matchTable(title, doFilterFinished) { %>
     <div class="container">
       <h1 class="header"><%= title %></h1>
       <table>
-        <% matches.filter(match=>((hasValidCurrent && match.currentPlayer!==undefined) ||
-        (!hasValidCurrent && match.currentPlayer===undefined)) ).forEach(function(match){ %>
+        <% matches.filter(match=>((doFilterFinished && match.isFinished) || (!doFilterFinished &&
+        !match.isFinished)) ).forEach(function(match){ %>
         <tr>
           <td>
             <a class="btn" href="/matches/<%= match.id %>"> #<%= match.id %> </a>
           </td>
-          <td><%= match.startedAt.toLocaleTimeString() %></td>
-          <td><%= match.moves.length %></td>
+          <td><%= match.startedAt?.toLocaleTimeString() %></td>
           <td>
-            <%- match.players.map((player, idx)=>{ return (match.currentPlayer !== player) ?
-            players.at(player)?.name : "<b>"+players.at(player)?.name+"</b>";}).join(" | "); %>
+            <%- match.players?.map((player, idx)=>{ return (match.currentPlayer !== player.id) ?
+            player?.name : "<b>"+player?.name+"</b>";}).join(" | "); %>
           </td>
         </tr>
         <% }); %>

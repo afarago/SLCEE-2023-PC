@@ -4,8 +4,8 @@ import cloneDeep from "lodash/cloneDeep";
 
 import Registry from "./registry";
 import * as model from "./model";
-import * as matchevent from "./matchevent";
 import * as utils from "../utils";
+import MatchState from "./matchstate";
 import { CardAbbreviation } from "./model";
 
 //TODO: Kraken->Cannon->Oracle //BUG: not working yet
@@ -16,41 +16,46 @@ export default class Coordinator {
     return this._instance || (this._instance = new this());
   }
 
-  private static matchNumberGenerator: number = 0;
-  private static moveContextGenerator: number = 0;
-  private static eventContextGenerator: number = 0;
-
   private static newMove(match: model.Match): model.Move {
-    return new model.Move(
-      Coordinator.moveContextGenerator++
-      //this.state = match?.state; //TODO: later - create a copy of the state, if any
-    );
+    //-- copy state over frm previous move state to keep continuity
+    //-- no need to clone state, we can easily sacrifice the state of the previous move as it wa salready persisted
+    const move = new model.Move(match.id, match.move?.state);
+    move.sequenceId = match.move?.sequenceId ? match.move?.sequenceId + 1 : 0;
+    return move;
   }
+  private static persistMove(move: model.Move) {
+    Registry.Instance.putMovePromise(move);
+  }
+
   private static addEvent(
     move: model.Move,
-    event: matchevent.MatchEventBase,
+    event: model.MatchEventBase,
     oldState: model.MatchState
   ): model.MatchState {
     //-- copy state to new state
     const state = model.MatchState.clone(oldState);
-    state.id = Coordinator.eventContextGenerator++;
     event.state = state;
 
     move.addEvent(event);
     return state;
   }
 
-  public actionStartMatch(players: model.PlayerId[], initialDrawPile?: Array<any>): model.Match {
+  public async actionStartMatch(
+    players: model.PlayerId[],
+    initialDrawPile?: Array<any>
+  ): Promise<model.Match> {
     console.log(">START_MATCH", players);
 
     //-- check if all players exists and there is exactly 2 players
-    if (players.length != 2 || !players.every((p) => !!Registry.Instance.getPlayerById(p)))
+    const playerdata = await Promise.all(
+      players.map(async (pid) => await Registry.Instance.getPlayerByIdPromise(pid))
+    ); //TODO: improve Registy to query all id's at once
+    if (players.length != 2 || playerdata.some((pd) => !pd))
       throw new Error("Invalid players specified, please check settings.");
 
-    let match = new model.Match(Coordinator.matchNumberGenerator++, players);
-    match.moves = new Array<model.Move>();
+    let match = new model.Match(playerdata);
 
-    Registry.Instance.addMatch(match);
+    await Registry.Instance.putMatchPromise(match); //match.persist():
     console.log("MATCH_STARTS:", match.id);
 
     //-- testing lodash array clone problems
@@ -67,13 +72,12 @@ export default class Coordinator {
     // let z2 = cloneDeep(z) as model.CardPileArrTest;
     // console.log(z, z1, z2);
 
-    const move = Coordinator.newMove(match);
+    const move = (match.move = Coordinator.newMove(match));
     {
       //-- announce match starting
-      match.moves.push(move);
       let startingState = Coordinator.addEvent(
         move,
-        new matchevent.MatchStarted(),
+        new model.MatchStarted(),
         new model.MatchState()
       );
 
@@ -98,32 +102,22 @@ export default class Coordinator {
     //-- announce turn starting
     this.turnStarting(match, move, match.state.currentPlayerIndex);
 
-    //-- return events
+    //-- return event
+    Coordinator.persistMove(match.move);
     return match;
   }
 
-  public getMatches(): Array<model.Match> {
-    //TODO: remove
-    return Registry.Instance.getMatches();
-  }
-
-  public getMatchById(id: model.MatchId): model.Match {
-    //TODO: remove
-    return Registry.Instance.getMatchById(id);
-  }
-
-  public executeAction(id: model.MatchId, data: any) {
+  public async executeActionPromise(
+    match: model.Match,
+    data: any
+  ): Promise<Array<model.MatchEventBase>> {
     // console.log(">ACTION:", data.etype);
 
-    let match = Registry.Instance.getMatchById(id);
-    if (!match) throw Error("Match does not exist.");
-
-    // Safeguards: no action on finished matches
+    // Safeguards:
+    if (match.isFinished) throw new Error("No action possible on finished matches");
     // - only accept ResponseToEffect if pending effectresponse
-    const pendingEffectPointer = match.state.pendingEffectPointer;
-    let pendingEffect: matchevent.CardEffectBase;
-    if (pendingEffectPointer) {
-      pendingEffect = match.pendingEffect;
+    const pendingEffect = match.state.pendingEffect;
+    if (pendingEffect) {
       if (!pendingEffect)
         throw new Error("Incorrect event registry, while processing CardPlayedEffect");
       if (data.etype != "ResponseToEffect")
@@ -139,21 +133,21 @@ export default class Coordinator {
 
     //-- act according to the event type
     if (data.etype == "Draw") {
-      this.actionDraw(match);
-      return match.moves.at(-1).getEvents();
+      await this.actionDraw(match);
     } else if (data.etype == "EndTurn") {
-      this.actionEndTurn(match);
+      await this.actionEndTurn(match);
     } else if (data.etype == "ResponseToEffect") {
-      this.actionRespondToEffect(match, data.effect, pendingEffect);
+      await this.actionRespondToEffect(match, data.effect, pendingEffect);
     } else {
       throw new Error("Unknown action verb: " + data.etype);
     }
 
     //-- return generated events
-    return match.moves.at(-1).getEvents();
+    Coordinator.persistMove(match.move);
+    return match.move?.getEvents();
   }
 
-  public actionEndTurn(match: model.Match): void {
+  private async actionEndTurn(match: model.Match): Promise<void> {
     console.log(">ENDTURN");
 
     //-- CHECK: are there any cards on the play area
@@ -161,9 +155,9 @@ export default class Coordinator {
     if (state.playArea.length == 0) throw new Error("Cannot end turn with empty playarea.");
 
     //-- add initiator
-    const move = Coordinator.newMove(match);
-    match.moves.push(move);
-    Coordinator.addEvent(move, new matchevent.EndTurn(), state);
+    const move = (match.move = Coordinator.newMove(match));
+
+    Coordinator.addEvent(move, new model.EndTurn(), state);
 
     //-- initiate forced turn end
     this.turnEnding(match, move, true);
@@ -175,7 +169,6 @@ export default class Coordinator {
     doRemoveFromPile: boolean = true
   ): model.Card {
     const state = match.state;
-    let pickedCardindex = -1;
 
     //-- if drawpile is exhausted - annotation match end
     if (state.drawPile.length == 0) {
@@ -188,40 +181,9 @@ export default class Coordinator {
     //-- execute the draw
     const cardDrawn = state.drawPile.draw(doRemoveFromPile);
 
-    // //-- check if pending draw due to oracle
-    // if (state.drawPile.nextCard) {
-    //   //-- Oracle was the last effect - get the card peeked
-    //   const oracleCard = state.drawPile.nextCard;
-    //   pickedCardindex = state.drawPile.findIndex(
-    //     (c) => c.suit == oracleCard.suit && c.value == oracleCard.value
-    //   );
-
-    //   //-- reset peeked card - we have no knowledge anymore on next card
-    //   state.drawPile.nextCard = null;
-    // }
-
-    // //-- dev testing
-    // if (pickedCardindex < 0 && Coordinator.__cardsPileForTesting) {
-    //   if (Coordinator.__cardsPileForTesting.length > 0) {
-    //     const card = doRemoveFromPile
-    //       ? Coordinator.__cardsPileForTesting.splice(0, 1)[0]
-    //       : Coordinator.__cardsPileForTesting.at(0);
-    //     pickedCardindex = state.drawPile.findIndex(
-    //       (c) => c.suit == card.suit && c.value == card.value
-    //     );
-    //   }
-    // }
-
-    // //-- if no preselection (default case) -- randomly pick a card
-    // if (pickedCardindex < 0) pickedCardindex = Math.floor(Math.random() * state.drawPile.length);
-
-    // //-- execute the draw
-    // const cardDrawn = doRemoveFromPile
-    //   ? state.drawPile.splice(pickedCardindex, 1).at(0)
-    //   : state.drawPile.at(pickedCardindex);
-
     //-- event only - if removed
-    if (doRemoveFromPile) Coordinator.addEvent(move, new matchevent.Draw(cardDrawn), state);
+    if (doRemoveFromPile) Coordinator.addEvent(move, new model.Draw(cardDrawn), state);
+
     console.log(doRemoveFromPile ? "DRAW_CARD:" : "PEEK_CARD:", cardDrawn);
 
     return cardDrawn;
@@ -247,12 +209,9 @@ export default class Coordinator {
 
     //-- add drawn card
     {
-      const state = Coordinator.addEvent(
-        move,
-        new matchevent.CardPlacedToPlayArea(card),
-        match.state
-      );
+      const state = Coordinator.addEvent(move, new model.CardPlacedToPlayArea(card), match.state);
       state.playArea.cards.push(card);
+
       console.log(
         "PLACE_CARD:",
         card,
@@ -270,8 +229,7 @@ export default class Coordinator {
         //-- clear pending effect (can only be oracle) - Kraken ignores that
         const pendingEffect = match.pendingEffect;
         if (pendingEffect) {
-          if (pendingEffect instanceof matchevent.CardEffectOracle)
-            delete match.state.pendingEffectPointer;
+          if (pendingEffect instanceof model.CardEffectOracle) match.state.clearPendingEffect();
           else
             throw new Error(
               "Game inconsistency - Kraken with some other pending effect" +
@@ -294,14 +252,10 @@ export default class Coordinator {
       //-- if drawpile is empty, just skip
       if (match.state.drawPile.length > 0) {
         const cardPeekedOracle = this.drawCard(match, move, false);
-        const effect = new matchevent.CardEffectOracle(cardPeekedOracle);
+        const effect = new model.CardEffectOracle(cardPeekedOracle);
         {
-          const state = Coordinator.addEvent(
-            move,
-            new matchevent.CardPlayedEffect(effect),
-            match.state
-          );
-          state.addPendingEffect(match);
+          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          state.addPendingEffect(effect);
           state.drawPile.nextCard = cardPeekedOracle;
         }
         console.log("CARDEFFECT:", card.suit, ":", cardPeekedOracle, "[requires user response]");
@@ -312,14 +266,10 @@ export default class Coordinator {
       const bank = match.state.banks[match.state.currentPlayerIndex];
       //-- if own bank has no elements, just skip
       if (bank.flatSize > 0) {
-        const effect = new matchevent.CardEffectHook();
+        const effect = new model.CardEffectHook();
         {
-          const state = Coordinator.addEvent(
-            move,
-            new matchevent.CardPlayedEffect(effect),
-            match.state
-          );
-          state.addPendingEffect(match);
+          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          state.addPendingEffect(effect);
         }
         console.log("CARDEFFECT:", card.suit, "[requires user response]");
       } else {
@@ -332,16 +282,10 @@ export default class Coordinator {
       );
       if (anyItemsInAnyBanks) {
         const effect =
-          card.suit === "Cannon"
-            ? new matchevent.CardEffectCannon()
-            : new matchevent.CardEffectSword();
+          card.suit === "Cannon" ? new model.CardEffectCannon() : new model.CardEffectSword();
         {
-          const state = Coordinator.addEvent(
-            move,
-            new matchevent.CardPlayedEffect(effect),
-            match.state
-          );
-          state.addPendingEffect(match);
+          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          state.addPendingEffect(effect);
         }
         console.log("CARDEFFECT:", card.suit, "[requires user response]");
       } else {
@@ -362,14 +306,11 @@ export default class Coordinator {
           match.state.discardPile.cards.splice(idx, 1);
         }
 
-        const effect = new matchevent.CardEffectMap(cardsFromDiscard);
+        const effect = new model.CardEffectMap(cardsFromDiscard);
         {
-          const state = Coordinator.addEvent(
-            move,
-            new matchevent.CardPlayedEffect(effect),
-            match.state
-          );
-          state.addPendingEffect(match);
+          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          state.addPendingEffect(effect);
+
           console.log(
             "CARDEFFECT:",
             card.suit,
@@ -391,21 +332,20 @@ export default class Coordinator {
     move.state.discardPile.cards.push(card);
   }
 
-  public actionDraw(match: model.Match) {
+  private async actionDraw(match: model.Match): Promise<void> {
     console.log(">DRAW");
-    const move = Coordinator.newMove(match);
-    match.moves.push(move);
+    const move = (match.move = Coordinator.newMove(match));
 
     const card = this.drawCard(match, move);
     if (card) this.placeCard(match, move, card);
   }
 
-  public matchEnding(match: model.Match, move: model.Move) {
+  public async matchEnding(match: model.Match, move: model.Move): Promise<void> {
     console.log("MATCH_ENDING");
-    let event = new matchevent.MatchEnded();
+    let event = new model.MatchEnded();
     {
       const state = Coordinator.addEvent(move, event, match.state);
-      state.banks.forEach((bank) => bank.clear());
+      state.banks.forEach((bank) => bank.piles.clear());
       state.currentPlayerIndex = -1;
     }
 
@@ -414,7 +354,7 @@ export default class Coordinator {
     for (let idx = 0; idx < match.players.length; idx++) {
       const bank = match.state.banks[idx];
       let score = 0;
-      for (let [key, value] of bank.entries()) {
+      for (let [key, value] of bank.piles.entries()) {
         const maxValue = value.max();
         console.log("SCORED:", idx, "in:", key, "max:", maxValue);
         score += maxValue;
@@ -430,9 +370,9 @@ export default class Coordinator {
     event.scores = Array.from(scores.values());
   }
 
-  public turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean) {
+  private turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean) {
     console.log("TURN_ENDING", isSuccessful);
-    delete match.state.pendingEffectPointer; //-- remove any pending todos //TOCHECK
+    match.state.clearPendingEffect(); //-- remove any pending todos //TOCHECK
 
     let cardsCollected: Array<model.Card> = [];
     {
@@ -487,7 +427,7 @@ export default class Coordinator {
 
       /*const state = */ Coordinator.addEvent(
         move,
-        new matchevent.TurnEnded(isSuccessful, cardsCollected),
+        new model.TurnEnded(isSuccessful, cardsCollected),
         match.state
       );
       console.log(
@@ -508,17 +448,17 @@ export default class Coordinator {
   }
 
   private addCardToBank(bank: model.Bank, card: model.Card) {
-    if (!bank.has(card.suit)) bank.set(card.suit, new model.CardSuitStack());
-    bank.get(card.suit).add(card.value);
+    if (!bank.piles.has(card.suit)) bank.piles.set(card.suit, new model.CardSuitStack());
+    bank.piles.get(card.suit).stack.add(card.value);
     console.log("COLLECT:", card);
   }
 
-  public turnStarting(match: model.Match, move: model.Move, playerIndex: number) {
+  private turnStarting(match: model.Match, move: model.Move, playerIndex: number) {
     //-- move to the next player
     {
       const state = Coordinator.addEvent(
         move,
-        new matchevent.TurnStarted(playerIndex),
+        new model.TurnStarted(match.players[playerIndex].id),
         match.state
       );
       state.currentPlayerIndex = playerIndex;
@@ -526,16 +466,15 @@ export default class Coordinator {
     console.log("TURN_START:", match.state.currentPlayerIndex);
   }
 
-  public actionRespondToEffect(
+  private async actionRespondToEffect(
     match: model.Match,
-    response: matchevent.ResponseToEffect,
-    pendingEffect: matchevent.CardEffectBase
-  ) {
+    response: model.ResponseToEffect,
+    pendingEffect: model.CardEffectBase
+  ): Promise<void> {
     console.log(">RESPOND_CARDEFFECT:", response.name, ":=", response.card);
     if (!pendingEffect) throw new Error("No pending effects to respond to");
 
-    const move = Coordinator.newMove(match);
-    match.moves.push(move);
+    const move = (match.move = Coordinator.newMove(match));
 
     //================================================================
     if (response.name === "Oracle") {
@@ -544,10 +483,10 @@ export default class Coordinator {
       {
         const state = Coordinator.addEvent(
           move,
-          new matchevent.ResponseToEffect(response.name, response.card),
+          new model.ResponseToEffect(response.name, response.card),
           match.state
         );
-        delete state.pendingEffectPointer; //-- process pending effect - set to null
+        state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       if (response.card == null) {
@@ -558,7 +497,8 @@ export default class Coordinator {
           response.card.suit != nextCardPeeked?.suit ||
           response.card.value != nextCardPeeked?.value
         ) {
-          match.moves.splice(match.moves.length - 1, 1); //-- remove this move as it is invalid
+          //await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
+
           throw new Error(
             "Inappropriate Card specified for effect response. Oracle card is: " +
               JSON.stringify(nextCardPeeked) +
@@ -577,23 +517,23 @@ export default class Coordinator {
       {
         const state = Coordinator.addEvent(
           move,
-          new matchevent.ResponseToEffect(response.name, response.card),
+          new model.ResponseToEffect(response.name, response.card),
           match.state
         );
-        delete state.pendingEffectPointer; //-- process pending effect - set to null
+        state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       const bank = match.state.banks[match.state.currentPlayerIndex];
-      const suitstack = bank.get(response.card?.suit);
+      const suitstack = bank.piles.get(response.card?.suit);
       //-- check if card is valid == i.e. responded to AND exists in Bank AND is topmost on the stack
       if (suitstack?.max() != response.card?.value) {
-        match.moves.splice(match.moves.length - 1, 1); //-- remove this move as it is invalid
+        //await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
         throw new Error("Card does not exist in Own Bank or is not the topmost one.");
       }
 
       //-- remove card from bank
-      suitstack.delete(response.card?.value);
-      if (suitstack.size == 0) bank.delete(response.card?.suit);
+      suitstack.stack.delete(response.card?.value);
+      if (suitstack.stack.size == 0) bank.piles.delete(response.card?.suit);
 
       //-- place to playarea
       const cardFrombank = new model.Card(response.card.suit, response.card.value);
@@ -605,22 +545,22 @@ export default class Coordinator {
       {
         const state = Coordinator.addEvent(
           move,
-          new matchevent.ResponseToEffect(response.name, response.card),
+          new model.ResponseToEffect(response.name, response.card),
           match.state
         );
-        delete state.pendingEffectPointer; //-- process pending effect - set to null
+        state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       const bankTargetIndex = match.state.banks.findIndex((bank, bankIndex) => {
         if (bankIndex == match.state.currentPlayerIndex) return false;
-        const suitstack = bank.get(response.card?.suit);
+        const suitstack = bank.piles.get(response.card?.suit);
         if (suitstack?.max() != response.card?.value) return false;
         return true;
       });
       const bankTarget = match.state.banks.at(bankTargetIndex);
       //-- check if card is valid == i.e. responded to AND exists in Bank AND is topmost on the stack
       if (!bankTarget) {
-        match.moves.splice(match.moves.length - 1, 1); //-- remove this move as it is invalid
+        //await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
         throw new Error("Card does not exist in Enemy Bank(s) or is not the topmost one.");
       }
 
@@ -629,14 +569,14 @@ export default class Coordinator {
       {
         const state = Coordinator.addEvent(
           move,
-          new matchevent.CardRemovedFromBank(cardFrombank, bankTargetIndex),
+          new model.CardRemovedFromBank(cardFrombank, bankTargetIndex),
           match.state
         );
         console.log("REMOVE_CARD_FROM_BANK:", cardFrombank, "player:", bankTargetIndex);
 
-        const suitstack = bankTarget.get(response.card?.suit);
-        suitstack.delete(response.card?.value);
-        if (suitstack.size == 0) bankTarget.delete(response.card?.suit);
+        const suitstack = bankTarget.piles.get(response.card?.suit);
+        suitstack.stack.delete(response.card?.value);
+        if (suitstack.stack.size == 0) bankTarget.piles.delete(response.card?.suit);
       }
 
       if (response.name === "Cannon") {
@@ -653,21 +593,21 @@ export default class Coordinator {
       {
         const state = Coordinator.addEvent(
           move,
-          new matchevent.ResponseToEffect(response.name, response.card),
+          new model.ResponseToEffect(response.name, response.card),
           match.state
         );
-        delete state.pendingEffectPointer; //-- process pending effect - set to null
+        state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       //-- check if selected card is within the possible cards
-      const pendingEffectCards = (pendingEffect as matchevent.CardEffectMap)?.cards;
+      const pendingEffectCards = (pendingEffect as model.CardEffectMap)?.cards;
       if (
         !response.card ||
         !pendingEffectCards?.find(
           (c) => response.card.suit == c.suit && response.card.value == c.value
         )
       ) {
-        match.moves.splice(match.moves.length - 1, 1); //-- remove this move as it is invalid
+        //await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
         throw new Error("Inappropriate Card specified for effect response");
       }
 
@@ -684,6 +624,11 @@ export default class Coordinator {
       });
     }
   }
+
+  // private async redoCurrentMovePromise(match: model.Match) {
+  //   //match.moves.splice(match.moves.length - 1, 1); //-- remove this move as it is invalid
+  //   match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
+  // }
 
   public generateDrawPile(drawPile: model.DrawCardPile) {
     let s: keyof typeof model.OCardSuit;

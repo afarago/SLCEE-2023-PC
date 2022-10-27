@@ -59,12 +59,12 @@ export const register = (app: express.Application) => {
   //   { suit: "Map", value: 3 },
   // ];
 
-  Registry.Instance.players.push(
-    new model.Player(0, "John"),
-    new model.Player(1, "Jill"),
-    new model.Player(2, "Ethan"),
-    new model.Player(3, "Priya")
-  );
+  // Registry.Instance.players.push(
+  //   new model.Player("0", "John"),
+  //   new model.Player("1", "Jill"),
+  //   new model.Player("2", "Ethan"),
+  //   new model.Player("3", "Priya")
+  // );
   // Coordinator.Instance.actionStartMatch(
   //   [0, 1],
   //   [
@@ -77,6 +77,7 @@ export const register = (app: express.Application) => {
   //-- add set rreplacer
   app.set("json replacer", utils.fnSetMapSerializer);
 
+  //TODO: add promise / next handling
   app.post(`/api/matches`, async (req: any, res) => {
     try {
       const data = req.body;
@@ -86,7 +87,7 @@ export const register = (app: express.Application) => {
         throw new Error("Missing players from input parameters.");
       let players = new Array<model.PlayerId>(...data.players);
       let drawPile = data.drawPile;
-      const match = Coordinator.Instance.actionStartMatch(players, drawPile);
+      const match = await Coordinator.Instance.actionStartMatch(players, drawPile);
       if (!match) throw Error("Could not create match.");
 
       return res.json(utils.apifyMatch(match, data));
@@ -102,7 +103,7 @@ export const register = (app: express.Application) => {
     // oidc.ensureAuthenticated(),
     async (req: any, res) => {
       try {
-        const matches = Object.values(Registry.Instance.getMatches());
+        const matches = Object.values(await Registry.Instance.getMatchesPromise());
         const params = req.body;
 
         return res.json(matches.map((match) => utils.apifyMatch(match, params)));
@@ -122,9 +123,12 @@ export const register = (app: express.Application) => {
         const id = req.params.id;
         const data = req.body;
 
-        const match = Registry.Instance.getMatchById(id);
+        const match = await Registry.Instance.getMatchByIdPromise(id);
         if (!match) throw Error("Match does not exist.");
+        match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
+        if (!match.move) throw Error("Consistency error - no move exist for match.");
 
+        //TODO: check debug settings
         return res.json(utils.apifyMatch(match, data));
       } catch (err) {
         // tslint:disable-next-line:no-console
@@ -138,14 +142,19 @@ export const register = (app: express.Application) => {
   app.post(
     `/api/matches/:id`, // TODO: add a from index param as well for easy polling
     // oidc.ensureAuthenticated(),
-    async (req: any, res) => {
+    async (req: any, res, next) => {
       try {
         const id = req.params.id;
         const data = req.body;
 
-        const events = Coordinator.Instance.executeAction(id, data);
+        const match = await Registry.Instance.getMatchByIdPromise(id);
+        if (!match) throw Error("Match does not exist.");
+        match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
+        if (!match.move) throw Error("Consistency error - no move exist for match.");
+
+        const events = await Coordinator.Instance.executeActionPromise(match, data);
         //if (!events) return res.send(404);
-        if (!events) throw Error("Error processing request.");
+        if (!events) return next("Error processing request.");
 
         return res.json(utils.apifyEvents(events, data));
       } catch (err) {
@@ -155,4 +164,27 @@ export const register = (app: express.Application) => {
       }
     }
   );
+
+  //-- retrieve players
+  app.get("/api/players", async (req, res, next) => {
+    Promise.resolve()
+      .then(async () => {
+        const result = await Registry.Instance.getPlayersPromise();
+        if (!result) throw new Error("No records found");
+        res.json(result);
+      })
+      .catch(next); // Errors will be passed to Express.
+  });
+
+  //-- retrieve player by id
+  app.get("/api/players/:id", async (req, res, next) => {
+    Promise.resolve()
+      .then(async () => {
+        const id = req.params.id;
+        const result = await Registry.Instance.getPlayerByIdPromise(id);
+        if (!result) throw new Error("Record not found");
+        res.json(result);
+      })
+      .catch(next); // Errors will be passed to Express.
+  });
 };

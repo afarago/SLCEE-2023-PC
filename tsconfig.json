@@ -11,11 +11,9 @@
     "paths": {
       "*": ["node_modules/*"]
     },
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2017.TypedArrays",
-    ]
+    "lib": ["DOM", "DOM.Iterable", "ES2017.TypedArrays"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "exclude": ["src/public"]

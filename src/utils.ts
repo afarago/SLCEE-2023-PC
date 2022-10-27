@@ -1,4 +1,5 @@
 import * as model from "./game/model";
+import { DynamoDB } from "aws-sdk";
 
 export function fnSetMapSerializer(_key: any, value: any) {
   if (value instanceof Set) return [...value];
@@ -25,24 +26,37 @@ export function apifyMatch(match: model.Match, parameters?: any) {
   let retval: any = { ...match }; // create a shallow copy, to remove unneeded properties
 
   retval.currentPlayer = match.currentPlayer ?? null; //-- will yield undefined if out or range (e.g. ended)
-  retval.movesCount = match.moves.length;
-  retval.banks = match.state.banks;
-  retval.drawPileSize = match.state.drawPile.length;
-  retval.discardPileSize = match.state.discardPile.length;
-  retval.playArea = match.state.playArea;
-  retval.pendingEffect = match.pendingEffect;
-  retval.startedAt = match.startedAt;
+  retval.movesCount = match.move?.sequenceId;
+  retval.banks = match.state?.banks;
+  retval.drawPileSize = match.state?.drawPile?.length;
+  retval.discardPileSize = match.state?.discardPile?.length;
+  retval.playArea = match.state?.playArea;
   const matchendEvent =
-    match.lastMove.lastEvent instanceof model.MatchEnded
-      ? (match.lastMove.lastEvent as model.MatchEnded)
+    match.move?.lastEvent instanceof model.MatchEnded
+      ? (match.move?.lastEvent as model.MatchEnded)
       : null;
-  retval.isFinished = !!matchendEvent;
+  //TODO: maybe fill this up upon ending the match to the match db itself
   if (matchendEvent) {
     retval.winner = matchendEvent.winner;
     retval.scores = matchendEvent.scores;
-    retval.endedAt = match.lastMove?.at;
+    retval.endedAt = match.move?.at;
   }
-  if (!parameters?.moves) delete retval.moves;
+  if (!parameters?.debug?.keep?.move) delete retval.move;
 
   return retval;
 }
+
+// export const dateMarshall = (value: Date): DynamoDB.AttributeValue =>
+//   ({ I: value.getTime() } as DynamoDB.AttributeValue);
+
+// export const dateMarshall = (value: Date): DynamoDB.AttributeValue =>
+//   ({ I: value.getTime() } as DynamoDB.AttributeValue);
+export const dateMarshall = (value: Date): DynamoDB.AttributeValue =>
+  ({ S: value.toISOString() } as DynamoDB.AttributeValue);
+
+export const dateUnmarshall = ({ S }: DynamoDB.AttributeValue): Date | undefined =>
+  S ? new Date(S) : undefined;
+//   export const ddbDateMarshall = (value: Date): DynamoDB.AttributeValue =>
+//   ({ N: value.getTime().toString() } as DynamoDB.AttributeValue);
+// export const ddbDateUnmarshall = ({ N }: DynamoDB.AttributeValue): Date | undefined =>
+//   N ? new Date(N) : undefined;
