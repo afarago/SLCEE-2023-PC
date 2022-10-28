@@ -3,10 +3,8 @@ import cloneDeep from "lodash/cloneDeep";
 //import cloneDeepWith from "lodash/cloneDeepWith";
 
 import Registry from "./registry";
-import * as model from "./model";
+import * as model from "./model/model";
 import * as utils from "../utils";
-import MatchState from "./matchstate";
-import { CardAbbreviation } from "./model";
 
 //TODO: Kraken->Cannon->Oracle //BUG: not working yet
 
@@ -20,7 +18,7 @@ export default class Coordinator {
     //-- copy state over frm previous move state to keep continuity
     //-- no need to clone state, we can easily sacrifice the state of the previous move as it wa salready persisted
     const move = new model.Move(match.id, match.move?.state);
-    move.sequenceId = match.move?.sequenceId ? match.move?.sequenceId + 1 : 0;
+    move.sequenceId = match.move ? match.move?.sequenceId + 1 : 0;
     return move;
   }
   private static persistMove(move: model.Move) {
@@ -29,7 +27,7 @@ export default class Coordinator {
 
   private static addEvent(
     move: model.Move,
-    event: model.MatchEventBase,
+    event: model.MatchEvent,
     oldState: model.MatchState
   ): model.MatchState {
     //-- copy state to new state
@@ -77,7 +75,7 @@ export default class Coordinator {
       //-- announce match starting
       let startingState = Coordinator.addEvent(
         move,
-        new model.MatchStarted(),
+        new model.MatchEvent(model.OMatchEventType.MatchStarted),
         new model.MatchState()
       );
 
@@ -110,7 +108,7 @@ export default class Coordinator {
   public async executeActionPromise(
     match: model.Match,
     data: any
-  ): Promise<Array<model.MatchEventBase>> {
+  ): Promise<Array<model.MatchEvent>> {
     // console.log(">ACTION:", data.etype);
 
     // Safeguards:
@@ -121,13 +119,13 @@ export default class Coordinator {
       if (!pendingEffect)
         throw new Error("Incorrect event registry, while processing CardPlayedEffect");
       if (data.etype != "ResponseToEffect")
-        throw new Error("Respond to pending effect first: " + pendingEffect.constructor.name);
-      if (!pendingEffect.constructor.name.endsWith(data.effect?.name))
+        throw new Error("Respond to pending effect first: " + pendingEffect.effectType);
+      if (pendingEffect?.effectType != data.effect?.effectType)
         throw new Error(
           "Respond correctly to the pending effect first: " +
-            pendingEffect.constructor.name +
+            pendingEffect.effectType +
             " response: " +
-            data.effect?.name
+            data.effect?.effectType
         );
     }
 
@@ -157,7 +155,7 @@ export default class Coordinator {
     //-- add initiator
     const move = (match.move = Coordinator.newMove(match));
 
-    Coordinator.addEvent(move, new model.EndTurn(), state);
+    Coordinator.addEvent(move, new model.MatchEvent(model.OMatchEventType.EndTurn), state);
 
     //-- initiate forced turn end
     this.turnEnding(match, move, true);
@@ -182,7 +180,12 @@ export default class Coordinator {
     const cardDrawn = state.drawPile.draw(doRemoveFromPile);
 
     //-- event only - if removed
-    if (doRemoveFromPile) Coordinator.addEvent(move, new model.Draw(cardDrawn), state);
+    if (doRemoveFromPile)
+      Coordinator.addEvent(
+        move,
+        new model.MatchEvent(model.OMatchEventType.Draw, { drawCard: cardDrawn }),
+        state
+      );
 
     console.log(doRemoveFromPile ? "DRAW_CARD:" : "PEEK_CARD:", cardDrawn);
 
@@ -209,7 +212,13 @@ export default class Coordinator {
 
     //-- add drawn card
     {
-      const state = Coordinator.addEvent(move, new model.CardPlacedToPlayArea(card), match.state);
+      const state = Coordinator.addEvent(
+        move,
+        new model.MatchEvent(model.OMatchEventType.CardPlacedToPlayArea, {
+          cardPlacedToPlayAreaCard: card,
+        }),
+        match.state
+      );
       state.playArea.cards.push(card);
 
       console.log(
@@ -221,20 +230,19 @@ export default class Coordinator {
     }
 
     //-- execute effects based on Suit special
-    if (card.suit === "Kraken") {
+    if (card.suit === model.OCardSuit.Kraken) {
       for (let i = 0; i < 2; i++) {
         const cardDrawnKraken = this.drawCard(match, move);
         if (!cardDrawnKraken) break;
 
         //-- clear pending effect (can only be oracle) - Kraken ignores that
-        const pendingEffect = match.pendingEffect;
-        if (pendingEffect) {
-          if (pendingEffect instanceof model.CardEffectOracle) match.state.clearPendingEffect();
-          else
-            throw new Error(
-              "Game inconsistency - Kraken with some other pending effect" +
-                match.pendingEffect.toString()
-            );
+        if (match.pendingEffect?.effectType == model.OCardEffectType.Oracle)
+          match.state.clearPendingEffect();
+        else if (match.pendingEffect) {
+          throw new Error(
+            "Game inconsistency - Kraken with some other pending effect" +
+              JSON.stringify(match.pendingEffect)
+          );
         }
 
         console.log("CARDEFFECT:", card.suit, ":", cardDrawnKraken);
@@ -243,18 +251,31 @@ export default class Coordinator {
         //-- You will draw two cards from the Draw Pile, unless the first card drawn is a Hook, Sword or Map.
         //-- Any of those three Suit Abilities adds an additional card to the Play Area.
         //-- or if is busted (null)
-        if (!cardPlacedKraken || cardPlacedKraken?.suit in ["Hook", "Map", "Sword"]) break;
+        if (
+          !cardPlacedKraken ||
+          cardPlacedKraken?.suit in
+            [model.OCardSuit.Hook, model.OCardSuit.Map, model.OCardSuit.Sword]
+        )
+          break;
 
         //-- if busted (thus ended) in the meantime, break
         if (move.lastEvent.eventType === "TurnStarted") break;
       }
-    } else if (card.suit === "Oracle") {
+    } else if (card.suit === model.OCardSuit.Oracle) {
       //-- if drawpile is empty, just skip
       if (match.state.drawPile.length > 0) {
         const cardPeekedOracle = this.drawCard(match, move, false);
-        const effect = new model.CardEffectOracle(cardPeekedOracle);
+        const effect = new model.CardEffect(model.OCardEffectType.Oracle, {
+          card: cardPeekedOracle,
+        });
         {
-          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          const state = Coordinator.addEvent(
+            move,
+            new model.MatchEvent(model.OMatchEventType.CardPlayedEffect, {
+              cardPlayedEffect: effect,
+            }),
+            match.state
+          );
           state.addPendingEffect(effect);
           state.drawPile.nextCard = cardPeekedOracle;
         }
@@ -262,36 +283,50 @@ export default class Coordinator {
       } else {
         console.log("CARDEFFECT:", card.suit, ":", "ignored - due to empty drawpile");
       }
-    } else if (card.suit === "Hook") {
+    } else if (card.suit === model.OCardSuit.Hook) {
       const bank = match.state.banks[match.state.currentPlayerIndex];
       //-- if own bank has no elements, just skip
       if (bank.flatSize > 0) {
-        const effect = new model.CardEffectHook();
+        const effect = new model.CardEffect(model.OCardEffectType.Hook);
         {
-          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          const state = Coordinator.addEvent(
+            move,
+            new model.MatchEvent(model.OMatchEventType.CardPlayedEffect, {
+              cardPlayedEffect: effect,
+            }),
+            match.state
+          );
           state.addPendingEffect(effect);
         }
         console.log("CARDEFFECT:", card.suit, "[requires user response]");
       } else {
         console.log("CARDEFFECT:", card.suit, ":", "ignored - due to empty bank");
       }
-    } else if (card.suit === "Cannon" || card.suit === "Sword") {
+    } else if (card.suit === model.OCardSuit.Cannon || card.suit === model.OCardSuit.Sword) {
       //-- if no other player bank has elements, just skip
       const anyItemsInAnyBanks = !!match.state.banks.find(
         (bank, bindex) => bindex != match.state.currentPlayerIndex && bank.flatSize > 0
       );
       if (anyItemsInAnyBanks) {
         const effect =
-          card.suit === "Cannon" ? new model.CardEffectCannon() : new model.CardEffectSword();
+          card.suit === model.OCardSuit.Cannon
+            ? new model.CardEffect(model.OCardEffectType.Cannon)
+            : new model.CardEffect(model.OCardEffectType.Sword);
         {
-          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          const state = Coordinator.addEvent(
+            move,
+            new model.MatchEvent(model.OMatchEventType.CardPlayedEffect, {
+              cardPlayedEffect: effect,
+            }),
+            match.state
+          );
           state.addPendingEffect(effect);
         }
         console.log("CARDEFFECT:", card.suit, "[requires user response]");
       } else {
         console.log("CARDEFFECT:", card.suit, ":", "ignored - due to empty enemy banks");
       }
-    } else if (card.suit === "Map") {
+    } else if (card.suit === model.OCardSuit.Map) {
       //-- if draw pile has no elements, just skip
       if (match.state.discardPile.length > 0) {
         let cardsFromDiscard = new Array<model.Card>();
@@ -306,9 +341,17 @@ export default class Coordinator {
           match.state.discardPile.cards.splice(idx, 1);
         }
 
-        const effect = new model.CardEffectMap(cardsFromDiscard);
+        const effect = new model.CardEffect(model.OCardEffectType.Map, {
+          cards: cardsFromDiscard,
+        });
         {
-          const state = Coordinator.addEvent(move, new model.CardPlayedEffect(effect), match.state);
+          const state = Coordinator.addEvent(
+            move,
+            new model.MatchEvent(model.OMatchEventType.CardPlayedEffect, {
+              cardPlayedEffect: effect,
+            }),
+            match.state
+          );
           state.addPendingEffect(effect);
 
           console.log(
@@ -342,12 +385,6 @@ export default class Coordinator {
 
   public async matchEnding(match: model.Match, move: model.Move): Promise<void> {
     console.log("MATCH_ENDING");
-    let event = new model.MatchEnded();
-    {
-      const state = Coordinator.addEvent(move, event, match.state);
-      state.banks.forEach((bank) => bank.piles.clear());
-      state.currentPlayerIndex = -1;
-    }
 
     //-- calc scores
     const scores = new Map<number, number>();
@@ -366,8 +403,17 @@ export default class Coordinator {
     var scoresDesc = [...scores.entries()].sort((a, b) => b[1] - a[1]);
     console.log("MATCH_ENDED:", JSON.stringify(scoresDesc, utils.fnSetMapSerializer));
 
-    event.winner = scoresDesc[0][0] !== scoresDesc[1][0] ? match.players[scoresDesc[0][0]] : null; //-- handle tie situation
-    event.scores = Array.from(scores.values());
+    const winner = scoresDesc[0][0] !== scoresDesc[1][0] ? match.players[scoresDesc[0][0]] : null; //-- handle tie situation
+    const scoresFlat = Array.from(scores.values());
+    let event = new model.MatchEvent(model.OMatchEventType.MatchEnded, {
+      matchEndedWinner: winner,
+      matchEndedScores: scoresFlat,
+    });
+    {
+      const state = Coordinator.addEvent(move, event, match.state);
+      state.banks.forEach((bank) => bank.piles.clear());
+      state.currentPlayerIndex = -1;
+    }
   }
 
   private turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean) {
@@ -381,7 +427,7 @@ export default class Coordinator {
       const playArea = state.playArea;
       const collectIndex = isSuccessful
         ? playArea.length
-        : playArea.cards.findIndex((e) => e.suit === "Anchor"); //TODO: enum
+        : playArea.cards.findIndex((e) => e.suit === model.OCardSuit.Anchor);
 
       //-- process playarea cards
       for (let i = 0; i < playArea.length; i++) {
@@ -398,8 +444,8 @@ export default class Coordinator {
 
     //-- identify and add bonus cards for Chest & Key combo
     if (
-      cardsCollected.find((c) => c.suit === "Chest") && //TODO: enum
-      cardsCollected.find((c) => c.suit === "Key")
+      cardsCollected.find((c) => c.suit === model.OCardSuit.Chest) &&
+      cardsCollected.find((c) => c.suit === model.OCardSuit.Key)
     ) {
       const bonusCardAmount = cardsCollected.length;
       console.log("BONUS: Key&Chest", bonusCardAmount);
@@ -427,13 +473,16 @@ export default class Coordinator {
 
       /*const state = */ Coordinator.addEvent(
         move,
-        new model.TurnEnded(isSuccessful, cardsCollected),
+        new model.MatchEvent(model.OMatchEventType.TurnEnded, {
+          turnEndedIsSuccessful: isSuccessful,
+          turnEndedCardsCollected: cardsCollected,
+        }),
         match.state
       );
       console.log(
         "TURN_ENDED:",
-        !isSuccessful ? "BUSTED!" : null,
-        JSON.stringify(cardsCollected, utils.fnSetMapSerializer)
+        JSON.stringify(cardsCollected, utils.fnSetMapSerializer),
+        !isSuccessful ? "BUSTED!" : ""
       );
     }
 
@@ -458,7 +507,9 @@ export default class Coordinator {
     {
       const state = Coordinator.addEvent(
         move,
-        new model.TurnStarted(match.players[playerIndex].id),
+        new model.MatchEvent(model.OMatchEventType.TurnStarted, {
+          turnStartedPlayer: match.players[playerIndex].id,
+        }),
         match.state
       );
       state.currentPlayerIndex = playerIndex;
@@ -468,22 +519,28 @@ export default class Coordinator {
 
   private async actionRespondToEffect(
     match: model.Match,
-    response: model.ResponseToEffect,
-    pendingEffect: model.CardEffectBase
+    response: model.CardEffectResponse,
+    pendingEffect: model.CardEffect
   ): Promise<void> {
-    console.log(">RESPOND_CARDEFFECT:", response.name, ":=", response.card);
+    console.log(">RESPOND_CARDEFFECT:", response.effectType, ":=", response.card);
     if (!pendingEffect) throw new Error("No pending effects to respond to");
 
     const move = (match.move = Coordinator.newMove(match));
+    let responseCard = response.card
+      ? new model.Card(response.card.suit as model.CardSuit, response.card.value as model.CardValue)
+      : undefined; //CHECK: some validation on card input
 
     //================================================================
-    if (response.name === "Oracle") {
+    if (response.effectType === model.OCardEffectType.Oracle) {
       //-- User Responded Effect - Oracle
       let nextCardPeeked = match.state.drawPile.nextCard; //-- remember card as we will delete before checking
       {
         const state = Coordinator.addEvent(
           move,
-          new model.ResponseToEffect(response.name, response.card),
+          new model.MatchEvent(model.OMatchEventType.ResponseToEffect, {
+            responseToEffectType: response.effectType,
+            responseToEffectCard: responseCard, //-- shall be either a card or undefined - shall not be null, will cause unmarshall error
+          }),
           match.state
         );
         state.clearPendingEffect(); //-- process pending effect - set to null
@@ -512,19 +569,22 @@ export default class Coordinator {
       }
     }
     //================================================================
-    else if (response.name === "Hook") {
+    else if (response.effectType === model.OCardEffectType.Hook) {
       //-- User Responded Effect - Hook
       {
         const state = Coordinator.addEvent(
           move,
-          new model.ResponseToEffect(response.name, response.card),
+          new model.MatchEvent(model.OMatchEventType.ResponseToEffect, {
+            responseToEffectType: response.effectType,
+            responseToEffectCard: responseCard,
+          }),
           match.state
         );
         state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       const bank = match.state.banks[match.state.currentPlayerIndex];
-      const suitstack = bank.piles.get(response.card?.suit);
+      const suitstack = bank.piles.get(responseCard?.suit);
       //-- check if card is valid == i.e. responded to AND exists in Bank AND is topmost on the stack
       if (suitstack?.max() != response.card?.value) {
         //await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
@@ -532,20 +592,26 @@ export default class Coordinator {
       }
 
       //-- remove card from bank
-      suitstack.stack.delete(response.card?.value);
-      if (suitstack.stack.size == 0) bank.piles.delete(response.card?.suit);
+      suitstack.stack.delete(responseCard?.value);
+      if (suitstack.stack.size == 0) bank.piles.delete(responseCard?.suit);
 
       //-- place to playarea
-      const cardFrombank = new model.Card(response.card.suit, response.card.value);
+      const cardFrombank = new model.Card(responseCard.suit, responseCard.value);
       this.placeCard(match, move, cardFrombank);
     }
     //================================================================
-    else if (response.name === "Cannon" || response.name === "Sword") {
+    else if (
+      response.effectType === model.OCardEffectType.Cannon ||
+      response.effectType === model.OCardEffectType.Sword
+    ) {
       //-- User Responded Effect - Cannon, Sword
       {
         const state = Coordinator.addEvent(
           move,
-          new model.ResponseToEffect(response.name, response.card),
+          new model.MatchEvent(model.OMatchEventType.ResponseToEffect, {
+            responseToEffectType: response.effectType,
+            responseToEffectCard: responseCard,
+          }),
           match.state
         );
         state.clearPendingEffect(); //-- process pending effect - set to null
@@ -553,7 +619,7 @@ export default class Coordinator {
 
       const bankTargetIndex = match.state.banks.findIndex((bank, bankIndex) => {
         if (bankIndex == match.state.currentPlayerIndex) return false;
-        const suitstack = bank.piles.get(response.card?.suit);
+        const suitstack = bank.piles.get(responseCard?.suit);
         if (suitstack?.max() != response.card?.value) return false;
         return true;
       });
@@ -565,42 +631,48 @@ export default class Coordinator {
       }
 
       //-- remove card from bank
-      const cardFrombank = new model.Card(response.card.suit, response.card.value);
+      const cardFrombank = responseCard; //new model.Card(response.card.suit, response.card.value);
       {
         const state = Coordinator.addEvent(
           move,
-          new model.CardRemovedFromBank(cardFrombank, bankTargetIndex),
+          new model.MatchEvent(model.OMatchEventType.CardRemovedFromBank, {
+            cardRemovedFromBankCard: cardFrombank,
+            cardRemovedFromBankIndex: bankTargetIndex,
+          }),
           match.state
         );
         console.log("REMOVE_CARD_FROM_BANK:", cardFrombank, "player:", bankTargetIndex);
 
-        const suitstack = bankTarget.piles.get(response.card?.suit);
-        suitstack.stack.delete(response.card?.value);
-        if (suitstack.stack.size == 0) bankTarget.piles.delete(response.card?.suit);
+        const suitstack = bankTarget.piles.get(responseCard?.suit);
+        suitstack.stack.delete(responseCard?.value);
+        if (suitstack.stack.size == 0) bankTarget.piles.delete(responseCard?.suit);
       }
 
-      if (response.name === "Cannon") {
+      if (response.effectType === model.OCardEffectType.Cannon) {
         //-- place to DiscardPile
         this.discardCard(match, move, cardFrombank);
-      } else if (response.name === "Sword") {
+      } else if (response.effectType === model.OCardEffectType.Sword) {
         //-- place to playarea
         this.placeCard(match, move, cardFrombank);
       }
     }
     //================================================================
-    else if (response.name === "Map") {
+    else if (response.effectType === model.OCardEffectType.Map) {
       //-- User Responded Effect - Map
       {
         const state = Coordinator.addEvent(
           move,
-          new model.ResponseToEffect(response.name, response.card),
+          new model.MatchEvent(model.OMatchEventType.ResponseToEffect, {
+            responseToEffectType: response.effectType,
+            responseToEffectCard: responseCard,
+          }),
           match.state
         );
         state.clearPendingEffect(); //-- process pending effect - set to null
       }
 
       //-- check if selected card is within the possible cards
-      const pendingEffectCards = (pendingEffect as model.CardEffectMap)?.cards;
+      const pendingEffectCards = pendingEffect?.cards;
       if (
         !response.card ||
         !pendingEffectCards?.find(

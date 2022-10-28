@@ -9,19 +9,17 @@ import {
 } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
-import * as utils from "../utils";
-
 export const OCardSuit = {
-  Anchor: 0,
-  Hook: 1,
-  Cannon: 2,
-  Key: 3,
-  Chest: 4,
-  Map: 5,
-  Oracle: 6,
-  Sword: 7,
-  Kraken: 8,
-  Mermaid: 9,
+  Anchor: "Anchor",
+  Hook: "Hook",
+  Cannon: "Cannon",
+  Key: "Key",
+  Chest: "Chest",
+  Map: "Map",
+  Oracle: "Oracle",
+  Sword: "Sword",
+  Kraken: "Kraken",
+  Mermaid: "Mermaid",
 }; // as const;
 export type CardSuit = keyof typeof OCardSuit;
 // export type Suit = typeof OSuit[keyof typeof OSuit];
@@ -61,6 +59,7 @@ export class CardPile {
   @attribute({ memberType: embed(Card) })
   readonly cards: Array<Card>;
   //-- architecture warning - should not derive from Array<Card> directly as lodash Lodash only clones index values (and some meta values) of arrays.
+
   constructor() {
     this.cards = new Array<Card>();
   }
@@ -72,7 +71,9 @@ export class CardPile {
   }
 }
 export class CardSuitStack {
+  @attribute({ memberType: "Number" })
   stack: Set<CardValue>;
+
   constructor() {
     this.stack = new Set<CardValue>();
   }
@@ -100,11 +101,6 @@ export class Bank extends OrderedCardPile {}
 
 export class PlayArea extends CardPile {} // or Map<Suit, number>;
 
-export type EffectPointer = {
-  moveIndex: number;
-  eventIndex: number;
-};
-
 export { default as DrawCardPile } from "./drawcardpile";
 export { default as MatchState } from "./matchstate";
 export { default as Match, MatchId } from "./match";
@@ -112,3 +108,4 @@ export { default as Move, MoveId } from "./move";
 export { default as Player, PlayerId } from "./player";
 export * from "./matchevent";
 export * from "./cardeffect";
+export * from "./utils";

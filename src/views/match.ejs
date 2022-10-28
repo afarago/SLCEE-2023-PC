@@ -12,7 +12,7 @@
       </h1>
       <a class="btn" href="#!" onClick="history.go(0);">Refresh</a>
       <table>
-        <% match.moves?.reduceRight( (_,move) => { %>
+        <% moves?.reduceRight( (_,move) => { %>
         <tbody class="movebody">
           <% let hevent = move.events.at(0); %>
           <tr class="moveheader player<%= hevent.currentPlayerIndex %>">

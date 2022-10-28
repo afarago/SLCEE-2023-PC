@@ -18,7 +18,7 @@ import {
 
 export default class DrawCardPile extends CardPile {
   @attribute()
-  nextCard: Card; //-- Oracle reveals Next Card
+  nextCard?: Card; //-- Oracle reveals Next Card
 
   @attribute()
   isPreOrdered: boolean; //-- debug purposes preset order, without random draw
@@ -61,19 +61,30 @@ export default class DrawCardPile extends CardPile {
   }
 
   public draw(doRemoveFromPile: boolean = true): Card {
+    let pickedCardindex = -1;
+
     //-- check if pending (peeked card) draw due to oracle
     if (this.nextCard) {
-      const pickedCard = this.nextCard;
-      this.nextCard = null; //-- reset peeked card
+      let pickedCardindex = this.cards.findIndex(
+        (c) => c.suit === this.nextCard.suit && c.value === this.nextCard.value
+      );
+
+      delete this.nextCard; //-- reset peeked card
+
+      //-- we need to remove the card from the pile as well - as peeking does not remove it
+      let pickedCard = this.cards.splice(pickedCardindex, 1)?.at(0);
       return pickedCard;
     }
 
     //-- if this is preordered, use next card
-    if (this.isPreOrdered) return doRemoveFromPile ? this.cards.splice(0, 1)?.at(0) : this?.cards.at(0);
+    if (this.isPreOrdered)
+      return doRemoveFromPile ? this.cards.splice(0, 1)?.at(0) : this?.cards.at(0);
 
     //-- default case - pick a random card
     //-- execute the draw
-    let pickedCardindex = Math.floor(Math.random() * this.cards.length);
-    return doRemoveFromPile ? this.cards.splice(pickedCardindex, 1)?.at(0) : this?.cards.at(pickedCardindex);
+    pickedCardindex = Math.floor(Math.random() * this.cards.length);
+    return doRemoveFromPile
+      ? this.cards.splice(pickedCardindex, 1)?.at(0)
+      : this?.cards.at(pickedCardindex);
   }
 } // or Map<Suit, number>; -- but how to do random?

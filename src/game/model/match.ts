@@ -7,8 +7,7 @@ import {
   table,
 } from "@aws/dynamodb-data-mapper-annotations";
 
-import * as utils from "../utils";
-import { CardEffectBase, MatchEventBase, MatchEnded } from "./model";
+import { CardEffect, MatchEvent, OMatchEventType } from "./model";
 import Player from "./player";
 import Move from "./move";
 import MatchState from "./matchstate";
@@ -46,21 +45,18 @@ export default class Match {
     return this.players?.length;
   }
   get state(): MatchState {
-    //-- it might happen that this ha sno state, check for the previous one
-    //return this.lastMove?.state ?? this.moves?.at(-2)?.state; //TO-CHECK, -2 is really needed?
     return this.move?.state;
-    //TODO: consider move having a state at the very beginning...
   }
-  get lastEvent(): MatchEventBase {
+  get lastEvent(): MatchEvent {
     return this.move?.lastEvent;
   }
   get currentPlayer(): Player {
     return this.players[this.move?.currentPlayerIndex];
   }
-  get pendingEffect(): CardEffectBase {
+  get pendingEffect(): CardEffect {
     return this.state?.pendingEffect;
   }
   get isFinished(): boolean {
-    return this.move?.lastEvent instanceof MatchEnded;
+    return this.move?.lastEvent.eventType === OMatchEventType.MatchEnded;
   }
 }

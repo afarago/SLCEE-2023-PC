@@ -10,7 +10,7 @@ import {
 import { embed } from "@aws/dynamodb-data-mapper";
 
 import * as model from "./model";
-import { Bank, PlayArea, CardPile, CardEffectBase } from "./model";
+import { Bank, PlayArea, CardPile, CardEffect } from "./model";
 import DrawCardPile from "./drawcardpile";
 import Match from "./match";
 
@@ -31,9 +31,9 @@ export default class MatchState {
   discardPile: CardPile;
 
   @attribute()
-  private _pendingEffect: CardEffectBase; //-- e.g. Kraken, Hook
+  private _pendingEffect: CardEffect; //-- e.g. Kraken, Hook
 
-  get pendingEffect(): CardEffectBase {
+  get pendingEffect(): CardEffect {
     return this._pendingEffect;
   }
 
@@ -41,9 +41,9 @@ export default class MatchState {
     delete this._pendingEffect;
   }
 
-  addPendingEffect(effect: CardEffectBase): void {
+  addPendingEffect(effect: CardEffect): void {
     if (this._pendingEffect) {
-      throw new Error("Effect already in action: " + this._pendingEffect + " cannot add next one");
+      throw new Error("Effect already in action: " + this._pendingEffect.effectType + " - cannot add next one");
     }
 
     this._pendingEffect = effect;

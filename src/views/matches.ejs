@@ -10,18 +10,20 @@
         !match.isFinished)) ).forEach(function(match){ %>
         <tr>
           <td>
-            <a class="btn" href="/matches/<%= match.id %>"> #<%= match.id %> </a>
+            <a class="btn" href="/matches/<%= match.id %>">
+              <%= match.startedAt?.toLocaleString() %>
+            </a>
           </td>
-          <td><%= match.startedAt?.toLocaleTimeString() %></td>
+          <% for (const player of match.players) { %>
           <td>
-            <%- match.players?.map((player, idx)=>{ return (match.currentPlayer !== player.id) ?
-            player?.name : "<b>"+player?.name+"</b>";}).join(" | "); %>
+            <%- (match.currentPlayer !== player.id) ? player?.name : "<b>"+player?.name+"</b>"; %>
           </td>
+          <% }; %>
+          <td><%= match.id %></td>
         </tr>
         <% }); %>
       </table>
     </div>
-    <% }; %> <%# === ONGOING MATCHES === %> <%= matchTable("Ongoing Matches", true) %> <%# ===
-    FINISHED MATCHES === %> <%= matchTable("Finished Matches", false) %>
+    <% }; %> <%= matchTable("Matches", null) %>
   </body>
 </html>

@@ -8,10 +8,8 @@ import {
 } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
-import * as utils from "../utils";
-import DrawCardPile from "./drawcardpile";
 import MatchState from "./matchstate";
-import { MatchEventBase } from "./matchevent";
+import { MatchEvent } from "./matchevent";
 import Match, { MatchId } from "./match";
 
 export type MoveId = string;
@@ -38,9 +36,9 @@ export default class Move {
   })
   at!: Date;
 
-  @attribute({ memberType: embed(MatchEventBase), valueConstructor: MatchEventBase })
-  //@attribute({ memberType: embed(MatchEventBase) })
-  events: Array<MatchEventBase> = [];
+  @attribute({ memberType: embed(MatchEvent), valueConstructor: MatchEvent })
+  //@attribute({ memberType: embed(MatchEvent) })
+  events: Array<MatchEvent> = [];
 
   //-- do not persist, this is the initial state for handling events
   //-- when new move is created, before first event is added
@@ -54,16 +52,16 @@ export default class Move {
   get state(): MatchState {
     return this.lastEvent?.state ?? this.initialState;
   }
-  get lastEvent(): MatchEventBase {
+  get lastEvent(): MatchEvent {
     return this.events?.at(-1);
   }
   get currentPlayerIndex(): number {
     return this.state?.currentPlayerIndex;
   }
-  getEvents(): Array<MatchEventBase> {
+  getEvents(): Array<MatchEvent> {
     return this.events;
   }
-  addEvent(event: MatchEventBase): void {
+  addEvent(event: MatchEvent): void {
     this.events?.push(event);
   }
 }

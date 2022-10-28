@@ -1,0 +1,24 @@
+=== TODOs ===
+
+* generator pattern for all "switched" types (effect/event for meainginful deserialization) via ctor 
+    --> maybe not such a big issue / we dont want to do anything with cardeffects and evebts after restoring the state
+    --> still should check effect based on type instead of class
+
+    // events not restored e.g. turnstarted.currentplayer
+    // not event serialized!
+* 
+
+P1
+* check debug settings for production
+* add user auth / checking
+
+
+P2
+* change card to tuple
+
+P3
+* improve Registy to query all id's at once at game start (query)
+* api: match: add a from index param as well for easy polling
+
+=== BUGs KNOWN ===
+* Kraken->Cannon->Oracle //BUG: not working yet
