@@ -2,6 +2,8 @@
 P1
 * check debug settings for production
 * add user auth / checking
+* serialization / deserialization through ddmapper is a big risk, one failure propagates --> manual deserialization could be an option...
+* serialization: try typedorm
 
 P2
 * change card to tuple
@@ -11,17 +13,15 @@ P3
 * api: match: add a from index param as well for easy polling
 
 === BUGs KNOWN ===
-* Kraken->Cannon/Map->Oracle //BUG: not working yet
-* // Kraken->Hook/Sword/Map->
-Missing:
-* Kraken first card reaction
+N/A
 
 === RULES - the small details ===
-* Kraken must draw two if drawpile allows: Upon card effect for first Kraken card cannot be fulfilled, thus is nullified, the second card needs to be drawn (e.g. Kraken->Map(empty discard)->[!], Kraken->Hook(with empty bank)->[!], Kraken->Sword(with empty or all existing suit stacks) ))
-* Kraken cancels Oracle effect if drawn first, as you will draw next card anyways: Kraken->Oracle[X]->X
-* Sword cannot draw existing stack
+* Kraken must draw two if drawpile allows
+  * cancels Oracle effect if drawn first, as you will need draw a second card anyways: Kraken->Oracle[X]->X
+  * if first card successfully triggers effect (Hook, Map, Sword), no forced second draw is triggered
+  * upon card effect for first Kraken card cannot be fulfilled, thus is nullified, the second card needs to be drawn (e.g. Kraken->Map(empty discard)->[!], Kraken->Hook(with empty bank)->[!], Kraken->Sword(with empty or all existing suit stacks) ))
+* Sword effect cannot pick enemy Suit from which own Player already has someting in its Bank
 
 
 ================================================================
 
-* serialization / deserialization through ddmapper is a big risk, one failure propagates --> manual deserialization could be an option...

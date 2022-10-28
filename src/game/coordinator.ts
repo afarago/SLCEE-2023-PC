@@ -280,41 +280,41 @@ export default class Coordinator {
       console.log("PLACE_CARD:", card, "area:", JSON.stringify(state.playArea));
     }
 
+    //-- maintain and check if Kraken forced card is fulfulled
+    if (match.state.pendingKrakenCards) {
+      --match.state.pendingKrakenCards;
+      console.log("PLACE_CARD - DEBUG: Kraken pending", match.state.pendingKrakenCards);
+    }
+
+    //================================================================
+    //=== EFFECTs ====================================================
     //-- execute effects based on Suit special
+
+    //=== KRAKEN effect =====================================
     if (card.suit === model.OCardSuit.Kraken) {
-      for (let i = 0; i < 2; i++) {
-        const cardDrawnKraken = Coordinator.drawCard(match, move);
-        if (!cardDrawnKraken) break;
+      match.state.pendingKrakenCards = 2;
 
-        //-- clear pending effect (can only be oracle) - Kraken ignores that
-        if (match.pendingEffect?.effectType == model.OCardEffectType.Oracle)
-          match.state.clearPendingEffect();
-        else if (match.pendingEffect) {
-          throw new Error(
-            "Game inconsistency - Kraken with some other pending effect" +
-              JSON.stringify(match.pendingEffect)
-          );
-        }
-
-        console.log("CARDEFFECT:", card.suit, ":", cardDrawnKraken);
-        const cardPlacedKraken = Coordinator.placeCard(match, move, cardDrawnKraken);
-
-        //-- You will draw two cards from the Draw Pile, unless the first card drawn is a Hook, Sword or Map.
-        //-- Any of those three Suit Abilities adds an additional card to the Play Area.
-        //-- or if is busted (null)
-        if (
-          !cardPlacedKraken ||
-          cardPlacedKraken?.suit in
-            [model.OCardSuit.Hook, model.OCardSuit.Map, model.OCardSuit.Sword]
-        )
+      while (match.state.pendingKrakenCards) {
+        //-- if there are any pending effects, that means that there is no need to draw the next kraken card
+        //-- e.g. map, hook or sword - we skip  oracly with a condition on pendingKrakenCards
+        if (match.state.drawPile.length === 0 || match.pendingEffect) {
+          console.log("CARDEFFECT:", card.suit, "terminated");
+          match.state.pendingKrakenCards = 0;
           break;
+        }
+        console.log("CARDEFFECT:", card.suit);
 
-        //-- if busted (thus ended) in the meantime, break
-        if (move.lastEvent.eventType === "TurnStarted") break;
+        const cardDrawnKraken = Coordinator.drawCard(match, move, true);
+        if (!cardDrawnKraken) break; //-- empty deck will break here
+        const cardPlacedKraken = Coordinator.placeCard(match, move, cardDrawnKraken);
+        if (!cardPlacedKraken) break; //-- busted will break here
       }
-    } else if (card.suit === model.OCardSuit.Oracle) {
-      //-- if drawpile is empty, just skip
-      if (match.state.drawPile.length > 0) {
+    }
+
+    //=== ORACLE effect =====================================
+    else if (card.suit === model.OCardSuit.Oracle) {
+      //-- if drawpile is empty or there is a kraken in progress, just skip
+      if (match.state.drawPile.length > 0 && !match.state.pendingKrakenCards) {
         const cardPeekedOracle = Coordinator.drawCard(match, move, false);
         const effect = new model.CardEffect(model.OCardEffectType.Oracle, {
           card: cardPeekedOracle,
@@ -332,9 +332,17 @@ export default class Coordinator {
         }
         console.log("CARDEFFECT:", card.suit, ":", cardPeekedOracle, "[requires user response]");
       } else {
-        console.log("CARDEFFECT:", card.suit, ":", "ignored - due to empty drawpile");
+        console.log(
+          "CARDEFFECT:",
+          card.suit,
+          ":",
+          "ignored - due to empty drawpile or pending kraken."
+        );
       }
-    } else if (card.suit === model.OCardSuit.Hook) {
+    }
+
+    //=== HOOK effect =====================================
+    else if (card.suit === model.OCardSuit.Hook) {
       const bank = match.state.banks[match.state.currentPlayerIndex];
       //-- if own bank has no elements, just skip
       if (bank.flatSize > 0) {
@@ -353,7 +361,10 @@ export default class Coordinator {
       } else {
         console.log("CARDEFFECT:", card.suit, ":", "ignored - due to empty bank");
       }
-    } else if (card.suit === model.OCardSuit.Cannon || card.suit === model.OCardSuit.Sword) {
+    }
+
+    //=== CANNON, SWORD effect =====================================
+    else if (card.suit === model.OCardSuit.Cannon || card.suit === model.OCardSuit.Sword) {
       //-- if no other player bank has elements, just skip
       //--  important: Sword cannot choose from suitstack that exists in our bank, while Cannon can pick any
       const anyItemsInAnyBanksFromDifferentSuits = Coordinator.checkIfWeCanPickFromOtherBanks(
@@ -384,7 +395,10 @@ export default class Coordinator {
           "ignored - due to empty or same_suited enemy banks"
         );
       }
-    } else if (card.suit === model.OCardSuit.Map) {
+    }
+
+    //=== MAP effect =====================================
+    else if (card.suit === model.OCardSuit.Map) {
       //-- if discard pile has no elements, just skip
       if (match.state.discardPile.length > 0) {
         //-- remove (temp) cards from discard pile, until effect is fulfulled
@@ -519,7 +533,7 @@ export default class Coordinator {
     console.log("MATCH_ENDED:", JSON.stringify(scoresDesc));
 
     const winner = scoresDesc[0][0] !== scoresDesc[1][0] ? match.players[scoresDesc[0][0]] : null; //-- handle tie situation
-    const scoresFlat: number[] = Array.from(scores.values()).map((entry) => entry);
+    const scoresFlat: Array<number> = Array.from(scores.values()).map((entry) => entry) as Array<number>;
     let event = new model.MatchEvent(model.OMatchEventType.MatchEnded, {
       matchEndedWinner: winner,
       matchEndedScores: scoresFlat,
@@ -538,13 +552,12 @@ export default class Coordinator {
    */
   private static turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean): void {
     console.log("TURN_ENDING", isSuccessful);
-    match.state.clearPendingEffect(); //-- remove any pending todos //TOCHECK
 
     let cardsCollected: Array<model.Card> = [];
     {
       //-- identify collected cards index
-      const state = match.state;
-      const playArea = state.playArea;
+      const startingstate = match.state;
+      const playArea = startingstate.playArea;
       const collectIndex = isSuccessful
         ? playArea.length
         : playArea.cards.findIndex((e) => e.suit === model.OCardSuit.Anchor);
@@ -558,6 +571,7 @@ export default class Coordinator {
         } else {
           //-- discard card
           Coordinator.discardCard(match, move, card);
+          //TODO: incorrect, should add this to a new state, but new state is only created at the end - rework later
         }
       }
     }
@@ -570,6 +584,7 @@ export default class Coordinator {
       const bonusCardAmount = cardsCollected.length;
       console.log("BONUS: Key&Chest", bonusCardAmount);
       const bonusCards = Coordinator.drawCardsFromDiscardPile(match, move, bonusCardAmount);
+      //TODO: incorrect, should add this to a new state, but new state is only created at the end - rework later
       bonusCards.forEach((card) => cardsCollected.push(card));
     }
 
@@ -578,6 +593,14 @@ export default class Coordinator {
       const state = match.state;
       const playArea = state.playArea;
       playArea.cards.length = 0; //(0, playArea.length);
+      //TODO: incorrect, should add this to a new state, but new state is only created at the end - rework later
+    }
+
+    {
+      //-- clear any effects
+      match.state.clearPendingEffect(); //-- remove any pending todos //TOCHECK
+      delete match.state.pendingKrakenCards; //-- clear pending kraken cards
+      //TODO: incorrect, should add this to a new state, but new state is only created at the end - rework later
     }
 
     {
@@ -587,6 +610,7 @@ export default class Coordinator {
         //-- add to player's bank
         Coordinator.addCardToBank(bank, card);
       });
+      //TODO: incorrect, should add this to a new state, but new state is only created at the end - rework later
 
       /*const state = */ Coordinator.addEvent(
         move,
@@ -599,10 +623,9 @@ export default class Coordinator {
       console.log("TURN_ENDED:", JSON.stringify(cardsCollected), !isSuccessful ? "BUSTED!" : "");
     }
 
-    //-- check if cards are out or move to the next player
+    //-- check if there are any drawpile left and move to next player
     if (match.state.drawPile.length > 0) {
-      const state = match.state;
-      const nextPlayerIndex = (state.currentPlayerIndex + 1) % match.numberOfPlayers;
+      const nextPlayerIndex = (match.state.currentPlayerIndex + 1) % match.numberOfPlayers;
       Coordinator.turnStarting(match, move, nextPlayerIndex);
     } else {
       Coordinator.matchEnding(match, move);

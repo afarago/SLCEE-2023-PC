@@ -12,7 +12,6 @@ import { embed } from "@aws/dynamodb-data-mapper";
 import * as model from "./model";
 import { Bank, PlayArea, CardPile, CardEffect } from "./model";
 import DrawCardPile from "./drawcardpile";
-import Match from "./match";
 
 /**
  * Match state associated with an atomic event
@@ -34,7 +33,10 @@ export default class MatchState {
   discardPile: CardPile;
 
   @attribute()
-  pendingEffect: CardEffect; //-- e.g. Kraken, Hook
+  pendingEffect: CardEffect; //-- e.g. Hook, Map (not Kraken)
+
+  //-- no need to persist, only applies to the specific move
+  pendingKrakenCards?: number;
 
   clearPendingEffect() {
     delete this.pendingEffect;

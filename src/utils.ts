@@ -1,10 +1,10 @@
 import { DynamoDB } from "aws-sdk";
 
-// export function fnSetMapSerializer(_key: any, value: any) {
-//   if (value instanceof Set) return [...value];
-//   if (value instanceof Map) return Object.fromEntries(value);
-//   return value;
-// }
+export function fnSetMapSerializer(_key: any, value: any) {
+  if (value instanceof Set) return [...value];
+  if (value instanceof Map) return Object.fromEntries(value);
+  return value;
+}
 
 // export const dateMarshall = (value: Date): DynamoDB.AttributeValue =>
 //   ({ I: value.getTime() } as DynamoDB.AttributeValue);
