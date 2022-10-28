@@ -30,8 +30,8 @@ export default class MatchState {
   @attribute()
   discardPile: CardPile;
 
-  @attribute()
-  private _pendingEffect: CardEffect; //-- e.g. Kraken, Hook
+  @attribute({ attributeName: "pendingEffect"})
+  _pendingEffect: CardEffect; //-- e.g. Kraken, Hook
 
   get pendingEffect(): CardEffect {
     return this._pendingEffect;
@@ -43,7 +43,9 @@ export default class MatchState {
 
   addPendingEffect(effect: CardEffect): void {
     if (this._pendingEffect) {
-      throw new Error("Effect already in action: " + this._pendingEffect.effectType + " - cannot add next one");
+      throw new Error(
+        "Effect already in action: " + this._pendingEffect.effectType + " - cannot add next one"
+      );
     }
 
     this._pendingEffect = effect;

@@ -5,11 +5,15 @@
     <%- include('partials/nav.ejs') %>
     <div class="container">
       <h1 class="header">
-        Match #<%- match.id %> | 
-        <%- match.players?.map((p,idx)=>
-        "<span class='pill player"+idx+"'>"+p?.name+"</span>").join(", ") %> | <%=
-        match.isFinished ? "Finished" : "Ongoing" %>
+        Match <% match.players?.forEach((p,idx)=> { %>
+        <span class="pill player<%=idx%> <%=(match?.currentPlayerId==p?'activePlayer':'')%>"
+          ><%= players.get(p)?.name %></span
+        >
+        <% }); %>
+        <span class="badge"><%= match.isFinished ? "Finished" : "Ongoing" %></span>
+        <span class="badge"><%= match.id %></span>
       </h1>
+
       <a class="btn" href="#!" onClick="history.go(0);">Refresh</a>
       <table>
         <% moves?.reduceRight( (_,move) => { %>
@@ -21,9 +25,9 @@
               <span class="eventType"><%= hevent.eventType %></span>
               <div class="datepill"><%= move.at?.toLocaleTimeString() %></div>
             </td>
-            <td><%= JSON.stringify(fnSanitizeEvent(hevent)) %></td>
+            <td><%= JSON.stringify(fnSanitizeEvent(hevent)).trim("{") %></td>
           </tr>
-          <% move.events.slice(1).reduceRight( (_,event) => { %>
+          <% move.events.slice(1).reduce( (_,event) => { %>
           <tr class="player<%= event.currentPlayerIndex %>">
             <td class="bar"></td>
             <td><%= event.eventType %></td>

@@ -3,7 +3,7 @@ import "core-js/es/array/at";
 import { attribute } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
-import { Card, CardSuit, CardValue } from "./model";
+import { Card } from "./model";
 
 export const OCardEffectType = {
   Oracle: "Oracle",
@@ -34,7 +34,7 @@ export class CardEffect {
   @attribute()
   readonly card: Card;
 
-  @attribute({ memberType: embed(Card) })
+  @attribute({ memberType: embed(Card)})
   readonly cards: Array<Card>;
 
   constructor(effectType?: string, params?: CardEffectFactoryParemeters) {

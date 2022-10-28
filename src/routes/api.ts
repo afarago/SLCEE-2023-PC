@@ -18,7 +18,7 @@ export const register = (app: express.Application) => {
           throw new Error("Missing players from input parameters.");
         let players = new Array<model.PlayerId>(...data.players);
         let drawPile = data.drawPile;
-        const match = await Coordinator.Instance.actionStartMatch(players, drawPile);
+        const match = await Coordinator.actionStartMatch(players, drawPile);
         if (!match) throw Error("Could not create match.");
 
         return res.json({ id: match.id });
@@ -77,7 +77,7 @@ export const register = (app: express.Application) => {
           match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
           if (!match.move) throw Error("Consistency error - no move exist for match.");
 
-          const events = await Coordinator.Instance.executeActionPromise(match, data);
+          const events = await Coordinator.executeActionPromise(match, data);
           //if (!events) return res.send(404);
           if (!events) return next("Error processing request.");
 
@@ -103,8 +103,13 @@ export const register = (app: express.Application) => {
     Promise.resolve()
       .then(async () => {
         const id = req.params.id;
-        const result = await Registry.Instance.getPlayerByIdPromise(id);
-        if (!result) throw new Error("Record not found");
+        const player = await Registry.Instance.getPlayerByIdPromise(id);
+        if (!player) throw new Error("Record not found");
+        let result: any = { ...player };
+
+        const activeMatches = await Registry.Instance.getMatchesByCurrentPlayerPartialPromise(id); //IMPORTANT: only keys are added, thus result will be partial
+        if (activeMatches) result.activeMatches = activeMatches; //TOCHECK: maybe just id is enough
+
         res.json(result);
       })
       .catch(next); // Errors will be passed to Express.

@@ -41,7 +41,7 @@ export type MatchEventParemeters = {
   turnEndedCardsCollected?: Array<Card>;
   turnEndedIsSuccessful?: boolean;
   matchEndedScores?: Array<number>;
-  matchEndedWinner?: Player;
+  matchEndedWinner?: PlayerId;
   responseToEffectType?: string;
   responseToEffectCard?: Card; //LATER: e.g.cannon/sword - in case of multiplayer player is not (directly) covered -- card determines though
 };
@@ -79,10 +79,10 @@ export class MatchEvent {
   readonly turnEndedCardsCollected: Array<Card>;
   @attribute()
   readonly turnEndedIsSuccessful: boolean;
-  @attribute({ memberType: embed(Number) })
+  @attribute({ memberType: embed(Number) }) // here it should be embed(Number) as "Number" fails - AWS bug
   readonly matchEndedScores: Array<number>;
   @attribute()
-  readonly matchEndedWinner: Player;
+  readonly matchEndedWinner: PlayerId;
   @attribute()
   readonly responseToEffectType: string;
   @attribute()

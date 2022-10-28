@@ -6,24 +6,27 @@
     <div class="container">
       <h1 class="header"><%= title %></h1>
       <table>
-        <% matches.filter(match=>((doFilterFinished && match.isFinished) || (!doFilterFinished &&
-        !match.isFinished)) ).forEach(function(match){ %>
+        <% matches.filter(match=>((doFilterFinished===match.isFinished)) ).forEach(function(match){
+        %>
         <tr>
           <td>
             <a class="btn" href="/matches/<%= match.id %>">
               <%= match.startedAt?.toLocaleString() %>
             </a>
           </td>
-          <% for (const player of match.players) { %>
+          <% for (const playerid of match.players) { const player = players.get(playerid); %>
           <td>
-            <%- (match.currentPlayer !== player.id) ? player?.name : "<b>"+player?.name+"</b>"; %>
+            <%- (match.currentPlayerId !== playerid) ? player?.name : "<b>"+player?.name+"</b>"; %>
           </td>
           <% }; %>
+          <td><%= match.moveCount %></td>
+          <td><%= match.lastMoveAt?.toLocaleTimeString() %></td>
           <td><%= match.id %></td>
         </tr>
         <% }); %>
       </table>
     </div>
-    <% }; %> <%= matchTable("Matches", null) %>
+    <% }; %> <%= matchTable("Ongoing Matches", false); %><%= matchTable("Finished Matches", true);
+    %>
   </body>
 </html>

@@ -35,20 +35,28 @@ export type CardSuit = keyof typeof OCardSuit;
 //   | "Kraken"
 //   | "Mermaid";
 
-export type CardValueBase = 2 | 3 | 4 | 5 | 6 | 7;
-export type CardValue = CardValueBase | 8 | 9;
-export type CardAbbreviation = [CardSuit, CardValue];
+//export type CardValueBase = 2 | 3 | 4 | 5 | 6 | 7;
+//export type CardValue = CardValueBase | 8 | 9;
+export type CardAbbreviation = [CardSuit, number]; //CardValue];
 export class Card {
   //TODO: change to tuple
   @attribute()
   suit: CardSuit;
 
-  @attribute()
-  value: CardValue;
+  @attribute({ unwrapNumbers: true }) //{ memberType: "Number" }
+  value: number; //CardValue;
 
-  constructor(suit?: CardSuit, value?: CardValue) {
+  constructor(suit?: CardSuit, value?: number) {
+    //CardValue) {
     this.suit = suit;
     this.value = value;
+    if (
+      suit !== undefined &&
+      value !== undefined &&
+      !(suit !== OCardSuit.Mermaid && value >= 2 && value <= 7) &&
+      !(suit === OCardSuit.Mermaid && value >= 4 && value <= 9)
+    )
+      throw new Error("Invalid Card");
   }
   static fromAbbreviation(abbreviation: CardAbbreviation) {
     return new Card(abbreviation[0], abbreviation[1]);
@@ -71,11 +79,11 @@ export class CardPile {
   }
 }
 export class CardSuitStack {
-  @attribute({ memberType: "Number" })
-  stack: Set<CardValue>;
+  @attribute({ memberType: "Number" }) // here it should be "Number", as embed(Number) fails - AWS bug
+  stack: Set<number>; //CardValue
 
   constructor() {
-    this.stack = new Set<CardValue>();
+    this.stack = new Set<number>(); //CardValue>();
   }
 
   max() {

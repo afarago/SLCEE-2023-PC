@@ -1,13 +1,5 @@
 import "core-js/es/array/at";
-import {
-  Card,
-  CardAbbreviation,
-  CardValue,
-  CardValueBase,
-  CardPile,
-  OCardSuit,
-  CardSuit,
-} from "./model";
+import { Card, CardAbbreviation, CardPile, OCardSuit, CardSuit } from "./model";
 import {
   attribute,
   hashKey,
@@ -25,8 +17,9 @@ export default class DrawCardPile extends CardPile {
 
   public static create(): DrawCardPile;
   public static create(cards: Array<Card | CardAbbreviation>): DrawCardPile;
-  public static create(suits: Array<CardSuit>, values: Array<CardValue>): DrawCardPile;
-  public static create(cardsOrSuits?: Array<any>, values?: Array<CardValue>): DrawCardPile {
+  public static create(suits: Array<CardSuit>, values: Array<number>): DrawCardPile; //CardValue
+  public static create(cardsOrSuits?: Array<any>, values?: Array<number>): DrawCardPile {
+    //CardValue
     let retval = new DrawCardPile();
 
     if (cardsOrSuits instanceof Array) {
@@ -49,7 +42,7 @@ export default class DrawCardPile extends CardPile {
       //-- generate cards
       for (let s of cardsOrSuits) {
         for (let cv of values) {
-          const cv2 = (cv + (s == "Mermaid" ? +2 : 0)) as CardValue; //-- for Mermaid shift 2-7 to 4-9
+          const cv2 = cv + (s == "Mermaid" ? +2 : 0); // as CardValue; //-- for Mermaid shift 2-7 to 4-9
           const card = new Card(s, cv2);
           retval.cards.push(card);
         }

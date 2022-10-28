@@ -12,7 +12,13 @@ export const register = (app: express.Application) => {
       .then(async () => {
         const user = req.userContext ? req.userContext.userinfo : null;
         const matches = await Registry.Instance.getMatchesPromise();
-        res.render("matches", { matches });
+        const players: Map<model.PlayerId, model.Player> = (
+          await Registry.Instance.getPlayersPromise()
+        ).reduce(
+          (prev, current) => prev.set(current.id, current),
+          new Map<model.PlayerId, model.Player>()
+        );
+        res.render("matches", { matches, players });
       })
       .catch(next); // Errors will be passed to Express.
   });
@@ -22,6 +28,12 @@ export const register = (app: express.Application) => {
     Promise.resolve()
       .then(async () => {
         const matchId = req.params.matchId;
+        const players: Map<model.PlayerId, model.Player> = (
+          await Registry.Instance.getPlayersPromise()
+        ).reduce(
+          (prev, current) => prev.set(current.id, current),
+          new Map<model.PlayerId, model.Player>()
+        ); //TODO: get only affected player objects
         const match = await Registry.Instance.getMatchByIdPromise(matchId);
         const moves = await Registry.Instance.getAllMovesByMatchIdPromise(matchId);
         const fnSanitizeEvent = (event: model.MatchEvent) => {
@@ -30,7 +42,7 @@ export const register = (app: express.Application) => {
           return retval;
         };
         if (!match) return res.send("error");
-        res.render("match", { match, moves, fnSanitizeEvent }); // TODO: error handling
+        res.render("match", { match, moves, players, fnSanitizeEvent }); // TODO: error handling
       })
       .catch(next); // Errors will be passed to Express.
   });

@@ -3,14 +3,24 @@ import * as model from "./model/model";
 import { DynamoDB } from "aws-sdk";
 import { DataMapper, embed } from "@aws/dynamodb-data-mapper";
 import { between } from "@aws/dynamodb-expressions";
+//import {Marshaller} from '@aws/dynamodb-auto-marshaller';
 
-async function gen2array<T>(gen: AsyncIterable<T>): Promise<T[]> {
-  const out: T[] = [];
+async function gen2array<T>(gen: AsyncIterable<T>): Promise<Array<T>> {
+  const out: Array<T> = new Array<T>();
   for await (const x of gen) {
     out.push(x);
   }
   return out;
 }
+// async function gen2mapbyid<T>(gen: AsyncIterable<T>): Promise<Map<any, T>> {
+//   const out: Map<any, T> = new Map<any, T>();
+//   for await (const x of gen) {
+//     const id = (<any>x).id;
+//     if (id) out.set(id, x);
+//   }
+//   return out;
+// }
+
 export default class Registry {
   private static _instance: Registry;
   public static get Instance(): Registry {
@@ -19,6 +29,7 @@ export default class Registry {
 
   ddb = new DynamoDB({ region: "eu-central-1" });
   ddbmapper = new DataMapper({ client: this.ddb, tableNamePrefix: "spc2022_" });
+  //const marshaller = new Marshaller({unwrapNumbers: true});
 
   public async getMatchesPromise(): Promise<model.Match[]> {
     let results = await gen2array(
@@ -29,12 +40,27 @@ export default class Registry {
   public async putMatchPromise(match: model.Match): Promise<model.Match> {
     const itemCreated = await this.ddbmapper.put(match);
     match.id = itemCreated?.id;
+    match.startedAt = itemCreated?.startedAt;
     return itemCreated;
   }
 
   public async getMatchByIdPromise(id: model.MatchId): Promise<model.Match> {
     const results = await gen2array(this.ddbmapper.query(model.Match, { id: id }));
     return results.at(0);
+  }
+
+  public async getMatchesByCurrentPlayerPartialPromise(
+    playerId: model.PlayerId
+  ): Promise<Array<model.Match>> {
+    const results = await gen2array(
+      this.ddbmapper.query(
+        model.Match,
+        { currentPlayerId: playerId },
+        { indexName: "currentPlayerId-lastMoveAt-index" } //IMPORTANT: only keys are added, thus result will be partial
+      )
+    );
+
+    return results;
   }
 
   public async getPlayersPromise(): Promise<Array<model.Player>> {
@@ -45,11 +71,7 @@ export default class Registry {
     const results = await gen2array(this.ddbmapper.query(model.Player, { id: id }));
     return results.at(0);
   }
-  // public async getPlayersByIdsPromise(id: PlayerId): Promise<Player> {
-  //   const results = await gen2array(this.ddbmapper.query(Player, { id: id }));
-  //   return results.at(0);
-  // }
-
+  
   //-- matchId=x, sequenceId->max
   public async getLastMoveByMatchIdPromise(matchId: model.MatchId): Promise<model.Move> {
     const results = await gen2array(
@@ -75,10 +97,16 @@ export default class Registry {
   //       querySpec.withScanIndexForward(true);
   //       querySpec.withMaxResultSize(1);
 
-  public async putMovePromise(move: model.Move): Promise<model.Move> {
+  public async createMovePromise(move: model.Move): Promise<model.Move> {
     const itemCreated = await this.ddbmapper.put(move);
     move.id = itemCreated?.id;
+    move.at = itemCreated?.at;
     return itemCreated;
+  }
+
+  public async updateMatchPromise(match: model.Match): Promise<model.Match> {
+    const item = await this.ddbmapper.update(match);
+    return item;
   }
 }
 
