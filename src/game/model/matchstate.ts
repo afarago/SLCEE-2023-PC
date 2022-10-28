@@ -14,6 +14,9 @@ import { Bank, PlayArea, CardPile, CardEffect } from "./model";
 import DrawCardPile from "./drawcardpile";
 import Match from "./match";
 
+/**
+ * Match state associated with an atomic event
+ */
 export default class MatchState {
   @attribute({ memberType: embed(Bank), valueConstructor: Bank })
   banks: Array<Bank>;
@@ -30,25 +33,21 @@ export default class MatchState {
   @attribute()
   discardPile: CardPile;
 
-  @attribute({ attributeName: "pendingEffect"})
-  _pendingEffect: CardEffect; //-- e.g. Kraken, Hook
-
-  get pendingEffect(): CardEffect {
-    return this._pendingEffect;
-  }
+  @attribute()
+  pendingEffect: CardEffect; //-- e.g. Kraken, Hook
 
   clearPendingEffect() {
-    delete this._pendingEffect;
+    delete this.pendingEffect;
   }
 
   addPendingEffect(effect: CardEffect): void {
-    if (this._pendingEffect) {
+    if (this.pendingEffect) {
       throw new Error(
-        "Effect already in action: " + this._pendingEffect.effectType + " - cannot add next one"
+        "Effect already in action: " + this.pendingEffect.effectType + " - cannot add next one"
       );
     }
 
-    this._pendingEffect = effect;
+    this.pendingEffect = effect;
   }
 
   static clone(instance: MatchState) {

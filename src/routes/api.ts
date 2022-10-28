@@ -5,8 +5,7 @@ import * as model from "../game/model/model";
 import * as utils from "../utils";
 
 export const register = (app: express.Application) => {
-  //-- add set replacer
-  app.set("json replacer", utils.fnSetMapSerializer);
+  // app.set("json replacer", utils.fnSetMapSerializer);
 
   app.post(`/api/matches`, async (req: any, res, next) => {
     Promise.resolve()

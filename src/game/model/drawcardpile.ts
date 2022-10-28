@@ -8,6 +8,9 @@ import {
   table,
 } from "@aws/dynamodb-data-mapper-annotations";
 
+/**
+ * Draw card pile - contains all remining cards
+ */
 export default class DrawCardPile extends CardPile {
   @attribute()
   nextCard?: Card; //-- Oracle reveals Next Card

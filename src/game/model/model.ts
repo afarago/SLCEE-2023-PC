@@ -35,9 +35,16 @@ export type CardSuit = keyof typeof OCardSuit;
 //   | "Kraken"
 //   | "Mermaid";
 
+/**
+ * Card abbreviation
+ */
 //export type CardValueBase = 2 | 3 | 4 | 5 | 6 | 7;
 //export type CardValue = CardValueBase | 8 | 9;
 export type CardAbbreviation = [CardSuit, number]; //CardValue];
+
+/**
+ * Card object
+ */
 export class Card {
   //TODO: change to tuple
   @attribute()
@@ -63,6 +70,9 @@ export class Card {
   }
 }
 
+/**
+ * Card pile object
+ */
 export class CardPile {
   @attribute({ memberType: embed(Card) })
   readonly cards: Array<Card>;
@@ -78,6 +88,9 @@ export class CardPile {
     this.cards.length = value;
   }
 }
+/**
+ * Card suit stack - for effective representation of bank collection ordered by suits
+ */
 export class CardSuitStack {
   @attribute({ memberType: "Number" }) // here it should be "Number", as embed(Number) fails - AWS bug
   stack: Set<number>; //CardValue
@@ -90,6 +103,9 @@ export class CardSuitStack {
     return Math.max.apply(null, Array.from(this.stack.values()));
   }
 }
+/**
+ * Ordered card pile - for effective representation of bank collection ordered by suits
+ */
 export class OrderedCardPile {
   constructor() {
     this.piles = new Map<CardSuit, CardSuitStack>();
@@ -105,8 +121,14 @@ export class OrderedCardPile {
   }
 }
 
+/**
+ * Bank - object for a player's bank
+ */
 export class Bank extends OrderedCardPile {}
 
+/**
+ * Play area - object to represent the play area
+ */
 export class PlayArea extends CardPile {} // or Map<Suit, number>;
 
 export { default as DrawCardPile } from "./drawcardpile";

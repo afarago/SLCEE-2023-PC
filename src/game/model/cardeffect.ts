@@ -27,6 +27,9 @@ export type CardEffectResponse = {
   };
 }
 
+/**
+ * Card effect associated with a special card
+ */
 export class CardEffect {
   @attribute()
   readonly effectType: string; //TODO; use CardEffectType;

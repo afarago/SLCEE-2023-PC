@@ -9,7 +9,15 @@ import { CardSuit, Card } from "./model/model";
 
 //TODO: Kraken->Cannon->Oracle //BUG: not working yet
 
+/**
+ * Coordinator class, main game controller
+ */
 export default class Coordinator {
+  /**
+   * Creates a Move object on the global match
+   * @param match
+   * @returns move
+   */
   private static newMove(match: model.Match): model.Move {
     //-- copy state over frm previous move state to keep continuity
     //-- no need to clone state, we can easily sacrifice the state of the previous move as it wa salready persisted
@@ -17,14 +25,31 @@ export default class Coordinator {
     move.sequenceId = match.move ? match.move?.sequenceId + 1 : 0;
     return move;
   }
-  private static async persistMovPromise(move: model.Move) {
+
+  /**
+   * Persists move promise
+   * @param move
+   */
+  private static async persistMovePromise(move: model.Move) {
     await Registry.Instance.createMovePromise(move);
   }
+
+  /**
+   * Persists update match promise
+   * @param match
+   */
   private static async persistUpdateMatchPromise(match: model.Match) {
     match.updateHeader();
     await Registry.Instance.updateMatchPromise(match);
   }
 
+  /**
+   * Adds event to the Match/Move
+   * @param move
+   * @param event
+   * @param oldState
+   * @returns event added event
+   */
   private static addEvent(
     move: model.Move,
     event: model.MatchEvent,
@@ -38,6 +63,12 @@ export default class Coordinator {
     return state;
   }
 
+  /**
+   * responds to user action to start a match
+   * @param players
+   * @param [initialDrawPile]
+   * @returns started match
+   */
   public static async actionStartMatch(
     players: model.PlayerId[],
     initialDrawPile?: Array<any>
@@ -101,11 +132,17 @@ export default class Coordinator {
     Coordinator.turnStarting(match, move, match.state.currentPlayerIndex);
 
     //-- return event
-    await Coordinator.persistMovPromise(match.move);
+    await Coordinator.persistMovePromise(match.move);
     await Coordinator.persistUpdateMatchPromise(match);
     return match;
   }
 
+  /**
+   * responds to user actions
+   * @param match
+   * @param data
+   * @returns promise to action
+   */
   public static async executeActionPromise(
     match: model.Match,
     data: any
@@ -142,7 +179,7 @@ export default class Coordinator {
     }
 
     //-- return generated events
-    await Coordinator.persistMovPromise(match.move);
+    await Coordinator.persistMovePromise(match.move);
     await Coordinator.persistUpdateMatchPromise(match);
 
     //--
@@ -151,6 +188,11 @@ export default class Coordinator {
     return match.move?.getEvents();
   }
 
+  /**
+   * responds to user action to end a turn
+   * @param match
+   * @returns void promise
+   */
   private static async actionEndTurn(match: model.Match): Promise<void> {
     console.log(">ENDTURN");
 
@@ -167,6 +209,13 @@ export default class Coordinator {
     Coordinator.turnEnding(match, move, true);
   }
 
+  /**
+   * Draws a card from drawpile
+   * @param match selected match
+   * @param move selected move
+   * @param [doRemoveFromPile] whether to remove item from the drawpile
+   * @returns card drawn
+   */
   private static drawCard(
     match: model.Match,
     move: model.Move,
@@ -198,19 +247,20 @@ export default class Coordinator {
     return cardDrawn;
   }
 
+  /**
+   * Places card to the playarea
+   * @param match selected match
+   * @param move selected move
+   * @param card selected card
+   * @returns card
+   */
   private static placeCard(match: model.Match, move: model.Move, card: model.Card): model.Card {
     //== place card to playarea
     //-- check for busted
     const isSuccessful = match.state.playArea.cards.find((c) => c.suit == card.suit) == null;
     if (!isSuccessful) {
       //-- busted
-      console.log(
-        "PLACE_CARD:",
-        card,
-        "area:",
-        JSON.stringify(match.state.playArea, utils.fnSetMapSerializer),
-        "BUSTED!"
-      );
+      console.log("PLACE_CARD:", card, "area:", JSON.stringify(match.state.playArea), "BUSTED!");
       Coordinator.discardCard(match, move, card);
       Coordinator.turnEnding(match, move, isSuccessful);
       return null;
@@ -227,12 +277,7 @@ export default class Coordinator {
       );
       state.playArea.cards.push(card);
 
-      console.log(
-        "PLACE_CARD:",
-        card,
-        "area:",
-        JSON.stringify(state.playArea, utils.fnSetMapSerializer)
-      );
+      console.log("PLACE_CARD:", card, "area:", JSON.stringify(state.playArea));
     }
 
     //-- execute effects based on Suit special
@@ -361,7 +406,7 @@ export default class Coordinator {
             "CARDEFFECT:",
             card.suit,
             ":",
-            JSON.stringify(cardsFromDiscard, utils.fnSetMapSerializer),
+            JSON.stringify(cardsFromDiscard),
             "[requires user response]"
           );
         }
@@ -373,7 +418,13 @@ export default class Coordinator {
     return card;
   }
 
-  private static checkIfWeCanPickFromOtherBanks(match: model.Match, card: model.Card) {
+  /**
+   * Checks if we can pick from other banks - useful for starting interaction on e.g. Map and Sword
+   * @param match selected match
+   * @param card selected card
+   * @returns if we can really pick
+   */
+  private static checkIfWeCanPickFromOtherBanks(match: model.Match, card: model.Card): boolean {
     //-- check if any other player has banks that are or to pick from
     //-- #1 should not be not empty
     //-- #2 Sword cannot choose from suitstack that exists in our bank, while Cannon can pick any
@@ -389,11 +440,24 @@ export default class Coordinator {
     return anyItemsInAnyBanksFromDifferentSuits;
   }
 
+  /**
+   * Moves a card to discardpile
+   * @param match selected match
+   * @param move selected move
+   * @param card selected card
+   */
   private static discardCard(match: model.Match, move: model.Move, card: model.Card): void {
     console.log("DISCARD:", card);
     move.state.discardPile.cards.push(card);
   }
 
+  /**
+   * Draws cards from discard pile
+   * @param match selected match
+   * @param move selected move
+   * @param numberOfCards target number of cards (can be less if not available)
+   * @returns cards from discard pile
+   */
   private static drawCardsFromDiscardPile(
     match: model.Match,
     move: model.Move,
@@ -415,6 +479,11 @@ export default class Coordinator {
     return cardsFromDiscard;
   }
 
+  /**
+   * execute user action to draw a card
+   * @param match selected match
+   * @returns void promise
+   */
   private static async actionDraw(match: model.Match): Promise<void> {
     console.log(">DRAW");
     const move = (match.move = Coordinator.newMove(match));
@@ -423,6 +492,12 @@ export default class Coordinator {
     if (card) Coordinator.placeCard(match, move, card);
   }
 
+  /**
+   * Match ending event
+   * @param match selected match
+   * @param move selected move
+   * @returns void promise
+   */
   public static async matchEnding(match: model.Match, move: model.Move): Promise<void> {
     console.log("MATCH_ENDING");
 
@@ -441,7 +516,7 @@ export default class Coordinator {
 
     //-- sort by id
     var scoresDesc = [...scores.entries()].sort((a, b) => b[1] - a[1]);
-    console.log("MATCH_ENDED:", JSON.stringify(scoresDesc, utils.fnSetMapSerializer));
+    console.log("MATCH_ENDED:", JSON.stringify(scoresDesc));
 
     const winner = scoresDesc[0][0] !== scoresDesc[1][0] ? match.players[scoresDesc[0][0]] : null; //-- handle tie situation
     const scoresFlat: number[] = Array.from(scores.values()).map((entry) => entry);
@@ -455,7 +530,13 @@ export default class Coordinator {
     }
   }
 
-  private static turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean) {
+  /**
+   * Turns ending event
+   * @param match selected match
+   * @param move selected move
+   * @param isSuccessful whether busted or not
+   */
+  private static turnEnding(match: model.Match, move: model.Move, isSuccessful: boolean): void {
     console.log("TURN_ENDING", isSuccessful);
     match.state.clearPendingEffect(); //-- remove any pending todos //TOCHECK
 
@@ -515,11 +596,7 @@ export default class Coordinator {
         }),
         match.state
       );
-      console.log(
-        "TURN_ENDED:",
-        JSON.stringify(cardsCollected, utils.fnSetMapSerializer),
-        !isSuccessful ? "BUSTED!" : ""
-      );
+      console.log("TURN_ENDED:", JSON.stringify(cardsCollected), !isSuccessful ? "BUSTED!" : "");
     }
 
     //-- check if cards are out or move to the next player
@@ -532,13 +609,24 @@ export default class Coordinator {
     }
   }
 
+  /**
+   * Adds card to bank
+   * @param bank selected bank
+   * @param card selected card
+   */
   private static addCardToBank(bank: model.Bank, card: model.Card) {
     if (!bank.piles.has(card.suit)) bank.piles.set(card.suit, new model.CardSuitStack());
     bank.piles.get(card.suit).stack.add(card.value);
     console.log("COLLECT:", card);
   }
 
-  private static turnStarting(match: model.Match, move: model.Move, playerIndex: number) {
+  /**
+   * Turns starting event
+   * @param match selected match
+   * @param move selected move
+   * @param playerIndex selected player
+   */
+  private static turnStarting(match: model.Match, move: model.Move, playerIndex: number): void {
     //-- move to the next player
     {
       const state = Coordinator.addEvent(
@@ -553,6 +641,13 @@ export default class Coordinator {
     console.log("TURN_START:", match.state.currentPlayerIndex);
   }
 
+  /**
+   * execute user action to respond to a card effect
+   * @param match selected match
+   * @param response input response
+   * @param pendingEffect pending effect
+   * @returns promise void
+   */
   private static async actionRespondToEffect(
     match: model.Match,
     response: model.CardEffectResponse,

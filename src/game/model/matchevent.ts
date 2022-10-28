@@ -46,6 +46,9 @@ export type MatchEventParemeters = {
   responseToEffectCard?: Card; //LATER: e.g.cannon/sword - in case of multiplayer player is not (directly) covered -- card determines though
 };
 
+/**
+ * Match event - representing an atomic event with state changes
+ */
 export class MatchEvent {
   @attribute()
   eventType: MatchEventType;

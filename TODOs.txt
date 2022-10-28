@@ -20,3 +20,8 @@ Missing:
 * Kraken must draw two if drawpile allows: Upon card effect for first Kraken card cannot be fulfilled, thus is nullified, the second card needs to be drawn (e.g. Kraken->Map(empty discard)->[!], Kraken->Hook(with empty bank)->[!], Kraken->Sword(with empty or all existing suit stacks) ))
 * Kraken cancels Oracle effect if drawn first, as you will draw next card anyways: Kraken->Oracle[X]->X
 * Sword cannot draw existing stack
+
+
+================================================================
+
+* serialization / deserialization through ddmapper is a big risk, one failure propagates --> manual deserialization could be an option...
