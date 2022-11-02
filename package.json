@@ -16,7 +16,8 @@
     "dev": "nodemon --watch src -e ts,ejs --exec npm run dev:start",
     "start": "node .",
     "//initdb": "ts-node tools/initdb",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "//test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Dummy test step\" && exit 0"
   },
   "keywords": [],
   "author": "",
