@@ -7,6 +7,15 @@ import * as utils from "../utils";
 export const register = (app: express.Application) => {
   app.set("json replacer", utils.fnSetMapSerializer);
 
+  //-- Hello
+  app.get("/api/hello", async (req, res, next) => {
+    Promise.resolve()
+      .then(async () => {
+        return res.json({ message: "Hello world" });
+      })
+      .catch(next); // Errors will be passed to Express.
+  });
+
   app.post(`/api/matches`, async (req: any, res, next) => {
     Promise.resolve()
       .then(async () => {
