@@ -1,9 +1,8 @@
 import "core-js/es/array/at";
 import * as model from "./model/model";
-import { DynamoDB } from "aws-sdk";
-import { DataMapper, embed } from "@aws/dynamodb-data-mapper";
-import { between } from "@aws/dynamodb-expressions";
-//import {Marshaller} from '@aws/dynamodb-auto-marshaller';
+import { Player, Match, Move } from "./model/model";
+import * as mongoDB from "mongodb";
+import { ObjectId } from "mongodb";
 
 async function gen2array<T>(gen: AsyncIterable<T>): Promise<Array<T>> {
   const out: Array<T> = new Array<T>();
@@ -29,19 +28,37 @@ export default class Registry {
   public static get Instance(): Registry {
     return this._instance || (this._instance = new this());
   }
+  private constructor() {}
 
-  ddb = new DynamoDB({ region: "eu-central-1" });
-  ddbmapper = new DataMapper({ client: this.ddb, tableNamePrefix: "spc2022_" });
-  //const marshaller = new Marshaller({unwrapNumbers: true});
+  private client: mongoDB.MongoClient;
+  private db: mongoDB.Db;
+  private collections: {
+    players?: mongoDB.Collection;
+    matches?: mongoDB.Collection;
+    moves?: mongoDB.Collection;
+  } = {};
+
+  public async connectDatabase() {
+    if (!this.client) {
+      this.client = new mongoDB.MongoClient(process.env.MONGODB_CONN_STRING ?? "");
+      await this.client.connect();
+      this.db = this.client.db(process.env.MONGODB_DBNAME ?? "");
+      this.collections = {
+        players: this.db.collection("players"),
+        matches: this.db.collection("matches"),
+        moves: this.db.collection("moves"),
+      };
+    }
+  }
 
   /**
    * Gets all matches
    * @returns matches promise
    */
   public async getMatchesPromise(): Promise<model.Match[]> {
-    let results = await gen2array(
-      this.ddbmapper.scan(model.Match, { indexName: "startedAt-index" })
-    );
+    await this.connectDatabase();
+    const dbitems = await this.collections.matches?.find({}).sort({ startedAt: "asc" }).toArray();
+    const results = dbitems.map((pojo) => new Match().populate(pojo));
     return results;
   }
   /**
@@ -50,10 +67,14 @@ export default class Registry {
    * @returns match promise
    */
   public async putMatchPromise(match: model.Match): Promise<model.Match> {
-    const itemCreated = await this.ddbmapper.put(match);
-    match.id = itemCreated?.id;
-    match.startedAt = itemCreated?.startedAt;
-    return itemCreated;
+    await this.connectDatabase();
+
+    match.startedAt = new Date();
+    const dbitem = await this.collections.matches.insertOne(match);
+    if (!dbitem) throw new Error("Could not create Match.");
+
+    match._id = dbitem.insertedId;
+    return match;
   }
 
   /**
@@ -61,9 +82,14 @@ export default class Registry {
    * @param id
    * @returns match by id promise
    */
-  public async getMatchByIdPromise(id: model.MatchId): Promise<model.Match> {
-    const results = await gen2array(this.ddbmapper.query(model.Match, { id: id }));
-    return results.at(0);
+  public async getMatchByIdPromise(id: string): Promise<model.Match> {
+    await this.connectDatabase();
+
+    const dbitem = await this.collections.matches?.findOne({ _id: new ObjectId(id) });
+    if (!dbitem) throw new Error("Match " + id + " is not valid.");
+
+    const result = new Match().populate(dbitem);
+    return result;
   }
 
   /**
@@ -72,17 +98,21 @@ export default class Registry {
    * @returns matches by current player partial promise
    */
   public async getMatchesByCurrentPlayerPartialPromise(
-    playerId: model.PlayerId
+    playerId: string
   ): Promise<Array<model.Match>> {
-    const results = await gen2array(
-      this.ddbmapper.query(
-        model.Match,
-        { currentPlayerId: playerId },
-        { indexName: "currentPlayerId-lastMoveAt-index" } //IMPORTANT: only keys are added, thus result will be partial
-      )
-    );
+    await this.connectDatabase();
 
-    return results;
+    // const results = await gen2array(
+    //   this.ddbmapper.query(
+    //     model.Match,
+    //     { currentPlayerId: playerId },
+    //     { indexName: "currentPlayerId-lastMoveAt-index" } //IMPORTANT: only keys are added, thus result will be partial
+    //   )
+    // );
+
+    // return results;
+    //TODO
+    return null;
   }
 
   /**
@@ -91,8 +121,12 @@ export default class Registry {
    * @returns match promise
    */
   public async updateMatchPromise(match: model.Match): Promise<model.Match> {
-    const item = await this.ddbmapper.update(match);
-    return item;
+    await this.connectDatabase();
+
+    // const item = await this.ddbmapper.update(match);
+    // return item;
+    //TODO
+    return null;
   }
 
   /**
@@ -100,7 +134,10 @@ export default class Registry {
    * @returns players promise
    */
   public async getPlayersPromise(): Promise<Array<model.Player>> {
-    let results = gen2array(this.ddbmapper.scan(model.Player));
+    await this.connectDatabase();
+
+    const dbitems = await this.collections.players?.find({}).toArray();
+    const results = dbitems.map((pojo) => new Player().populate(pojo));
     return results;
   }
 
@@ -109,9 +146,35 @@ export default class Registry {
    * @param id
    * @returns player by id promise
    */
-  public async getPlayerByIdPromise(id: model.PlayerId): Promise<model.Player> {
-    const results = await gen2array(this.ddbmapper.query(model.Player, { id: id }));
-    return results.at(0);
+  public async getPlayerByIdPromise(id: string): Promise<model.Player> {
+    await this.connectDatabase();
+
+    const dbitem = await this.collections.players.findOne({ _id: new ObjectId(id) });
+    if (!dbitem) throw new Error("Player " + id + " is not valid.");
+
+    const result = new Player().populate(dbitem);
+    return result;
+  }
+
+  /**
+   * Gets players by ids
+   * @param ids
+   * @returns players by ids promise
+   */
+  public async getPlayerByIdsPromise(ids: Array<string>): Promise<Array<model.Player>> {
+    await this.connectDatabase();
+
+    const oids = ids.map((id) => new ObjectId(id));
+    const dbitems = await this.collections.players.find({ _id: { $in: oids } }).toArray();
+    if (!dbitems) throw new Error("Error retrieving players");
+
+    const result: Array<Player> = ids.map((id) => {
+      const dbitem = dbitems.find((dbitem: any) => dbitem._id.toString() == id);
+      if (dbitem) return new Player().populate(dbitem);
+      throw new Error("Player " + id + " is not valid.");
+    });
+
+    return result;
   }
 
   /**
@@ -119,12 +182,19 @@ export default class Registry {
    * @param matchId
    * @returns last move by match id promise
    */
-  public async getLastMoveByMatchIdPromise(matchId: model.MatchId): Promise<model.Move> {
-    const results = await gen2array(
-      this.ddbmapper.query(model.Move, { matchId: matchId }, { limit: 1, scanIndexForward: false })
-    ); //projection: ["sequenceId"],
+  public async getLastMoveByMatchIdPromise(matchId: ObjectId): Promise<model.Move> {
+    await this.connectDatabase();
 
-    return results.at(0);
+    const dbitem = await this.collections.moves.findOne(
+      { matchId: matchId },
+      {
+        sort: { sequenceId: "desc" },
+      }
+    );
+    if (!dbitem) throw new Error("Error retrieving move by match id " + matchId + ".");
+
+    const result = new Move().populate(dbitem);
+    return result;
   }
 
   /**
@@ -132,13 +202,17 @@ export default class Registry {
    * @param matchId
    * @returns all moves by match id promise
    */
-  public async getAllMovesByMatchIdPromise(matchId: model.MatchId): Promise<Array<model.Move>> {
-    const results = await gen2array(
-      this.ddbmapper.query(model.Move, { matchId: matchId }, { scanIndexForward: true })
-      //this.ddbmapper.scan(model.Move, { matchId })
-    ); //projection: ["sequenceId"],
+  public async getAllMovesByMatchIdPromise(matchId: ObjectId): Promise<Array<model.Move>> {
+    await this.connectDatabase();
 
-    return results;
+    const dbitems = await this.collections.moves
+      .find({ matchId: matchId })
+      .sort({ sequenceId: "asc" })
+      .toArray();
+    if (!dbitems) throw new Error("Error retrieving moves");
+
+    const result = dbitems.map((dbitem) => new Move().populate(dbitem));
+    return result;
   }
 
   /**
@@ -147,15 +221,13 @@ export default class Registry {
    * @returns move promise
    */
   public async createMovePromise(move: model.Move): Promise<model.Move> {
-    const itemCreated = await this.ddbmapper.put(move);
-    move.id = itemCreated?.id;
-    move.at = itemCreated?.at;
-    return itemCreated;
+    await this.connectDatabase();
+
+    move.at = new Date();
+    const dbitem = await this.collections.moves.insertOne(move);
+    if (!dbitem) throw new Error("Could not create Move.");
+
+    move._id = dbitem.insertedId;
+    return move;
   }
 }
-
-// valueConstructor: MyDomainClass,
-// keyCondition: {
-//     hashKey: 'foo',
-//     rangeKey: between(10, 99)
-// }

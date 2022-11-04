@@ -9,14 +9,27 @@ import {
 } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
-import * as model from "./model";
-import { Bank, PlayArea, CardPile, CardEffect } from "./model";
+import { SupportsHydration, Bank, PlayArea, CardPile, CardEffect } from "./model";
 import DrawCardPile from "./drawcardpile";
 
 /**
  * Match state associated with an atomic event
  */
-export default class MatchState {
+export default class MatchState implements SupportsHydration {
+  populate(pojo: any) {
+    if (pojo.hasOwnProperty("banks"))
+      this.banks = pojo.banks?.map((pojoiter: any) => new Bank().populate(pojoiter));
+    if (pojo.hasOwnProperty("playArea")) this.playArea = new PlayArea().populate(pojo.playArea);
+    if (pojo.hasOwnProperty("currentPlayerIndex"))
+      this.currentPlayerIndex = pojo.currentPlayerIndex;
+    if (pojo.hasOwnProperty("drawPile")) this.drawPile = new DrawCardPile().populate(pojo.drawPile);
+    if (pojo.hasOwnProperty("discardPile"))
+      this.discardPile = new CardPile().populate(pojo.discardPile);
+    if (pojo.hasOwnProperty("pendingEffect"))
+      this.pendingEffect = new CardEffect().populate(pojo.pendingEffect);
+    return this;
+  }
+
   @attribute({ memberType: embed(Bank), valueConstructor: Bank })
   banks: Array<Bank>;
 
@@ -33,7 +46,7 @@ export default class MatchState {
   discardPile: CardPile;
 
   @attribute()
-  pendingEffect: CardEffect; //-- e.g. Hook, Map (not Kraken)
+  pendingEffect?: CardEffect; //-- e.g. Hook, Map (not Kraken)
 
   //-- no need to persist, only applies to the specific move
   pendingKrakenCards?: number;

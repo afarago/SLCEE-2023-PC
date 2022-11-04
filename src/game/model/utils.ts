@@ -15,7 +15,7 @@ export function apifyMatch(match: model.Match, parameters?: any) {
   retval.discardPileSize = match.state?.discardPile?.length;
   retval.playArea = match.state?.playArea;
   const matchendEvent =
-    match.move?.lastEvent.eventType === model.OMatchEventType.MatchEnded
+    match.move?.lastEvent?.eventType === model.OMatchEventType.MatchEnded
       ? match.move?.lastEvent
       : null;
   //TODO: maybe fill this up upon ending the match to the match db itself

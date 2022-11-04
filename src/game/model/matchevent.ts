@@ -11,7 +11,7 @@ import { embed } from "@aws/dynamodb-data-mapper";
 
 import MatchState from "./matchstate";
 import Player, { PlayerId } from "./player";
-import { Card } from "./model";
+import { SupportsHydration, Card } from "./model";
 import { CardEffect } from "./cardeffect";
 
 export const OMatchEventType = {
@@ -49,45 +49,89 @@ export type MatchEventParemeters = {
 /**
  * Match event - representing an atomic event with state changes
  */
-export class MatchEvent {
+export class MatchEvent implements SupportsHydration {
+  populate(pojo: any) {
+    if (pojo.hasOwnProperty("eventType")) this.eventType = pojo.eventType;
+    if (pojo.hasOwnProperty("state")) this.state = new MatchState().populate(pojo.state);
+
+    if (pojo.hasOwnProperty("turnStartedPlayer")) this.turnStartedPlayer = pojo.turnStartedPlayer;
+    if (pojo.hasOwnProperty("drawCard")) this.drawCard = new Card().populate(pojo.drawCard);
+    if (pojo.hasOwnProperty("cardPlayedEffect"))
+      this.cardPlayedEffect = new CardEffect().populate(pojo.cardPlayedEffect);
+    if (pojo.hasOwnProperty("cardPlacedToPlayAreaCard"))
+      this.cardPlacedToPlayAreaCard = new Card().populate(pojo.cardPlacedToPlayAreaCard);
+    if (pojo.hasOwnProperty("cardRemovedFromBankCard"))
+      this.cardRemovedFromBankCard = new Card().populate(pojo.cardRemovedFromBankCard);
+    if (pojo.hasOwnProperty("cardRemovedFromBankIndex"))
+      this.cardRemovedFromBankIndex = pojo.cardRemovedFromBankIndex;
+    if (pojo.hasOwnProperty("turnEndedCardsCollected"))
+      this.turnEndedCardsCollected = pojo.turnEndedCardsCollected.map((pojoiter: any) =>
+        new Card().populate(pojoiter)
+      );
+    if (pojo.hasOwnProperty("turnEndedIsSuccessful"))
+      this.turnEndedIsSuccessful = pojo.turnEndedIsSuccessful;
+    if (pojo.hasOwnProperty("matchEndedScores")) this.matchEndedScores = pojo.matchEndedScores;
+    if (pojo.hasOwnProperty("matchEndedWinner")) this.matchEndedWinner = pojo.matchEndedWinner;
+    if (pojo.hasOwnProperty("responseToEffectType"))
+      this.responseToEffectType = pojo.responseToEffectType;
+    if (pojo.hasOwnProperty("responseToEffectCard"))
+      this.responseToEffectCard = pojo.responseToEffectCard
+        ? new Card().populate(pojo.responseToEffectCard)
+        : null; //-- oracle can respond with null
+
+    return this;
+  }
+
   @attribute()
-  eventType: MatchEventType;
+  eventType?: MatchEventType;
 
   @attribute(embed(MatchState))
-  state: MatchState;
+  state?: MatchState;
 
   constructor(eventType?: MatchEventType, params?: MatchEventParemeters) {
     this.eventType = eventType;
     Object.assign(this, params);
   }
 
-  get currentPlayerIndex(): number {
-    return this.state.currentPlayerIndex;
+  get currentPlayerIndex(): number | undefined {
+    return this.state?.currentPlayerIndex;
   }
 
   //TODO: use MatchEventParemeters
   @attribute()
-  readonly turnStartedPlayer: PlayerId;
+  /* readonly */
+  turnStartedPlayer: PlayerId;
   @attribute()
-  readonly drawCard: Card;
+  /* readonly */
+  drawCard: Card;
   @attribute()
-  readonly cardPlayedEffect: CardEffect;
+  /* readonly */
+  cardPlayedEffect: CardEffect;
   @attribute()
-  readonly cardPlacedToPlayAreaCard: Card;
+  /* readonly */
+  cardPlacedToPlayAreaCard: Card;
   @attribute()
-  readonly cardRemovedFromBankCard: Card;
+  /* readonly */
+  cardRemovedFromBankCard: Card;
   @attribute()
-  readonly cardRemovedFromBankIndex: number;
+  /* readonly */
+  cardRemovedFromBankIndex: number;
   @attribute({ memberType: embed(Card) })
-  readonly turnEndedCardsCollected: Array<Card>;
+  /* readonly */
+  turnEndedCardsCollected: Array<Card>;
   @attribute()
-  readonly turnEndedIsSuccessful: boolean;
+  /* readonly */
+  turnEndedIsSuccessful: boolean;
   @attribute({ memberType: embed(Number) }) // here it should be embed(Number) as "Number" fails - AWS bug
-  readonly matchEndedScores: Array<number>;
+  /* readonly */
+  matchEndedScores: Array<number>;
   @attribute()
-  readonly matchEndedWinner: PlayerId;
+  /* readonly */
+  matchEndedWinner: PlayerId;
   @attribute()
-  readonly responseToEffectType: string;
+  /* readonly */
+  responseToEffectType: string;
   @attribute()
-  readonly responseToEffectCard: Card; //LATER: e.g.cannon/sword - in case of multiplayer player is not (directly) covered -- card determines though
+  /* readonly */
+  responseToEffectCard: Card; //LATER: e.g.cannon/sword - in case of multiplayer player is not (directly) covered -- card determines though
 }

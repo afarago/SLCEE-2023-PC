@@ -15,7 +15,7 @@ export const register = (app: express.Application) => {
         const players: Map<model.PlayerId, model.Player> = (
           await Registry.Instance.getPlayersPromise()
         ).reduce(
-          (prev, current) => prev.set(current.id, current),
+          (prev, current) => prev.set(current._id, current), //TODO: //!!
           new Map<model.PlayerId, model.Player>()
         );
         res.render("matches", { matches, players });
@@ -31,7 +31,7 @@ export const register = (app: express.Application) => {
         const players: Map<model.PlayerId, model.Player> = (
           await Registry.Instance.getPlayersPromise()
         ).reduce(
-          (prev, current) => prev.set(current.id, current),
+          (prev, current) => prev.set(current._id, current), //TODO: //!!
           new Map<model.PlayerId, model.Player>()
         ); //TODO: get only affected player objects
         const match = await Registry.Instance.getMatchByIdPromise(matchId);

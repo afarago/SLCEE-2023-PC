@@ -9,6 +9,10 @@ import {
 } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
+export interface SupportsHydration {
+  populate(pojo: any): any;
+}
+
 export const OCardSuit = {
   Anchor: "Anchor",
   Hook: "Hook",
@@ -22,6 +26,9 @@ export const OCardSuit = {
   Mermaid: "Mermaid",
 }; // as const;
 export type CardSuit = keyof typeof OCardSuit;
+export function IsCardSuit(cardSuit?: string): cardSuit is CardSuit {
+  return !!cardSuit;
+}
 // export type Suit = typeof OSuit[keyof typeof OSuit];
 // export type Suit =
 //   | "Anchor"
@@ -40,18 +47,45 @@ export type CardSuit = keyof typeof OCardSuit;
  */
 //export type CardValueBase = 2 | 3 | 4 | 5 | 6 | 7;
 //export type CardValue = CardValueBase | 8 | 9;
-export type CardAbbreviation = [CardSuit, number]; //CardValue];
+//export type CardAbbreviation = [CardSuit, number]; //CardValue];
 
 /**
  * Card object
  */
-export class Card {
+export class Card implements SupportsHydration {
+  populate(pojo: any): any {
+    if (pojo.hasOwnProperty("suit") && pojo.hasOwnProperty("value")) {
+      //-- full form: {"suit":"Kraken", "value":4}
+      this.suit = pojo.suit;
+      this.value = pojo.value;
+    } else if (
+      Array.isArray(pojo) &&
+      pojo.length == 2 &&
+      IsCardSuit(pojo[0]) &&
+      typeof pojo[1] === "number"
+    ) {
+      //-- tuple form: ["Kraken",4]
+      this.suit = pojo[0];
+      this.value = pojo[1];
+    } else {
+      //-- abbreviated form: {"Kraken":4}, one card per object
+      const asuitvalue = Object.keys(OCardSuit).find(
+        (asuit) => pojo.hasOwnProperty(asuit) && IsCardSuit(asuit) && typeof pojo[asuit] == "number"
+      ) as CardSuit;
+      if (asuitvalue) {
+        this.suit = asuitvalue;
+        this.value = pojo[asuitvalue];
+      } else throw new Error("Invalid Card");
+    }
+    return this;
+  }
+
   //TODO: change to tuple
   @attribute()
-  suit: CardSuit;
+  suit?: CardSuit;
 
   @attribute({ unwrapNumbers: true }) //{ memberType: "Number" }
-  value: number; //CardValue;
+  value?: number; //CardValue;
 
   constructor(suit?: CardSuit, value?: number) {
     //CardValue) {
@@ -65,17 +99,22 @@ export class Card {
     )
       throw new Error("Invalid Card");
   }
-  static fromAbbreviation(abbreviation: CardAbbreviation) {
-    return new Card(abbreviation[0], abbreviation[1]);
-  }
 }
 
 /**
  * Card pile object
  */
-export class CardPile {
+export class CardPile implements SupportsHydration {
+  populate(pojo: any) {
+    let pojoiter = pojo?.hasOwnProperty("cards") ? pojo.cards : pojo;
+    if (Array.isArray(pojoiter))
+      this.cards = pojoiter?.map((cardpojo: any) => new Card().populate(cardpojo));
+    return this;
+  }
+
   @attribute({ memberType: embed(Card) })
-  readonly cards: Array<Card>;
+  /*readonly*/
+  cards: Array<Card>;
   //-- architecture warning - should not derive from Array<Card> directly as lodash Lodash only clones index values (and some meta values) of arrays.
 
   constructor() {
@@ -91,12 +130,35 @@ export class CardPile {
 /**
  * Card suit stack - for effective representation of bank collection ordered by suits
  */
-export class CardSuitStack {
+export class CardSuitStack implements SupportsHydration {
+  populate(pojo: any) {
+    this.stack.splice(0, Infinity);
+
+    const pojoiter = pojo.stack || pojo;
+    if (Array.isArray(pojoiter)) pojoiter?.forEach((pojo: any) => this.add(pojo));
+    return this;
+  }
+
   @attribute({ memberType: "Number" }) // here it should be "Number", as embed(Number) fails - AWS bug
-  stack: Set<number>; //CardValue
+  stack: Array<number>; //CardValue
+
+  add(value: number) {
+    const idx = this.stack.indexOf(value);
+    if (idx >= 0) throw new Error("Cannot add " + value + " to stack - already exists.");
+
+    this.stack.push(value);
+  }
+  delete(value: number) {
+    const idx = this.stack.indexOf(value);
+    if (idx < 0) throw new Error("Cannot remove " + value + " from stack.");
+    this.stack.splice(idx, 1);
+  }
+  get size() {
+    return this.stack.length;
+  }
 
   constructor() {
-    this.stack = new Set<number>(); //CardValue>();
+    this.stack = new Array<number>(); //CardValue>();
   }
 
   max() {
@@ -107,6 +169,17 @@ export class CardSuitStack {
  * Ordered card pile - for effective representation of bank collection ordered by suits
  */
 export class OrderedCardPile {
+  populate(pojo: any) {
+    this.piles.clear();
+
+    const pojoiter = pojo.piles || pojo;
+    if (pojoiter)
+      Object.getOwnPropertyNames(pojoiter).forEach((k: any, v: any, arr: any) =>
+        this.piles.set(k, new CardSuitStack().populate(pojoiter[k]))
+      );
+    return this;
+  }
+
   constructor() {
     this.piles = new Map<CardSuit, CardSuitStack>();
   }
@@ -116,7 +189,7 @@ export class OrderedCardPile {
 
   get flatSize(): number {
     let count = 0;
-    for (let [key, value] of this.piles.entries()) count += value.stack.size;
+    for (let [key, value] of this.piles.entries()) count += value.size;
     return count;
   }
 }

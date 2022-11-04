@@ -22,14 +22,11 @@ export const register = (app: express.Application) => {
         const data = req.body;
 
         if (!data.players) throw new Error("Missing players from input parameters.");
-        if (!(data.players instanceof Array))
-          throw new Error("Missing players from input parameters.");
-        let players = new Array<model.PlayerId>(...data.players);
-        let drawPile = data.drawPile;
-        const match = await Coordinator.actionStartMatch(players, drawPile);
+        if (!Array.isArray(data.players)) throw new Error("Missing players from input parameters.");
+        const match = await Coordinator.actionStartMatch(data.players, data.drawPile);
         if (!match) throw Error("Could not create match.");
 
-        return res.json({ id: match.id });
+        return res.json({ id: match._id });
       })
       .catch(next); // Errors will be passed to Express.
   });
@@ -60,7 +57,7 @@ export const register = (app: express.Application) => {
 
           const match = await Registry.Instance.getMatchByIdPromise(id);
           if (!match) throw Error("Match does not exist.");
-          match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
+          match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match._id);
           if (!match.move) throw Error("Consistency error - no move exist for match.");
 
           //TODO: check debug settings
@@ -82,7 +79,7 @@ export const register = (app: express.Application) => {
 
           const match = await Registry.Instance.getMatchByIdPromise(id);
           if (!match) throw Error("Match does not exist.");
-          match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match.id);
+          match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match._id);
           if (!match.move) throw Error("Consistency error - no move exist for match.");
 
           const events = await Coordinator.executeActionPromise(match, data);

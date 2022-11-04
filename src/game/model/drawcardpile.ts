@@ -1,5 +1,5 @@
 import "core-js/es/array/at";
-import { Card, CardAbbreviation, CardPile, OCardSuit, CardSuit } from "./model";
+import { Card, CardPile, OCardSuit, CardSuit } from "./model";
 import {
   attribute,
   hashKey,
@@ -12,6 +12,13 @@ import {
  * Draw card pile - contains all remining cards
  */
 export default class DrawCardPile extends CardPile {
+  populate(pojo: any) {
+    super.populate(pojo);
+    if (pojo.hasOwnProperty("isPreOrdered")) this.isPreOrdered = pojo?.isPreOrdered;
+    if (pojo.hasOwnProperty("nextCard")) this.nextCard = new Card().populate(pojo.nextCard);
+    return this;
+  }
+
   @attribute()
   nextCard?: Card; //-- Oracle reveals Next Card
 
@@ -19,7 +26,7 @@ export default class DrawCardPile extends CardPile {
   isPreOrdered: boolean; //-- debug purposes preset order, without random draw
 
   public static create(): DrawCardPile;
-  public static create(cards: Array<Card | CardAbbreviation>): DrawCardPile;
+  public static create(cards: Array<Card | any>): DrawCardPile;
   public static create(suits: Array<CardSuit>, values: Array<number>): DrawCardPile; //CardValue
   public static create(cardsOrSuits?: Array<any>, values?: Array<number>): DrawCardPile {
     //CardValue
@@ -27,10 +34,9 @@ export default class DrawCardPile extends CardPile {
 
     if (cardsOrSuits instanceof Array) {
       //-- list of cards or card abbreviations
-      cardsOrSuits.forEach((card) => {
-        if (card instanceof Card) retval.cards.push(card);
-        else if (card instanceof Array)
-          retval.cards.push(Card.fromAbbreviation(card as CardAbbreviation));
+      cardsOrSuits.forEach((cardobj) => {
+        if (cardobj instanceof Card) retval.cards.push(cardobj);
+        else retval.cards.push(new Card().populate(cardobj));
       });
       retval.isPreOrdered = true;
     }
@@ -40,6 +46,8 @@ export default class DrawCardPile extends CardPile {
       if (!cardsOrSuits) {
         cardsOrSuits = Object.keys(OCardSuit) as CardSuit[]; //-- empty suits --> use all suits
         if (!values) values = [2, 3, 4, 5, 6, 7]; //-- empty values --> use default 2-7 values
+      } else if (!values) {
+        throw new Error("Invalid values");
       }
 
       //-- generate cards
@@ -56,13 +64,13 @@ export default class DrawCardPile extends CardPile {
     return retval;
   }
 
-  public draw(doRemoveFromPile: boolean = true): Card {
+  public draw(doRemoveFromPile: boolean = true): Card | undefined {
     let pickedCardindex = -1;
 
     //-- check if pending (peeked card) draw due to oracle
     if (this.nextCard) {
       let pickedCardindex = this.cards.findIndex(
-        (c) => c.suit === this.nextCard.suit && c.value === this.nextCard.value
+        (c) => c.suit === this.nextCard?.suit && c.value === this.nextCard?.value
       );
 
       delete this.nextCard; //-- reset peeked card
