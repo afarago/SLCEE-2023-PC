@@ -2,13 +2,13 @@
 P1
 * check debug settings for production
 * add user auth / checking
-* drawpile seed based randomization and ordering on match start
+* drawpile seed based randomization and ordering on match start, might also need to persist the random seed (for picking map from discardpile consistently?) maybe use app.locals instead of injection
+* mongodb authentication (and keeping env as a secret)
 
 P2
-* 
+* draw timeout handling with repolling of db on "wrong" user
 
 P3
-* improve Registy to query all id's at once at game start (query)
 * api: match: add a from index param as well for easy polling
 * bootstrap / react app
 
@@ -21,8 +21,6 @@ N/A
   * if first card successfully triggers effect (Hook, Map, Sword), no forced second draw is triggered
   * upon card effect for first Kraken card cannot be fulfilled, thus is nullified, the second card needs to be drawn (e.g. Kraken->Map(empty discard)->[!], Kraken->Hook(with empty bank)->[!], Kraken->Sword(with empty or all existing suit stacks) ))
 * Sword effect cannot pick enemy Suit from which own Player already has someting in its Bank
-
+* drawpack - initially pick smallest of each suit
 
 ================================================================
-
-* drawpack - initially pick smallest of each suit!
