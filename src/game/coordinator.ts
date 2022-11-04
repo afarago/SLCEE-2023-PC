@@ -115,17 +115,8 @@ export default class Coordinator {
         .fill(null)
         .map(() => new model.Bank()) as Array<model.Bank>;
       startingState.playArea = new model.PlayArea();
-      startingState.discardPile = new model.CardPile();
+      startingState.discardPile = new model.FlatCardPile();
       startingState.drawPile = model.DrawCardPile.create(initialDrawPile);
-      //  model.DrawCardPile.create(["Anchor", "Mermaid"], [2, 3]);
-      //  model.DrawCardPile.generate(null, [2, 3, 4]);
-      //  model.DrawCardPile.create([
-      //   ["Mermaid", 2],
-      //   ["Anchor", 2],
-      //   ["Mermaid", 3],
-      // ]);
-      //  model.DrawCardPile.create(Object.keys(model.OCardSuit) as model.CardSuit[],[2,3]);
-      //  model.DrawCardPile.create();
     }
 
     //-- announce turn starting
@@ -543,7 +534,7 @@ export default class Coordinator {
     });
     {
       const state = Coordinator.addEvent(move, event, match.state);
-      state.currentPlayerIndex = -1;
+      state.currentPlayerIndex = null;
     }
   }
 
@@ -683,7 +674,7 @@ export default class Coordinator {
     response: model.CardEffectResponse,
     pendingEffect: model.CardEffect
   ): Promise<void> {
-    let responseCard = response.card ? new model.Card().populate(response.card) : undefined; //TODO: CHECK: some validation on card input
+    let responseCard = response.card ? new model.Card().populate(response.card) : null; //TODO: CHECK: some validation on card input
     console.log(">RESPOND_CARDEFFECT:", response.effectType, ":=", responseCard);
     if (!pendingEffect) throw new Error("No pending effects to respond to");
     //TODO: for some reaons on map return (match.state.pendingEffect.cards[0]) is not a number but a wrapper, no matter I switch it off

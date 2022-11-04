@@ -5,6 +5,7 @@ import * as model from "../game/model/model";
 import * as utils from "../utils";
 
 export const register = (app: express.Application) => {
+  // app.use(express.json());
   app.set("json replacer", utils.fnSetMapSerializer);
 
   //-- Hello
@@ -112,8 +113,8 @@ export const register = (app: express.Application) => {
         if (!player) throw new Error("Record not found");
         let result: any = { ...player };
 
-        const activeMatches = await Registry.Instance.getMatchesByCurrentPlayerPartialPromise(id); //IMPORTANT: only keys are added, thus result will be partial
-        if (activeMatches) result.activeMatches = activeMatches; //TOCHECK: maybe just id is enough
+        const activeMatches = await Registry.Instance.getMatchesByCurrentPlayerPromise(id);
+        if (activeMatches) result.activeMatches = activeMatches;
 
         res.json(result);
       })

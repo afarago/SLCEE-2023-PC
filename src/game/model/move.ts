@@ -55,6 +55,16 @@ export default class Move implements SupportsHydration {
   //@attribute({ memberType: embed(MatchEvent) })
   events: Array<MatchEvent> = [];
 
+  toJSON() {
+    let pojo = { ...this };
+    delete pojo.initialState;
+
+    return pojo;
+  }
+  toBSON() {
+    return this.toJSON();
+  }
+
   //-- do not persist, this is the initial state for handling events
   //-- when new move is created, before first event is added
   initialState?: MatchState;

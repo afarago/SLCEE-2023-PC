@@ -7,27 +7,63 @@
       <h1 class="header">
         Match <% match.players?.forEach((p,idx)=> { %>
         <span class="pill player<%=idx%> <%=(match?.currentPlayerId==p?'activePlayer':'')%>"
-          ><%= players.get(p)?.name %></span
+          ><%= players.get(p.toString())?.name %></span
         >
         <% }); %>
         <span class="badge"><%= match.isFinished ? "Finished" : "Ongoing" %></span>
-        <span class="badge"><%= match.id %></span>
+        <span class="badge"><%= match._id %></span>
       </h1>
 
+      <%# ====================================================================================== %>
+      <%# === MATCH STATE display ============================================================== %>
+      <% function displayCards(cards, showcards) { %> (<%= cards.length %>) <% if (showcards) { %> [
+      <% cards?.forEach((card,idx)=> { %> <%= card.suit %>-<%= card.value %> <% }); %> ] <% } %>
+      <%}%>
+      <div id="matchstate">
+        <% if (!match.isFinished) { %>
+        <div>
+          <b>currentplayer</b>: <%= players.get(match?.currentPlayerId?.toString())?.name %>
+        </div>
+        <div>
+          <b>playarea</b>: <% displayCards(match.state?.playArea?.cards, true) %> <% if
+          (match.state?.pendingEffect) { %> <b>pendingEffect</b>: <%=
+          match.state?.pendingEffect?.effectType %> <%= JSON.stringify(match.state?.pendingEffect)
+          %> <% } %>
+        </div>
+        <div>
+          <b>drawpile</b>: <% displayCards(match?.state?.drawPile?.cards,
+          viewoptions?.debug_showstacks) %>
+        </div>
+        <div>
+          <b>discardpile</b>: <% displayCards(match.state?.discardPile?.cards,
+          viewoptions?.debug_showstacks) %>
+        </div>
+        <div>
+          <b>lastmove</b>: <% const firstevent = match?.move?.events?.at(0); %> <%=
+          firstevent?.eventType %> by <%=
+          players.get(match.players.at(firstevent.currentPlayerIndex).toString())?.name %> %>
+        </div>
+        <% } %>
+      </div>
+
+      <%# ====================================================================================== %>
+      <%# RELOAD button %>
       <a class="btn" href="#!" onClick="history.go(0);">Refresh</a>
+
+      <%# ====================================================================================== %>
+      <%# MOVES detailed %>
       <table>
-        <% moves?.reduceRight( (_,move) => { %>
+        <% moves?.reduce( (_,move) => { %>
         <tbody class="movebody">
           <% let hevent = move.events.at(0); %>
           <tr class="moveheader player<%= hevent.currentPlayerIndex %>">
             <td class="bar"></td>
-            <td>
+            <td colspan="2">
               <span class="eventType"><%= hevent.eventType %></span>
-              <div class="datepill"><%= move.at?.toLocaleTimeString() %></div>
+              <div class="datepill"><%= move.at %></div>
             </td>
-            <td><%= JSON.stringify(fnSanitizeEvent(hevent)).trim("{") %></td>
           </tr>
-          <% move.events.slice(1).reduce( (_,event) => { %>
+          <% move.events.reduce( (_,event) => { %>
           <tr class="player<%= event.currentPlayerIndex %>">
             <td class="bar"></td>
             <td><%= event.eventType %></td>

@@ -9,7 +9,7 @@ import {
 } from "@aws/dynamodb-data-mapper-annotations";
 import { embed } from "@aws/dynamodb-data-mapper";
 
-import { SupportsHydration, Bank, PlayArea, CardPile, CardEffect } from "./model";
+import { SupportsHydration, Bank, PlayArea, FlatCardPile, CardEffect } from "./model";
 import DrawCardPile from "./drawcardpile";
 
 /**
@@ -24,7 +24,7 @@ export default class MatchState implements SupportsHydration {
       this.currentPlayerIndex = pojo.currentPlayerIndex;
     if (pojo.hasOwnProperty("drawPile")) this.drawPile = new DrawCardPile().populate(pojo.drawPile);
     if (pojo.hasOwnProperty("discardPile"))
-      this.discardPile = new CardPile().populate(pojo.discardPile);
+      this.discardPile = new FlatCardPile().populate(pojo.discardPile);
     if (pojo.hasOwnProperty("pendingEffect"))
       this.pendingEffect = new CardEffect().populate(pojo.pendingEffect);
     return this;
@@ -43,12 +43,13 @@ export default class MatchState implements SupportsHydration {
   drawPile: DrawCardPile;
 
   @attribute()
-  discardPile: CardPile;
+  discardPile: FlatCardPile;
 
   @attribute()
   pendingEffect?: CardEffect; //-- e.g. Hook, Map (not Kraken)
 
   //-- no need to persist, only applies to the specific move
+  @attribute()
   pendingKrakenCards?: number;
 
   clearPendingEffect() {

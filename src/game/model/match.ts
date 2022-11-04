@@ -61,8 +61,17 @@ export default class Match implements SupportsHydration {
   lastMoveAt: Date;
 
   @attribute()
-  currentPlayerId: PlayerId;
-  //(isFinished)
+  currentPlayerId?: PlayerId;
+
+  toJSON() {
+    let pojo = { ...this };
+    delete pojo.move;
+
+    return pojo;
+  }
+  toBSON() {
+    return this.toJSON();
+  }
 
   constructor(players?: Array<PlayerId>) {
     this.players = players ?? [];
@@ -80,14 +89,14 @@ export default class Match implements SupportsHydration {
     return this.state?.pendingEffect;
   }
   get isFinished(): boolean | undefined {
-    return this.move?.currentPlayerIndex === undefined || !!this.currentPlayerId;
+    return !this.currentPlayerId;
   }
   public updateHeader() {
     this.moveCount = this.move?.sequenceId;
     this.lastMoveAt = this.move?.at;
-    this.currentPlayerId = this.move?.currentPlayerIndex
-      ? this.players.at(this.move?.currentPlayerIndex)
-      : null;
-    //return this.players[this.move?.currentPlayerIndex];
+    this.currentPlayerId =
+      typeof this.move?.currentPlayerIndex == "number"
+        ? this.players.at(this.move?.currentPlayerIndex)
+        : undefined;
   }
 }

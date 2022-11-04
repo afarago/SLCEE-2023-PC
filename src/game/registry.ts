@@ -57,7 +57,7 @@ export default class Registry {
    */
   public async getMatchesPromise(): Promise<model.Match[]> {
     await this.connectDatabase();
-    const dbitems = await this.collections.matches?.find({}).sort({ startedAt: "asc" }).toArray();
+    const dbitems = await this.collections.matches?.find({}).sort({ startedAt: -1 }).toArray();
     const results = dbitems.map((pojo) => new Match().populate(pojo));
     return results;
   }
@@ -97,22 +97,15 @@ export default class Registry {
    * @param playerId
    * @returns matches by current player partial promise
    */
-  public async getMatchesByCurrentPlayerPartialPromise(
-    playerId: string
-  ): Promise<Array<model.Match>> {
+  public async getMatchesByCurrentPlayerPromise(playerId: string): Promise<Array<model.Match>> {
     await this.connectDatabase();
 
-    // const results = await gen2array(
-    //   this.ddbmapper.query(
-    //     model.Match,
-    //     { currentPlayerId: playerId },
-    //     { indexName: "currentPlayerId-lastMoveAt-index" } //IMPORTANT: only keys are added, thus result will be partial
-    //   )
-    // );
-
-    // return results;
-    //TODO
-    return null;
+    const dbitems = await this.collections.matches
+      ?.find({ currentPlayerId: new ObjectId(playerId) })
+      .sort({ startedAt: +1 })
+      .toArray();
+    const results = dbitems.map((pojo) => new Match().populate(pojo));
+    return results;
   }
 
   /**
@@ -123,10 +116,10 @@ export default class Registry {
   public async updateMatchPromise(match: model.Match): Promise<model.Match> {
     await this.connectDatabase();
 
-    // const item = await this.ddbmapper.update(match);
-    // return item;
-    //TODO
-    return null;
+    const dbitem = await this.collections.matches.replaceOne({ _id: match._id }, match);
+    if (!dbitem || !dbitem.matchedCount) throw new Error("Could not update Match.");
+
+    return match;
   }
 
   /**
@@ -188,7 +181,7 @@ export default class Registry {
     const dbitem = await this.collections.moves.findOne(
       { matchId: matchId },
       {
-        sort: { sequenceId: "desc" },
+        sort: { sequenceId: -1 },
       }
     );
     if (!dbitem) throw new Error("Error retrieving move by match id " + matchId + ".");
@@ -202,12 +195,13 @@ export default class Registry {
    * @param matchId
    * @returns all moves by match id promise
    */
-  public async getAllMovesByMatchIdPromise(matchId: ObjectId): Promise<Array<model.Move>> {
+  public async getAllMovesByMatchIdPromise(matchId: string): Promise<Array<model.Move>> {
     await this.connectDatabase();
+    let matchIdObj = new ObjectId(matchId);
 
     const dbitems = await this.collections.moves
-      .find({ matchId: matchId })
-      .sort({ sequenceId: "asc" })
+      .find({ matchId: matchIdObj })
+      .sort({ sequenceId: +1 })
       .toArray();
     if (!dbitems) throw new Error("Error retrieving moves");
 

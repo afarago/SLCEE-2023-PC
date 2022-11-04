@@ -70,7 +70,10 @@ export class Card implements SupportsHydration {
     } else {
       //-- abbreviated form: {"Kraken":4}, one card per object
       const asuitvalue = Object.keys(OCardSuit).find(
-        (asuit) => pojo.hasOwnProperty(asuit) && IsCardSuit(asuit) && typeof pojo[asuit] == "number"
+        (asuit) =>
+          pojo.hasOwnProperty(asuit) &&
+          IsCardSuit(asuit) &&
+          typeof pojo[asuit] == "number"
       ) as CardSuit;
       if (asuitvalue) {
         this.suit = asuitvalue;
@@ -80,12 +83,19 @@ export class Card implements SupportsHydration {
     return this;
   }
 
-  //TODO: change to tuple
   @attribute()
   suit?: CardSuit;
 
   @attribute({ unwrapNumbers: true }) //{ memberType: "Number" }
   value?: number; //CardValue;
+
+  //-- override toJSON
+  toJSON() {
+    return [this.suit, this.value];
+  }
+  toBSON() {
+    return this.toJSON();
+  }
 
   constructor(suit?: CardSuit, value?: number) {
     //CardValue) {
@@ -108,14 +118,16 @@ export class CardPile implements SupportsHydration {
   populate(pojo: any) {
     let pojoiter = pojo?.hasOwnProperty("cards") ? pojo.cards : pojo;
     if (Array.isArray(pojoiter))
-      this.cards = pojoiter?.map((cardpojo: any) => new Card().populate(cardpojo));
+      this.cards = pojoiter?.map((cardpojo: any) =>
+        new Card().populate(cardpojo)
+      );
     return this;
   }
 
-  @attribute({ memberType: embed(Card) })
   /*readonly*/
   cards: Array<Card>;
   //-- architecture warning - should not derive from Array<Card> directly as lodash Lodash only clones index values (and some meta values) of arrays.
+  //-- architecture warning - should not override toJSON to default as for DrawCardPile we will need a cards + properties separately in the storage structure
 
   constructor() {
     this.cards = new Array<Card>();
@@ -132,33 +144,50 @@ export class CardPile implements SupportsHydration {
  */
 export class CardSuitStack implements SupportsHydration {
   populate(pojo: any) {
-    this.stack.splice(0, Infinity);
+    // this.stack.splice(0, Infinity);
+    this.stack.clear();
 
     const pojoiter = pojo.stack || pojo;
-    if (Array.isArray(pojoiter)) pojoiter?.forEach((pojo: any) => this.add(pojo));
+    if (Array.isArray(pojoiter))
+      pojoiter?.forEach((pojo: any) => this.add(pojo));
     return this;
   }
 
-  @attribute({ memberType: "Number" }) // here it should be "Number", as embed(Number) fails - AWS bug
-  stack: Array<number>; //CardValue
+  stack: Set<number>; //Array<number>; //CardValue //Set<number>
+
+  //-- override toJSON
+  //-- architectural: it is ok from architectural prespective as de do not have any other subproperties
+  toJSON() {
+    //return this.stack;
+    //-- attention: default serialization cannot handle Set<>
+    return [...this.stack];
+  }
+  toBSON() {
+    return this.toJSON();
+  }
 
   add(value: number) {
-    const idx = this.stack.indexOf(value);
-    if (idx >= 0) throw new Error("Cannot add " + value + " to stack - already exists.");
+    // const idx = this.stack.indexOf(value);
+    // if (idx >= 0)
+    //   throw new Error("Cannot add " + value + " to stack - already exists.");
 
-    this.stack.push(value);
+    // this.stack.push(value);
+    this.stack.add(value);
   }
   delete(value: number) {
-    const idx = this.stack.indexOf(value);
-    if (idx < 0) throw new Error("Cannot remove " + value + " from stack.");
-    this.stack.splice(idx, 1);
+    // const idx = this.stack.indexOf(value);
+    // if (idx < 0) throw new Error("Cannot remove " + value + " from stack.");
+    // this.stack.splice(idx, 1);
+    this.stack.delete(value);
   }
   get size() {
-    return this.stack.length;
+    // return this.stack.length;
+    return this.stack.size;
   }
 
   constructor() {
-    this.stack = new Array<number>(); //CardValue>();
+    //this.stack = new Array<number>(); //CardValue>();
+    this.stack = new Set<number>(); //CardValue>();
   }
 
   max() {
@@ -184,13 +213,36 @@ export class OrderedCardPile {
     this.piles = new Map<CardSuit, CardSuitStack>();
   }
 
-  @attribute({ memberType: embed(CardSuitStack) })
   piles: Map<CardSuit, CardSuitStack>;
+
+  //-- override toJSON
+  //-- architectural: it is ok from architectural prespective as de do not have any other subproperties
+  toJSON() {
+    //-- attention: default serialization cannot handle Map<>
+    return Object.fromEntries(this.piles);
+  }
+  toBSON() {
+    return this.toJSON();
+  }
 
   get flatSize(): number {
     let count = 0;
     for (let [key, value] of this.piles.entries()) count += value.size;
     return count;
+  }
+}
+
+/**
+ * FlatCardPile - with no properties
+ */
+export class FlatCardPile extends CardPile {
+  //-- override toJSON
+  //-- architectural: it is ok from architectural prespective as de do not have any other subproperties
+  toJSON() {
+    return this.cards;
+  }
+  toBSON() {
+    return this.toJSON();
   }
 }
 
@@ -202,7 +254,7 @@ export class Bank extends OrderedCardPile {}
 /**
  * Play area - object to represent the play area
  */
-export class PlayArea extends CardPile {} // or Map<Suit, number>;
+export class PlayArea extends FlatCardPile {} // or Map<Suit, number>;
 
 export { default as DrawCardPile } from "./drawcardpile";
 export { default as MatchState } from "./matchstate";

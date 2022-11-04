@@ -14,6 +14,8 @@ const port = process.env.SERVER_PORT ?? 8080;
 const app = express();
 
 // Configure Express to parse incoming JSON data
+// strict:Enables or disables only accepting arrays and objects; when disabled will accept anything JSON.parse accepts.
+// reviver: The reviver option is passed directly to JSON.parse as the second argument. You can find more information on this argument in the MDN documentation about JSON.parse.
 app.use(express.json());
 
 // Configure Express to use EJS

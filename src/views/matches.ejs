@@ -10,13 +10,13 @@
         %>
         <tr>
           <td>
-            <a class="btn" href="/matches/<%= match.id %>">
+            <a class="btn" href="/matches/<%= match._id %>">
               <%= match.startedAt?.toLocaleString() %>
             </a>
           </td>
-          <% for (const playerid of match.players) { const player = players.get(playerid); %>
+          <% for (const playerid of match.players) { const player = players.get(playerid.toString()); %>
           <td>
-            <%- (match.currentPlayerId !== playerid) ? player?.name : "<b>"+player?.name+"</b>"; %>
+            <%- (match.currentPlayerId != playerid) ? player?.name : "<b>"+player?.name+"</b>"; %>
           </td>
           <% }; %>
           <td><%= match.moveCount %></td>

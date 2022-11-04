@@ -1,8 +1,8 @@
-import { DynamoDB } from "aws-sdk";
+//import { DynamoDB } from "aws-sdk";
 
 export function fnSetMapSerializer(_key: any, value: any) {
-  if (value instanceof Set) return [...value];
-  if (value instanceof Map) return Object.fromEntries(value);
+  if (value && value instanceof Set) return [...value];
+  if (value && value instanceof Map) return Object.fromEntries(value);
   return value;
 }
 
