@@ -24,7 +24,11 @@ export const register = (app: express.Application) => {
 
         if (!data.players) throw new Error("Missing players from input parameters.");
         if (!Array.isArray(data.players)) throw new Error("Missing players from input parameters.");
-        const match = await Coordinator.actionStartMatch(data.players, data.drawPile);
+        const match = await Coordinator.actionStartMatch(
+          data.players,
+          data.drawPile, //-- initial draw pile, if any
+          data.discardPile //-- initial discard pile, if any
+        );
         if (!match) throw Error("Could not create match.");
 
         return res.json({ id: match._id });

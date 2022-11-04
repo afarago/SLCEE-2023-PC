@@ -3,22 +3,7 @@ import * as model from "./model/model";
 import { Player, Match, Move } from "./model/model";
 import * as mongoDB from "mongodb";
 import { ObjectId } from "mongodb";
-
-async function gen2array<T>(gen: AsyncIterable<T>): Promise<Array<T>> {
-  const out: Array<T> = new Array<T>();
-  for await (const x of gen) {
-    out.push(x);
-  }
-  return out;
-}
-// async function gen2mapbyid<T>(gen: AsyncIterable<T>): Promise<Map<any, T>> {
-//   const out: Map<any, T> = new Map<any, T>();
-//   for await (const x of gen) {
-//     const id = (<any>x).id;
-//     if (id) out.set(id, x);
-//   }
-//   return out;
-// }
+import * as gen from "random-seed";
 
 /**
  * Registry singleton to DB/DTO access
@@ -28,7 +13,19 @@ export default class Registry {
   public static get Instance(): Registry {
     return this._instance || (this._instance = new this());
   }
-  private constructor() {}
+  private constructor() {
+    this.initRandom();
+  }
+
+  private randomGenerator: gen.RandomSeed;
+  public initRandom(seed?: string) {
+    this.randomGenerator = gen.create(seed);
+  }
+  public getRandom(min: number, max: number): number {
+    return this.randomGenerator.intBetween(min, max);
+  }
+
+  //--------
 
   private client: mongoDB.MongoClient;
   private db: mongoDB.Db;
@@ -38,7 +35,7 @@ export default class Registry {
     moves?: mongoDB.Collection;
   } = {};
 
-  public async connectDatabase() {
+  private async connectDatabase() {
     if (!this.client) {
       this.client = new mongoDB.MongoClient(process.env.MONGODB_CONN_STRING ?? "");
       await this.client.connect();

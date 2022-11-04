@@ -16,6 +16,10 @@
     crossorigin="anonymous"
   ></script> -->
   <style>
+    :root {
+      --player-0-color: #a6a;
+      --player-1-color: #3a3;
+    }
     .moveheader {
       background-color: #eee;
     }
@@ -30,20 +34,26 @@
       color: #777;
     }
     .player0 .bar {
-      background-color: #a6a;
+      background-color: var(--player-0-color);
     }
     .player1 .bar {
-      background-color: #3a3;
+      background-color: var(--player-1-color);
     }
-    .player0.pill {
-      color: #a6a;
+    .player0 {
+      color: var(--player-0-color);
     }
-    .player1.pill {
-      color: #3a3;
+    .player1 {
+      color: var(--player-1-color);
     }
     .activePlayer {
       font-weight: bold;
       text-decoration: underline;
+    }
+    .winningPlayer::after {
+      content: "👑";
+      position: relative;
+      top: -0.5em;
+      font-size: 80%;
     }
   </style>
 </head>

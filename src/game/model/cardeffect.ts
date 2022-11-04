@@ -1,9 +1,7 @@
 /* tslint:disable:max-classes-per-file */
 import "core-js/es/array/at";
-import { attribute } from "@aws/dynamodb-data-mapper-annotations";
-import { embed } from "@aws/dynamodb-data-mapper";
-
-import { SupportsHydration, Card } from "./model";
+import { SupportsHydration } from "./model";
+import Card from "./card";
 
 export const OCardEffectType = {
   Oracle: "Oracle",
@@ -12,7 +10,7 @@ export const OCardEffectType = {
   Sword: "Sword",
   Map: "Map",
 };
-type CardEffectType = keyof typeof OCardEffectType;
+export type CardEffectType = keyof typeof OCardEffectType;
 
 type CardEffectFactoryParemeters = {
   card?: Card;
@@ -30,7 +28,7 @@ export type CardEffectResponse = {
 /**
  * Card effect associated with a special card
  */
-export class CardEffect implements SupportsHydration {
+export default class CardEffect implements SupportsHydration {
   populate(pojo: any) {
     if (pojo.hasOwnProperty("effectType")) this.effectType = pojo.effectType;
     if (pojo.hasOwnProperty("card")) this.card = new Card().populate(pojo.card);
@@ -40,17 +38,9 @@ export class CardEffect implements SupportsHydration {
     return this;
   }
 
-  @attribute()
-  /*readonly*/
-  effectType?: string; //TODO; use CardEffectType;
-
-  @attribute()
-  /*readonly*/
-  card: Card;
-
-  @attribute({ memberType: embed(Card) })
-  /*readonly*/
-  cards: Array<Card>;
+  public effectType?: string; //TODO; use CardEffectType;
+  public card: Card;
+  public cards: Array<Card>;
 
   constructor(effectType?: string, params?: CardEffectFactoryParemeters) {
     //TODO: use CardEffectType

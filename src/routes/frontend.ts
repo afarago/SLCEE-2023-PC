@@ -35,11 +35,36 @@ export const register = (app: express.Application) => {
           (prev, current) => prev.set(current._id.toString(), current),
           new Map<string, model.Player>()
         );
+        const getPlayer = function (id: model.PlayerId | string): model.Player {
+          return players.get(id.toString());
+        };
         //TODO: get only affected player objects
         const match = await Registry.Instance.getMatchByIdPromise(matchId);
         const moves = await Registry.Instance.getAllMovesByMatchIdPromise(matchId);
         //match.move = await Registry.Instance.getLastMoveByMatchIdPromise(match._id);
         match.move = moves.at(-1);
+
+        //-- compile matchinfo object
+        let matchinfo = {
+          banks: match.state?.banks,
+          drawPileSize: match.state?.drawPile?.length,
+          discardPileSize: match.state?.discardPile?.length,
+          playArea: match.state?.playArea,
+          pendingEffect: match.state?.pendingEffect,
+        };
+        const matchendEvent =
+          match.move?.lastEvent?.eventType === model.OMatchEventType.MatchEnded
+            ? match.move?.lastEvent
+            : null;
+        if (matchendEvent) {
+          matchinfo = {
+            ...matchinfo,
+            ...{
+              winner: matchendEvent.matchEndedWinner,
+              scores: matchendEvent.matchEndedScores,
+            },
+          };
+        }
 
         const fnSanitizeEvent = (event: model.MatchEvent) => {
           let retval = model.apifyEvent(event);
@@ -48,7 +73,8 @@ export const register = (app: express.Application) => {
         };
         if (!match) return res.send("error");
         const viewoptions = { debug_showstacks: true };
-        res.render("match", { match, moves, players, viewoptions, fnSanitizeEvent }); // TODO: error handling
+
+        res.render("match", { match, matchinfo, moves, getPlayer, viewoptions, fnSanitizeEvent }); // TODO: error handling
       })
       .catch(next); // Errors will be passed to Express.
   });

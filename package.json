@@ -23,9 +23,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws/dynamodb-data-mapper": "^0.7.3",
-    "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
-    "aws-sdk": "^2.1241.0",
     "axios": "^0.24.0",
     "build": "^0.1.4",
     "dotenv": "^10.0.0",
@@ -34,6 +31,7 @@
     "lodash.clonedeep": "^4.5.0",
     "materialize-css": "^1.0.0",
     "newman": "^5.3.2",
+    "random-seed": "^0.3.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
@@ -44,6 +42,7 @@
     "@types/lodash.clonedeep": "^4.5.7",
     "@types/materialize-css": "^1.0.11",
     "@types/node": "^17.0.45",
+    "@types/random-seed": "^0.3.3",
     "@types/shelljs": "^0.8.11",
     "fs-extra": "^10.1.0",
     "nodemon": "^2.0.20",

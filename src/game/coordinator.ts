@@ -1,11 +1,8 @@
 import "core-js/es/array/at";
-import cloneDeep from "lodash/cloneDeep";
 //import cloneDeepWith from "lodash/cloneDeepWith";
 
-import Registry from "./registry";
 import * as model from "./model/model";
-import * as utils from "../utils";
-import { CardSuit, Card } from "./model/model";
+import Registry from "./registry";
 
 //TODO: Kraken->Cannon->Oracle //BUG: not working yet
 
@@ -73,7 +70,8 @@ export default class Coordinator {
    */
   public static async actionStartMatch(
     players: Array<string>,
-    initialDrawPile?: Array<any>
+    initialDrawPile?: Array<any>,
+    initialDiscardPile?: Array<any>
   ): Promise<model.Match> {
     console.log(">START_MATCH", players);
 
@@ -87,20 +85,7 @@ export default class Coordinator {
     await Registry.Instance.putMatchPromise(match); //match.persist():
     console.log("MATCH_STARTS:", match._id.toString());
 
-    //-- testing lodash array clone problems
-    // class CardPileArrTest extends Array<model.Card> {
-    //   testint: number;
-    // }
-    // let z = new model.CardPileArrTest();
-    // z.testint = 12;
-    // const fnCustomizer = (value: any, idx_key: any, obj: any, stack:any): any => {
-    //   console.log(value);
-    //   return undefined; //-- do not resolve
-    // };
-    // let z1 = cloneDeepWith(z, fnCustomizer) as model.CardPileArrTest;
-    // let z2 = cloneDeep(z) as model.CardPileArrTest;
-    // console.log(z, z1, z2);
-
+    //-- create initial state and initial move
     const move = (match.move = Coordinator.newMove(match));
     {
       //-- announce match starting
@@ -110,17 +95,18 @@ export default class Coordinator {
         new model.MatchState()
       );
 
-      startingState.currentPlayerIndex = Math.floor(Math.random() * match.numberOfPlayers);
+      startingState.currentPlayerIndex = null;
       startingState.banks = Array(match.numberOfPlayers)
         .fill(null)
         .map(() => new model.Bank()) as Array<model.Bank>;
       startingState.playArea = new model.PlayArea();
-      startingState.discardPile = new model.FlatCardPile();
+      startingState.discardPile = model.DiscardPile.create(initialDiscardPile);
       startingState.drawPile = model.DrawCardPile.create(initialDrawPile);
     }
 
     //-- announce turn starting
-    Coordinator.turnStarting(match, move, match.state.currentPlayerIndex);
+    const startingPlayerIndex = Math.floor(Math.random() * match.numberOfPlayers); //TODO: add pseudorandom
+    Coordinator.turnStarting(match, move, startingPlayerIndex);
 
     //-- return event
     await Coordinator.persistMovePromise(match.move);
@@ -142,21 +128,9 @@ export default class Coordinator {
 
     // Safeguards:
     if (match.isFinished) throw new Error("No action possible on finished matches");
-    // - only accept ResponseToEffect if pending effectresponse
-    const pendingEffect = match.state.pendingEffect;
-    if (pendingEffect) {
-      if (!pendingEffect)
-        throw new Error("Incorrect event registry, while processing CardPlayedEffect");
-      if (data.etype != "ResponseToEffect")
-        throw new Error("Respond to pending effect first: " + pendingEffect.effectType);
-      if (pendingEffect?.effectType != data.effect?.effectType)
-        throw new Error(
-          "Respond correctly to the pending effect first: " +
-            pendingEffect.effectType +
-            " response: " +
-            data.effect?.effectType
-        );
-    }
+
+    //Map<model.CardEffectType, Array<string>>
+    const pendingEffect = Coordinator.guardPendingEffect(match, data);
 
     //-- act according to the event type
     if (data.etype == "Draw") {
@@ -177,6 +151,37 @@ export default class Coordinator {
     //TODO: update match (moveCount, lastMoveAt, currentPlayer(isFinished))
 
     return match.move?.getEvents();
+  }
+
+  private static guardPendingEffect(
+    match: model.Match,
+    data: any,
+    allowedCombinations?: Map<model.CardEffectType, Array<string>>
+  ) {
+    const pendingEffect = match.state.pendingEffect;
+    if (pendingEffect) {
+      //-- Silently cancelling pending Oracle effect due to EndTurn or Draw
+      if (
+        ["Draw", "EndTurn"].includes(data.etype) &&
+        pendingEffect?.effectType === model.OCardEffectType.Oracle
+      ) {
+        console.log("Silently cancelling pending Oracle effect due to EndTurn or Draw");
+        match.state.clearPendingEffect(); //-- remove pending effect
+        return null;
+      }
+
+      //-- check if correct response were given to challenge
+      if (data.etype != "ResponseToEffect")
+        throw new Error("Respond to pending effect first: " + pendingEffect.effectType);
+      if (pendingEffect?.effectType != data.effect?.effectType)
+        throw new Error(
+          "Respond correctly to the pending effect first: " +
+            pendingEffect.effectType +
+            " response: " +
+            data.effect?.effectType
+        );
+    }
+    return pendingEffect;
   }
 
   /**
@@ -473,7 +478,7 @@ export default class Coordinator {
     for (let i = 0; i < numberOfCards; i++) {
       if (!match.state.discardPile.length) break;
 
-      let idx = Math.floor(Math.random() * match.state.discardPile.length);
+      let idx = Math.floor(Math.random() * match.state.discardPile.length); //TODO: add pseudorandom
       let card = match.state.discardPile.cards[idx];
 
       cardsFromDiscard.push(card);
@@ -510,13 +515,7 @@ export default class Coordinator {
     const scores = new Map<number, number>();
     for (let idx = 0; idx < match.players.length; idx++) {
       const bank = match.state.banks[idx];
-      let score = 0;
-      for (let [key, value] of bank.piles.entries()) {
-        const maxValue = value.max();
-        console.log("SCORED:", idx, "in:", key, "max:", maxValue);
-        score += maxValue;
-      }
-      scores.set(idx, score);
+      scores.set(idx, bank.bankvalue);
     }
 
     //-- sort by id

@@ -5,7 +5,7 @@ P1
 * drawpile seed based randomization and ordering on match start
 
 P2
-* change card to tuple
+* 
 
 P3
 * improve Registy to query all id's at once at game start (query)

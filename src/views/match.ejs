@@ -6,8 +6,9 @@
     <div class="container">
       <h1 class="header">
         Match <% match.players?.forEach((p,idx)=> { %>
-        <span class="pill player<%=idx%> <%=(match?.currentPlayerId==p?'activePlayer':'')%>"
-          ><%= players.get(p.toString())?.name %></span
+        <span
+          class="pill player<%=idx%> <%= (match?.currentPlayerId?.toString()==p?'activePlayer':'') %> <%= (matchinfo?.winner==p?.toString()?'winningPlayer':'') %>"
+          ><%= getPlayer(p)?.name %></span
         >
         <% }); %>
         <span class="badge"><%= match.isFinished ? "Finished" : "Ongoing" %></span>
@@ -16,34 +17,42 @@
 
       <%# ====================================================================================== %>
       <%# === MATCH STATE display ============================================================== %>
-      <% function displayCards(cards, showcards) { %> (<%= cards.length %>) <% if (showcards) { %> [
-      <% cards?.forEach((card,idx)=> { %> <%= card.suit %>-<%= card.value %> <% }); %> ] <% } %>
-      <%}%>
+      <% function displayCards(cards, showcards) { %> (<%= cards?.length %>) <% if (showcards) { %>
+      [ <% cards?.forEach((card,idx)=> { %> <%= card.suit %>-<%= card.value %> <% }); %> ] <% } %>
+      <%}%> <% function displayCardBank(bank) { %> (<%= bank.flatSize %>, $<%= bank.bankvalue %>) [
+      <% bank.piles?.forEach((pile,idx)=> { %> <%= idx %>: <%= pile.toJSON() %> <% }); %> ] <%}%> <%
+      function getUserByIdx(idx) { return getPlayer(match.players.at(idx)) } %>
       <div id="matchstate">
         <% if (!match.isFinished) { %>
         <div>
-          <b>currentplayer</b>: <%= players.get(match?.currentPlayerId?.toString())?.name %>
+          <b>lastmove</b>: <% const firstevent = match?.move?.events?.at(0); %> <%=
+          firstevent?.eventType %> by <%= getUserByIdx(firstevent.currentPlayerIndex)?.name %>
+          <b>currentplayer</b>: <%= getPlayer(match?.currentPlayerId)?.name %>
         </div>
         <div>
-          <b>playarea</b>: <% displayCards(match.state?.playArea?.cards, true) %> <% if
-          (match.state?.pendingEffect) { %> <b>pendingEffect</b>: <%=
-          match.state?.pendingEffect?.effectType %> <%= JSON.stringify(match.state?.pendingEffect)
-          %> <% } %>
+          <b>playarea</b>: <% displayCards(matchinfo.playArea?.cards, true) %> <% if
+          (matchinfo.pendingEffect) { %> <b>pendingEffect</b>: <%=
+          matchinfo.pendingEffect?.effectType %> <%= JSON.stringify(matchinfo.pendingEffect) %> <% }
+          %>
         </div>
         <div>
           <b>drawpile</b>: <% displayCards(match?.state?.drawPile?.cards,
           viewoptions?.debug_showstacks) %>
         </div>
         <div>
-          <b>discardpile</b>: <% displayCards(match.state?.discardPile?.cards,
+          <b>discardpile</b>: <% displayCards(match?.state?.discardPile?.cards,
           viewoptions?.debug_showstacks) %>
         </div>
+        <% } else { %>
         <div>
-          <b>lastmove</b>: <% const firstevent = match?.move?.events?.at(0); %> <%=
-          firstevent?.eventType %> by <%=
-          players.get(match.players.at(firstevent.currentPlayerIndex).toString())?.name %> %>
+          <b>winner</b> <%= getPlayer(matchinfo.winner)?.name %> <b>scores</b> <%= matchinfo.scores
+          %>
         </div>
-        <% } %>
+        <% } %> <%### BANKs ####%><% match.players?.forEach((p,idx)=> { %>
+        <div class="player<%= idx %>">
+          <b><%= getUserByIdx(idx)?.name %>'s bank</b>: <% displayCardBank(match.state?.banks[idx]) %>
+        </div>
+        <%})%>
       </div>
 
       <%# ====================================================================================== %>
