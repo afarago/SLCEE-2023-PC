@@ -55,7 +55,7 @@ export default class Registry {
   public async getMatchesPromise(): Promise<model.Match[]> {
     await this.connectDatabase();
     const dbitems = await this.collections.matches?.find({}).sort({ startedAt: -1 }).toArray();
-    const results = dbitems.map((pojo) => new Match().populate(pojo));
+    const results = dbitems.map((pojo: any) => new Match().populate(pojo));
     return results;
   }
   /**
@@ -101,7 +101,7 @@ export default class Registry {
       ?.find({ currentPlayerId: new ObjectId(playerId) })
       .sort({ startedAt: +1 })
       .toArray();
-    const results = dbitems.map((pojo) => new Match().populate(pojo));
+    const results = dbitems.map((pojo: any) => new Match().populate(pojo));
     return results;
   }
 
@@ -127,7 +127,7 @@ export default class Registry {
     await this.connectDatabase();
 
     const dbitems = await this.collections.players?.find({}).toArray();
-    const results = dbitems.map((pojo) => new Player().populate(pojo));
+    const results = dbitems.map((pojo: any) => new Player().populate(pojo));
     return results;
   }
 
@@ -202,7 +202,7 @@ export default class Registry {
       .toArray();
     if (!dbitems) throw new Error("Error retrieving moves");
 
-    const result = dbitems.map((dbitem) => new Move().populate(dbitem));
+    const result = dbitems.map((dbitem: any) => new Move().populate(dbitem));
     return result;
   }
 

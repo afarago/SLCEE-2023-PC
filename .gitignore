@@ -6,3 +6,4 @@ dist
 .env
 test/**/*.postman_environment*.json
 test/**/*.postman_collection*.json
+yarn.lock
