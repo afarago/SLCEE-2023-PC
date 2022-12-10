@@ -1,0 +1,106 @@
+=== TODOs ===
+P1
+* todo: add bust, winner/lost animations
+* SAP Labs CEE Hub 2023 Programming Competition / SLCEE-2023-PC
+
+P2
+* consolidate filter/starteddate GMT/UTC incliding io rooms and filters
+* API usage measurement: usage { id, total_accesscount, day_accesscount, lastaccess }
+* env/option to selectively start/serve only FE or BE
+
+P3
+* jest component test and mock and test to check basic movements and state transitions e.g. simple draw, busted draw, ...
+* use tsoa routes to generate route
+* Create a proper frontend React/View/Svelte w jamstack
+
+SOMEDAY / improve
+* typeORM/typedorm/mongoose based ORM, instead of manual hydration
+* move to GCP Cloud Functions / jamstack - separate API, frontend and listener IO
+* https://www.npmjs.com/package/ts-json-object
+
+CONSIDER
+* hide @Hidden admin endpoint(s) from swagger - e.g. terminate
+* do not need to store state for _all_ events associated with a move?
+* icons: ⚓💣🎁🔱🗝️🐙🗺️🧜🏼‍♀️🗡️🔮 || backup 🔫💣,🧰🎁,🔱⛏,🧚🧜🏼‍♀️    
+* discriminator on classes for serialization/deserialization
+* NO:?use git issues/tracker instead of email?
+
+ARCH:
+* separate jamstack -> FE / even serverless SSR React   | all FE
+* separate serverless -> serverless-http                | all API
+* separate socket.io -> some eventing? / Pub/Sub        | phase 2socket.io mech
+* explore netlify/AWS serverless
+* serverless => close connections
+
+SYSTEM DESIGN:
+* mongodb connection pool is teh shortcoming ~57 parallel connections
+theoretical should be M0 500 parallel connections
+Your M2 cluster has three nodes with a 500 connection limit per node. Atlas reserves 10 connections per node. If you set your 
+read preference to secondary, Atlas can read from the two secondary nodes for a combined 980 connection limit.
+Atlas sets the limits for concurrent incoming connections based on the cluster tier and class. Atlas connection limits apply per node. For 
+sharded clusters, Atlas connection limits apply per mongos router. The number of mongos routers is equal to the number of replica set nodes across all shards.
+
+=== BUGs KNOWN ===
+* n/a
+
+================================================================
+
+// app
+//   .route('/matches/statistics')
+//   /matches/statistics?from=12/1/2022&to=12/31/2022&tags=alma,korte&status=finished|active
+//    implicit filter by player or admin
+// Csaba: tournament stats: tag+(?date)=>[winnerid,scores]
+// calendar picker: filterset(tags,date+-range,(user)) => day/count [{}]
+
+
+
+===
+DB-DESIGN v2.0 (fields to be persisted):
+
+[Match]
+_id
+playerIds[]
+startedAt
+creationParams: [MatchCreationParams] 
+{
+playerIds[]
+tags[]
+drawPile[]
+discardPile[]
+banks[][]
+randomSeed
+createdByPlayerId 
+}
+
+(moves stored separately as no need to update/persist in the same doc as we do not need to read back everything)
+(btw: when hydration happens need to load back move header fields + lastevent)
+
+//currentplayeridx() -> ( last_move_preloaded.currentplayeridx() + (last_move_preloaded.turnended() ? +1 : 0) ) % numplayers // increment if move ended turn
+
+[move]
+
+_id
+matchId
+userAction?: UserAction;
+clientIP?: string;
+at: Date;
+sequenceId: integer //1..n, increments with every move/user interaction
+sequenceTurnId: integer //1..m, increments with every turn (turnstarted->turnended)
+sequenceInTurnId: integer | null; //1..k, increments with every move, restarts at any new turn: turn+inturn 1.1, 1.2, 2.1, 2.2, 2.3, ...
+stateAtTurnStart: state // state cached at turn start, for delta calculation
+//turnended(): if lastevent contains "turnended" --> new turn to be started
+//state(): -> events[-1].state
+//currentplayeridx() -> events[-1].currentplayeridx
+
+events: Array<MatchEvent> = []; // ref 1-N matchevent [MatchEvent] 
+    {
+    eventType?: MatchEventType;
+    state?: State; // ref 1-1: [State] {
+    currentPlayerIndex: integer; // 0/1
+    banks: Array<Bank>;
+    drawPile: DrawCardPile;
+    discardPile: DiscardCardPile;
+    playArea: PlayArea;
+    pendingEffect?: CardEffect; //-- e.g. Hook, Map (not Kraken)
+    + specific fields for events
+    }

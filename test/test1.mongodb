@@ -1,0 +1,5 @@
+use('spc22dev');
+
+db.matches.findOne(
+  { "creationParams.tags": {$in: ["tournament1"] } }
+)

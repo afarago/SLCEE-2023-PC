@@ -1,0 +1,1417 @@
+{
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"HelloWorldResponse": {
+				"properties": {
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message"
+				],
+				"type": "object"
+			},
+			"integer": {
+				"type": "integer",
+				"format": "int32"
+			},
+			"MatchEventType": {
+				"type": "string",
+				"enum": [
+					"MatchStarted",
+					"TurnStarted",
+					"Draw",
+					"CardPlayedEffect",
+					"ResponseToEffect",
+					"CardPlacedToPlayArea",
+					"CardRemovedFromBank",
+					"TurnEnded",
+					"MatchEnded"
+				],
+				"nullable": false
+			},
+			"CardSuit": {
+				"type": "string",
+				"enum": [
+					"Anchor",
+					"Hook",
+					"Cannon",
+					"Key",
+					"Chest",
+					"Map",
+					"Oracle",
+					"Sword",
+					"Kraken",
+					"Mermaid"
+				],
+				"nullable": false
+			},
+			"CardValue": {
+				"type": "number",
+				"enum": [
+					2,
+					3,
+					4,
+					5,
+					6,
+					7,
+					8,
+					9
+				],
+				"description": "Card Value including all possible values"
+			},
+			"Card": {
+				"description": "Card interface representing a game card",
+				"properties": {
+					"suit": {
+						"$ref": "#/components/schemas/CardSuit"
+					},
+					"value": {
+						"$ref": "#/components/schemas/CardValue"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false,
+				"example": {
+					"suit": "Mermaid",
+					"value": 9
+				}
+			},
+			"CardEffectType": {
+				"type": "string",
+				"enum": [
+					"Oracle",
+					"Hook",
+					"Cannon",
+					"Sword",
+					"Map",
+					"Kraken"
+				]
+			},
+			"CardEffect": {
+				"description": "Card effect associated with a special card",
+				"properties": {
+					"effectType": {
+						"$ref": "#/components/schemas/CardEffectType"
+					},
+					"cards": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array"
+					},
+					"krakenCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"effectType"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"IStateDeltaStack": {
+				"properties": {
+					"added": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array"
+					},
+					"removed": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"IStateDelta": {
+				"properties": {
+					"drawPile": {
+						"$ref": "#/components/schemas/IStateDeltaStack"
+					},
+					"discardPile": {
+						"$ref": "#/components/schemas/IStateDeltaStack"
+					},
+					"banks": {
+						"items": {
+							"$ref": "#/components/schemas/IStateDeltaStack"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MatchEventDTO": {
+				"description": "Match Response Event DTO",
+				"properties": {
+					"eventType": {
+						"$ref": "#/components/schemas/MatchEventType"
+					},
+					"matchStartedSeed": {
+						"type": "string"
+					},
+					"drawCard": {
+						"$ref": "#/components/schemas/Card"
+					},
+					"cardPlayedEffect": {
+						"$ref": "#/components/schemas/CardEffect"
+					},
+					"cardPlacedToPlayAreaCard": {
+						"$ref": "#/components/schemas/Card"
+					},
+					"cardRemovedFromBankCard": {
+						"$ref": "#/components/schemas/Card"
+					},
+					"cardRemovedFromBankIndex": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"turnEndedIsSuccessful": {
+						"type": "boolean"
+					},
+					"turnEndedBonusCards": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array"
+					},
+					"turnEndedDelta": {
+						"$ref": "#/components/schemas/IStateDelta"
+					},
+					"matchEndedScores": {
+						"items": {
+							"type": "number",
+							"format": "double"
+						},
+						"type": "array"
+					},
+					"matchEndedWinnerIdx": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
+					},
+					"matchEndedComment": {
+						"type": "string"
+					},
+					"matchEndedTerminated": {
+						"type": "boolean"
+					},
+					"responseToEffectType": {
+						"$ref": "#/components/schemas/CardEffectType"
+					},
+					"responseToEffectCard": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Card"
+							}
+						],
+						"nullable": true
+					},
+					"turnStartedDelta": {
+						"$ref": "#/components/schemas/IStateDelta"
+					},
+					"playerIndex": {
+						"$ref": "#/components/schemas/integer"
+					}
+				},
+				"required": [
+					"playerIndex"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MoveDTO": {
+				"description": "Match Response Movement DTO\r\ndeliver selectively timestamp, sequence along with DTO array of events",
+				"properties": {
+					"at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"sequenceId": {
+						"type": "number",
+						"format": "double"
+					},
+					"turnId": {
+						"type": "number",
+						"format": "double"
+					},
+					"sequenceInTurnId": {
+						"type": "number",
+						"format": "double"
+					},
+					"events": {
+						"items": {
+							"$ref": "#/components/schemas/MatchEventDTO"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"at",
+					"sequenceId",
+					"turnId",
+					"sequenceInTurnId",
+					"events"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ObjectId": {
+				"type": "string",
+				"description": "A class representation of the BSON ObjectId type."
+			},
+			"MatchId": {
+				"$ref": "#/components/schemas/ObjectId"
+			},
+			"PlayerId": {
+				"$ref": "#/components/schemas/ObjectId"
+			},
+			"ObjectIdString": {
+				"type": "string",
+				"example": "30d2b1b242ea506dcc6504de",
+				"format": "ObjectId",
+				"description": "Stringified Object Id.",
+				"pattern": "[0-9a-f]{24}|[0-9a-f]{12}"
+			},
+			"MatchCreationParams": {
+				"description": "Match creation parameters including players, drawpile, discardpile and randomseed",
+				"properties": {
+					"playerids": {
+						"items": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						},
+						"type": "array",
+						"description": "List of players. Omit to request a 'practice' match.",
+						"example": [
+							"269b4f148ce2269b4f148ce2",
+							"269b4f148ce2269b4f148ab3"
+						],
+						"minItems": 2,
+						"maxItems": 2
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array",
+						"description": "Tags to add to match for later filtering"
+					},
+					"drawPile": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array",
+						"description": "[Debug purposes] Draw pile initial contents of cards. When omitted default will be generated.",
+						"example": [
+							[
+								"Oracle",
+								4
+							],
+							[
+								"Anchor",
+								4
+							],
+							[
+								"Mermaid",
+								5
+							]
+						]
+					},
+					"discardPile": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array",
+						"description": "[Debug purposes] Discard pile initial contents of cards. When omitted default will be generated.",
+						"example": [
+							[
+								"Mermaid",
+								2
+							],
+							[
+								"Hook",
+								2
+							]
+						]
+					},
+					"banks": {
+						"items": {
+							"items": {
+								"$ref": "#/components/schemas/Card"
+							},
+							"type": "array"
+						},
+						"type": "array",
+						"description": "[Debug purposes] Banks initial contents of cards. When omitted match will start with empty banks."
+					},
+					"randomSeed": {
+						"type": "string",
+						"description": "[Debug purposes] Optional seed value for pseudorandom generator used for randomization of starting player, card drawing.\r\nMatch creation returns a the input or generated seed so you can recreate any game during development.\r\nTo ignore randomization and pick first item always use \"norandom\".",
+						"example": "20221105HelloWorld"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CardSuitStack": {
+				"items": {},
+				"type": "array",
+				"description": "Card suit stack - for effective representation of bank collection ordered by suits\r\nconsists of a set of cardvalues in the given suit stack"
+			},
+			"Bank": {
+				"properties": {},
+				"additionalProperties": {
+					"$ref": "#/components/schemas/CardSuitStack"
+				},
+				"type": "object",
+				"description": "Bank - object for a player's bank"
+			},
+			"DrawCardPile": {
+				"items": {
+					"$ref": "#/components/schemas/Card"
+				},
+				"type": "array",
+				"description": "Draw card pile - contains all remining cards"
+			},
+			"DiscardCardPile": {
+				"items": {
+					"$ref": "#/components/schemas/Card"
+				},
+				"type": "array",
+				"description": "Discard pile - object to represent discard pile"
+			},
+			"PlayArea": {
+				"items": {
+					"$ref": "#/components/schemas/Card"
+				},
+				"type": "array",
+				"description": "Play area - object to represent the play area"
+			},
+			"State": {
+				"description": "Match state associated with an atomic event",
+				"properties": {
+					"banks": {
+						"items": {
+							"$ref": "#/components/schemas/Bank"
+						},
+						"type": "array"
+					},
+					"drawPile": {
+						"$ref": "#/components/schemas/DrawCardPile"
+					},
+					"discardPile": {
+						"$ref": "#/components/schemas/DiscardCardPile"
+					},
+					"playArea": {
+						"$ref": "#/components/schemas/PlayArea"
+					},
+					"currentPlayerIndex": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"pendingEffect": {
+						"$ref": "#/components/schemas/CardEffect"
+					},
+					"winnerIdx": {
+						"$ref": "#/components/schemas/integer"
+					}
+				},
+				"required": [
+					"banks",
+					"playArea"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MatchDTO": {
+				"description": "Match Response item",
+				"properties": {
+					"_id": {
+						"$ref": "#/components/schemas/MatchId"
+					},
+					"playerids": {
+						"items": {
+							"$ref": "#/components/schemas/PlayerId"
+						},
+						"type": "array"
+					},
+					"startedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdByPlayerId": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PlayerId"
+							}
+						],
+						"nullable": true
+					},
+					"creationParams": {
+						"$ref": "#/components/schemas/MatchCreationParams"
+					},
+					"lastMoveAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"moveCount": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"turnCount": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"moveCountInTurn": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
+					},
+					"state": {
+						"$ref": "#/components/schemas/State"
+					},
+					"stateAtTurnStart": {
+						"$ref": "#/components/schemas/State"
+					},
+					"currentPlayerIndex": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
+					},
+					"currentPlayerId": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PlayerId"
+							}
+						],
+						"nullable": true
+					},
+					"playernames": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"moves": {
+						"items": {
+							"$ref": "#/components/schemas/MoveDTO"
+						},
+						"type": "array"
+					},
+					"drawPileSize": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"discardPileSize": {
+						"$ref": "#/components/schemas/integer"
+					},
+					"activePlayerIndex": {
+						"$ref": "#/components/schemas/integer"
+					}
+				},
+				"required": [
+					"_id",
+					"playerids",
+					"startedAt",
+					"lastMoveAt",
+					"moveCount",
+					"playernames",
+					"moves",
+					"drawPileSize",
+					"discardPileSize"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BoolLikeString": {
+				"type": "string",
+				"enum": [
+					"0",
+					"1",
+					"true",
+					"false"
+				]
+			},
+			"MatchCreateResponse": {
+				"properties": {
+					"randomSeed": {
+						"type": "string"
+					},
+					"id": {
+						"$ref": "#/components/schemas/ObjectIdString"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object",
+				"description": "Match creation result"
+			},
+			"ErrorResponse": {
+				"properties": {
+					"error": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"error"
+				],
+				"type": "object"
+			},
+			"ActionErrorResponse": {
+				"properties": {
+					"events": {
+						"items": {
+							"$ref": "#/components/schemas/MatchEventDTO"
+						},
+						"type": "array"
+					},
+					"error": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"error"
+				],
+				"type": "object"
+			},
+			"MatchActionType": {
+				"type": "string",
+				"enum": [
+					"Draw",
+					"ResponseToEffect",
+					"EndTurn"
+				],
+				"nullable": false
+			},
+			"CardEffectResponse": {
+				"properties": {
+					"effectType": {
+						"$ref": "#/components/schemas/CardEffectType"
+					},
+					"card": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Card"
+							}
+						],
+						"nullable": true
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"IUserAction": {
+				"description": "User action sent by the player",
+				"properties": {
+					"etype": {
+						"$ref": "#/components/schemas/MatchActionType"
+					},
+					"effect": {
+						"$ref": "#/components/schemas/CardEffectResponse"
+					},
+					"autopick": {
+						"type": "boolean"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PlayerDTO": {
+				"properties": {
+					"_id": {
+						"$ref": "#/components/schemas/ObjectIdString"
+					},
+					"name": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"_id",
+					"name"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"WhoAmiIResponse": {
+				"properties": {
+					"ip": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"username": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"ip",
+					"name",
+					"username"
+				],
+				"type": "object"
+			}
+		},
+		"securitySchemes": {
+			"basic": {
+				"scheme": "basic",
+				"type": "http"
+			},
+			"digest": {
+				"scheme": "digest",
+				"type": "http"
+			}
+		}
+	},
+	"info": {
+		"title": "SLHPC23 Arena",
+		"version": "1.0.0",
+		"description": "**SAP Labs CEE Hub Programming Competition 2023 Arean server**.\n\nYou can find more information about the game and the competititon rules at [github/SLH_SPC_2022](https://github.com/afarago/SLH_SPC_2022).  \nFor a test run, you can use the crash test dummy user `000000000000000000000000/dummypass`.  \n*Note: All the APIs expect and return application/json*.",
+		"license": {
+			"name": "ISC"
+		},
+		"contact": {
+			"email": "DL SLHPC23 <DL_637A3F6466D808029A65636A@global.corp.sap>"
+		}
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/api/hello": {
+			"get": {
+				"operationId": "GetMessage",
+				"responses": {
+					"200": {
+						"description": "message",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HelloWorldResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Hello world ping message",
+				"summary": "Hello world ping message",
+				"tags": [
+					"Diagnostic"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/matches": {
+			"get": {
+				"operationId": "GetMatches",
+				"responses": {
+					"200": {
+						"description": "matches",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/MatchDTO"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves the details of all Matches.\r\nPlayers will receive own matches only",
+				"summary": "Retrieves all Matches",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "optional filter parameter in the form of ISO date or 'today'",
+						"in": "query",
+						"name": "at",
+						"required": false,
+						"schema": {
+							"type": "string"
+						},
+						"example": "today"
+					},
+					{
+						"description": "optional filter matches where player is active at",
+						"in": "query",
+						"name": "active",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"description": "optional filter matches with matching tag/comma separated list of tags",
+						"in": "query",
+						"name": "tags",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "optionally waits with timeout for any resulting match - useful for polling when the user receives invite for a new match to avoid polling",
+						"in": "query",
+						"name": "wait",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateMatch",
+				"responses": {
+					"200": {
+						"description": "The newly created Match id",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MatchCreateResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Start a match with your player id twice or your player and the dummy player to start a practice match.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Creates a new Match using the supplied parameters, leave empty for a default 'practice' Match.",
+				"summary": "Creates a new Match",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "Match creation parameters including players, drawpile, discardpile, banks and randomseed",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MatchCreationParams",
+								"description": "Match creation parameters including players, drawpile, discardpile, banks and randomseed"
+							},
+							"examples": {
+								"Example 1": {
+									"value": {}
+								},
+								"Example 2": {
+									"value": {
+										"drawPile": [
+											[
+												"Oracle",
+												4
+											],
+											[
+												"Anchor",
+												4
+											],
+											[
+												"Mermaid",
+												5
+											]
+										],
+										"discardPile": [
+											[
+												"Mermaid",
+												2
+											],
+											[
+												"Hook",
+												2
+											]
+										]
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/matches/{id}": {
+			"get": {
+				"operationId": "GetMatch",
+				"responses": {
+					"200": {
+						"description": "Match details, with al details when requesting a 'practice' Match",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MatchDTO"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Match is visible to participating players only.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Match does not exist.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Authenticated user is not the current player.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"410": {
+						"description": "No action possible on finished matches.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves the details of an existing match.\r\nSupply the unique match ID and receive corresponding match details.",
+				"summary": "Retrieves a Match details",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "The requested Match Id",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						}
+					},
+					{
+						"description": "optionally waits with timeout until user becomes active",
+						"in": "query",
+						"name": "waitactive",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"description": "optionally add events associated with the match",
+						"in": "query",
+						"name": "showevents",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "ExecuteActionForMatch",
+				"responses": {
+					"200": {
+						"description": "List of Response events executed in response for the Action",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/MatchEventDTO"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Match is visible only to participating players.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Match does not exist.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Authenticated user is not the current player.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"410": {
+						"description": "No action possible on finished matches.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ActionErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Execute an Action for an existing Match.\r\nSupply the unique match ID and add Action details",
+				"summary": "Execute an Action for a Match",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						}
+					},
+					{
+						"description": "optionally waits with timeout executing the action - useful for waiting for other user to finish its action to avoid polling",
+						"in": "query",
+						"name": "wait",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Match action execution parameters",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/IUserAction",
+								"description": "Match action execution parameters"
+							},
+							"examples": {
+								"Example 1": {
+									"value": {
+										"etype": "Draw"
+									}
+								},
+								"Example 2": {
+									"value": {
+										"etype": "EndTurn"
+									}
+								},
+								"Example 3": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Oracle",
+											"card": [
+												"Mermaid",
+												5
+											]
+										}
+									}
+								},
+								"Example 4": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Oracle",
+											"card": null
+										}
+									}
+								},
+								"Example 5": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Hook",
+											"card": [
+												"Mermaid",
+												5
+											]
+										}
+									}
+								},
+								"Example 6": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Cannon",
+											"card": [
+												"Mermaid",
+												5
+											]
+										}
+									}
+								},
+								"Example 7": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Sword",
+											"card": [
+												"Mermaid",
+												5
+											]
+										}
+									}
+								},
+								"Example 8": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"effect": {
+											"effectType": "Map",
+											"card": [
+												"Mermaid",
+												5
+											]
+										}
+									}
+								},
+								"Example 9": {
+									"value": {
+										"etype": "ResponseToEffect",
+										"autopick": true
+									}
+								},
+								"Example 10": {
+									"value": {
+										"etype": "Draw",
+										"autopick": true
+									}
+								},
+								"Example 11": {
+									"value": {
+										"etype": "EndTurn",
+										"autopick": true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/matches/{id}/terminate": {
+			"delete": {
+				"operationId": "DeleteMatch",
+				"responses": {
+					"200": {
+						"description": ""
+					},
+					"401": {
+						"description": "Match is visible only to participating players.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Match does not exist.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Forceful deletion of a match by Admin, on a timeout",
+				"summary": "Forceful central deletion of a Match on a timeout",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "game id",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"comment": {
+										"type": "string"
+									},
+									"winnerId": {
+										"$ref": "#/components/schemas/ObjectIdString"
+									}
+								},
+								"required": [
+									"winnerId"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/players": {
+			"get": {
+				"operationId": "GetPlayers",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/PlayerDTO"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Not allowed for users to query players.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves the details of all Players.\r\nPlayers can retrieve only own information and details",
+				"summary": "Retrieves Player information",
+				"tags": [
+					"Players"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/api/players/{id}": {
+			"get": {
+				"operationId": "GetPlayer",
+				"responses": {
+					"200": {
+						"description": "Player details",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PlayerDTO"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Not allowed to query other users.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Player record not found.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves the details of an existing Player.\r\nSupply the unique Player ID and receive corresponding Player details.\r\nPlayers can retrieve only own information and details",
+				"summary": "Retrieves a Player details",
+				"tags": [
+					"Players"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "The requested Player Id",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						}
+					}
+				]
+			}
+		},
+		"/api/whoami": {
+			"get": {
+				"operationId": "GetAuthenticatedUser",
+				"responses": {
+					"200": {
+						"description": "The id of the authenticated User.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WhoAmiIResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Returns information on authenticated User",
+				"summary": "Returns authenticated User",
+				"tags": [
+					"Diagnostic"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": []
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	],
+	"tags": [
+		{
+			"name": "Diagnostic",
+			"description": "Diagnostic operations for easy onboarding"
+		},
+		{
+			"name": "Game",
+			"description": "Game relaeted operations to create/query a match or execute a user action"
+		},
+		{
+			"name": "Player",
+			"description": "Player related operations"
+		}
+	]
+}

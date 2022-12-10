@@ -1,0 +1,18 @@
+// Select the database to use.
+use('spc22dev');
+
+db.moves.aggregate([
+{ $match: { matchId: ObjectId("6376445c44ab22ec31eab85d") } },
+{ $sort: { sequenceId: -1 } },
+{ $limit: 1 },
+{ $project: { "events.eventType": +1 } },
+{ $project: { events: { $slice: ["$events", -1] } } },
+], 
+{})
+
+db.moves.find(
+  { matchId: ObjectId("6376445c44ab22ec31eab85d") },
+  { events: { $slice: -1 } },
+  { sort: { sequenceId: -1 } }
+)
+

@@ -1,0 +1,906 @@
+{
+	"info": {
+		"_postman_id": "cbdd8588-bbbd-4d67-9999-625d45b0d2d7",
+		"name": "SPC22",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17028852"
+	},
+	"item": [
+		{
+			"name": "central",
+			"item": [
+				{
+					"name": "startMatch",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch invalid players",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [42, \"43\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n        [\"Mermaid\", 5],\r\n        [\"Sword\", 3]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4],\r\n        [\"Sword\", 3]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2 Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n        [\"Mermaid\", 5],\r\n        [\"Map\", 3],\r\n        [\"Mermaid\", 9]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2 Copy 3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Map\", 5],\r\n        [\"Sword\", 2],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Oracle\", 2],\r\n        [\"Map\", 5],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Sword\", 5],\r\n        [\"Map\", 2]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2 Copy 4",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Mermaid\", 4],\r\n        [\"Mermaid\", 5],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Map\", 5],\r\n        [\"Mermaid\", 7]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2 Copy 5",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Anchor\", 4],\r\n        [\"Anchor\", 2],\r\n\r\n        [\"Kraken\", 5],\r\n        [\"Anchor\", 5],\r\n        [\"Anchor\", 3],\r\n\r\n        [\"Kraken\", 6],\r\n        [\"Hook\", 6],\r\n        [\"Mermaid\", 6]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch with debug stack 2 Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"players\": [\"898a4ad3-823a-40fb-98d9-37b77adfbe26\",\"1ec8a9c8-7911-4b49-b811-48cf56431e7c\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Mermaid\", 5],\r\n        [\"Sword\", 2],\r\n        [\"Mermaid\", 9]\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getMatches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getPlayers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/players",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"players"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "client",
+			"item": [
+				{
+					"name": "Draw",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"Draw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Endturn",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"EndTurn\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": {\r\n            \"suit\": \"Anchor\",\r\n            \"value\": 2\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle FlipBack",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": null\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Hook",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Hook\",\r\n        \"card\": {\r\n            \"suit\": \"Kraken\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Hook Bad",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Hook\",\r\n        \"card\": {\r\n            \"suit\": \"Hook\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Cannon",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Cannon\",\r\n        \"card\": {\r\n            \"suit\": \"Oracle\",\r\n            \"value\": 5\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Sword",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Sword\",\r\n        \"card\": {\r\n            \"suit\": \"Oracle\",\r\n            \"value\": 2\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Map",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Map\",\r\n        \"card\": {\r\n            \"suit\": \"Mermaid\",\r\n            \"value\": 5\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getPlayerById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/players/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"players",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "898a4ad3-823a-40fb-98d9-37b77adfbe26"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getMatch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getMatch debug",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"debug\": {\r\n        \"keep\":{\r\n            \"move\": true\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "targetmatch",
+			"value": "0",
+			"type": "default"
+		}
+	]
+}

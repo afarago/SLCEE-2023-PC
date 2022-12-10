@@ -1,0 +1,55 @@
+.matchestable {
+  thead {
+    th,
+    td {
+      padding: {
+        top: 0px;
+        bottom: 6px;
+      }
+    }
+
+    tr:last-child {
+      border-bottom: 2px solid rgba(180, 180, 180, 0.2);
+    }
+  }
+
+  // auto hide nodata body if there is any data
+  &:has(tbody.data tr) tbody.nodata {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) {
+    & td {
+      white-space: nowrap;
+
+      :last-child {
+        white-space: normal;
+      }
+    }
+
+    & a.btn {
+      width: 15em;
+    }
+  }
+
+  .matchrow.finished {
+    td {
+      color: #aaa !important;
+      background-color: #eee;
+    }
+  }
+}
+
+.datepicker-calendar {
+  .select-month input {
+    width: 75px;
+  }
+
+  .has-event button {
+    border-bottom: 2px solid #004d40;
+  }
+}
+
+#btnCreatePracticeMatch {
+  right: 24px;
+}

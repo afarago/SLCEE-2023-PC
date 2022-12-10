@@ -1,0 +1,63 @@
+@use 'sass:list';
+@use 'sass:map';
+
+//--- VARIABLES ---
+$player_colors: #7cb342 #ff8f00;
+
+//--- PAGE STRUCTURE ---
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+footer {
+  width: 100%;
+}
+
+nav .breadcrumb i.material-icons {
+  float: unset;
+  vertical-align: bottom;
+}
+
+.page-footer {
+  margin-top: 2em;
+}
+
+@media only screen and (max-width: 992px) {
+  .container {
+    width: 100%;
+    margin: 0px;
+  }
+  .collapsible-body {
+    padding: 0px;
+  }
+}
+
+@media only screen and (max-width: 1200px) {
+  .hide-on-large-and-down {
+    display: none !important;
+  }
+}
+
+//--- GENERIC PLAYER ---
+@each $color in $player_colors {
+  $pidx: index($player_colors, $color);
+
+  .player#{$pidx - 1} {
+    color: $color;
+  }
+}
+.activePlayer {
+  font-weight: 900;
+}
+
+.winningPlayer::after {
+  content: '🏆';
+  position: relative;
+  top: -0.5em;
+}

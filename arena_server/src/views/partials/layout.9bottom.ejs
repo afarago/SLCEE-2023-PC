@@ -1,0 +1,11 @@
+<%- include('footer.ejs') %>
+
+<!--JavaScript at end of body for optimized loading-->
+<script type="text/javascript" src="/js/materialize.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.tooltipped').tooltip();
+    $('.collapsible').collapsible();
+    $('.dropdown-trigger').dropdown({constrainWidth: false, coverTrigger: false, hover: true});
+  });
+</script>

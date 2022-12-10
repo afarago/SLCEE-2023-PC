@@ -1,0 +1,13 @@
+node_modules
+.cache
+.vscode
+/*.code-workspace
+test/**/*.postman_environment*.json
+test/**/*.postman_collection*.json
+logs/**
+bin
+obj
+.vs
+dist
+yarn.lock
+*.mongodb

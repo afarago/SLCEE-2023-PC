@@ -1,0 +1,253 @@
+@use '_common';
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:selector';
+
+.cardsuit {
+  width: 1em;
+  height: 1em;
+  vertical-align: sub;
+}
+
+.cardvalue {
+  font-family: 'Mochiy Pop One', serif;
+  font-size: 120%;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+
+.cardvalue,
+.cardsuit {
+  font-size: 140%;
+}
+.cardvalue span {
+  display: inline-block;
+  &:not(:last-child):after {
+    content: '·';
+  }
+}
+
+@keyframes animated_disappear {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+.animated_disappear {
+  animation: animated_disappear 750ms forwards;
+}
+
+.playcards {
+  display: inline-block;
+  white-space: nowrap;
+  z-index: 1;
+  color: rgb(20, 20, 20);
+  background-color: #e0d6b8;
+  border: 0.5px solid #79622663;
+  border-radius: 5px;
+  margin: 1px;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  box-shadow: 0.1em 0.1em 0.2em #333333b7;
+
+  &.back {
+    background-color: #796226;
+    border: 1px solid #e0d6b863;
+    color: #e0d6b8;
+  }
+  &.pulse {
+    cursor: pointer;
+    background-color: white;
+    color: black;
+    &:hover {
+      background-color: yellow;
+    }
+  }
+}
+
+.bigcard {
+  font-size: 250% !important;
+  border: 2px grey solid;
+  box-shadow: 0.2em 0.2em 0.5em #333;
+  padding-right: 0.1em;
+
+  &.bustercard {
+    border: 2px #ff5900 solid;
+  }
+  &.animateinitial {
+    opacity: 0;
+    top: 100px;
+    position: relative;
+  }
+}
+
+//--- MOVES TABLE ---
+#moveslist {
+  td {
+    padding: {
+      top: 1px;
+      bottom: 1px;
+    }
+
+    border: {
+      collapse: inherit;
+      radius: 0px;
+    }
+
+    line-height: 1.1em;
+  }
+
+  tr {
+    border: 0px;
+  }
+
+  .moveevent td {
+    font-size: 12px;
+  }
+
+  .bar {
+    width: 10px;
+    background-color: unset;
+  }
+
+  $bar_positions: 'first-of-type', 'last-of-type';
+  @each $color in common.$player_colors {
+    $pidx: index(common.$player_colors, $color);
+    $bpos: list.nth($bar_positions, $pidx);
+
+    .player#{$pidx - 1} .bar:#{$bpos} {
+      background-color: $color !important;
+    }
+  }
+
+  .datepill {
+    float: right;
+    color: #777;
+    font-size: 12px;
+  }
+
+  .moveheader {
+    td {
+      background-color: #eee;
+
+      padding: {
+        top: 6px;
+        bottom: 6px;
+      }
+
+      span.eventType {
+        font-weight: bold;
+      }
+    }
+  }
+
+  .movebody.collapsed {
+    tr td {
+      padding: {
+        top: 0px;
+        bottom: 0px;
+      }
+    }
+
+    tr:not(:first-child) {
+      display: none;
+    }
+  }
+}
+
+//--- MATCH STATUS ---
+#matchstate {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  margin-bottom: 0px;
+  padding-bottom: 1em;
+}
+
+.playtable {
+  margin-bottom: 0;
+  display: grid;
+  grid-template:
+    'playarea playarea' 1fr
+    'drawpile discardpile' auto / 1fr 1fr;
+}
+.statusbox.drawpile,
+.statusbox.discardpile {
+  white-space: nowrap;
+  padding-top: 0.375em !important;
+}
+.drawpile {
+  grid-area: drawpile;
+}
+.discardpile {
+  grid-area: discardpile;
+}
+
+h6.statusbox {
+  margin: 0px !important;
+  padding: 0.75em 0.75em 0.75em 0.75em !important;
+  max-height: 3em;
+}
+
+.statusbox {
+  padding: 0px !important;
+  margin: 0px !important;
+
+  h6 {
+    margin: 0px !important;
+    padding: 0.75em 0.75em 0.375em 0.75em !important;
+  }
+
+  div {
+    font-size: 12px;
+    line-height: 1;
+    padding: 0.375em 0.75em 0.75em 0.75em;
+    min-height: 2em;
+  }
+
+  .activePlayer {
+    border: 1px white solid;
+    border-radius: 6px;
+    padding: 0px 6px;
+  }
+
+  &.bank,
+  &.playarea {
+    .playcards {
+      font-size: 170%;
+    }
+  }
+  &.playarea {
+    grid-area: playarea;
+    min-height: 80px;
+    position: relative;
+  }
+
+  &.bank {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 0px;
+    }
+  }
+
+  .btn.useraction {
+    z-index: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .move-effect-revealer {
+    opacity: 1;
+    position: fixed;
+    z-index: 10;
+  }
+}

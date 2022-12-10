@@ -1,0 +1,300 @@
+@charset "UTF-8";
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+footer {
+  width: 100%;
+}
+
+nav .breadcrumb i.material-icons {
+  float: unset;
+  vertical-align: bottom;
+}
+
+.page-footer {
+  margin-top: 2em;
+}
+
+@media only screen and (max-width: 992px) {
+  .container {
+    width: 100%;
+    margin: 0px;
+  }
+  .collapsible-body {
+    padding: 0px;
+  }
+}
+@media only screen and (max-width: 1200px) {
+  .hide-on-large-and-down {
+    display: none !important;
+  }
+}
+.player0 {
+  color: #7cb342;
+}
+
+.player1 {
+  color: #ff8f00;
+}
+
+.activePlayer {
+  font-weight: 900;
+}
+
+.winningPlayer::after {
+  content: "🏆";
+  position: relative;
+  top: -0.5em;
+}
+
+.matchestable thead th,
+.matchestable thead td {
+  padding-top: 0px;
+  padding-bottom: 6px;
+}
+.matchestable thead tr:last-child {
+  border-bottom: 2px solid rgba(180, 180, 180, 0.2);
+}
+.matchestable:has(tbody.data tr) tbody.nodata {
+  display: none;
+}
+@media only screen and (min-width: 601px) {
+  .matchestable td {
+    white-space: nowrap;
+  }
+  .matchestable td :last-child {
+    white-space: normal;
+  }
+  .matchestable a.btn {
+    width: 15em;
+  }
+}
+.matchestable .matchrow.finished td {
+  color: #aaa !important;
+  background-color: #eee;
+}
+
+.datepicker-calendar .select-month input {
+  width: 75px;
+}
+.datepicker-calendar .has-event button {
+  border-bottom: 2px solid #004d40;
+}
+
+#btnCreatePracticeMatch {
+  right: 24px;
+}
+
+.cardsuit {
+  width: 1em;
+  height: 1em;
+  vertical-align: sub;
+}
+
+.cardvalue {
+  font-family: "Mochiy Pop One", serif;
+  font-size: 120%;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+
+.cardvalue,
+.cardsuit {
+  font-size: 140%;
+}
+
+.cardvalue span {
+  display: inline-block;
+}
+.cardvalue span:not(:last-child):after {
+  content: "·";
+}
+
+@keyframes animated_disappear {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+.animated_disappear {
+  animation: animated_disappear 750ms forwards;
+}
+
+.playcards {
+  display: inline-block;
+  white-space: nowrap;
+  z-index: 1;
+  color: rgb(20, 20, 20);
+  background-color: #e0d6b8;
+  border: 0.5px solid rgba(121, 98, 38, 0.3882352941);
+  border-radius: 5px;
+  margin: 1px;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  box-shadow: 0.1em 0.1em 0.2em rgba(51, 51, 51, 0.7176470588);
+}
+.playcards.back {
+  background-color: #796226;
+  border: 1px solid rgba(224, 214, 184, 0.3882352941);
+  color: #e0d6b8;
+}
+.playcards.pulse {
+  cursor: pointer;
+  background-color: white;
+  color: black;
+}
+.playcards.pulse:hover {
+  background-color: yellow;
+}
+
+.bigcard {
+  font-size: 250% !important;
+  border: 2px grey solid;
+  box-shadow: 0.2em 0.2em 0.5em #333;
+  padding-right: 0.1em;
+}
+.bigcard.bustercard {
+  border: 2px #ff5900 solid;
+}
+.bigcard.animateinitial {
+  opacity: 0;
+  top: 100px;
+  position: relative;
+}
+
+#moveslist td {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  border-collapse: inherit;
+  border-radius: 0px;
+  line-height: 1.1em;
+}
+#moveslist tr {
+  border: 0px;
+}
+#moveslist .moveevent td {
+  font-size: 12px;
+}
+#moveslist .bar {
+  width: 10px;
+  background-color: unset;
+}
+#moveslist .player0 .bar:first-of-type {
+  background-color: #7cb342 !important;
+}
+#moveslist .player1 .bar:last-of-type {
+  background-color: #ff8f00 !important;
+}
+#moveslist .datepill {
+  float: right;
+  color: #777;
+  font-size: 12px;
+}
+#moveslist .moveheader td {
+  background-color: #eee;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+#moveslist .moveheader td span.eventType {
+  font-weight: bold;
+}
+#moveslist .movebody.collapsed tr td {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+#moveslist .movebody.collapsed tr:not(:first-child) {
+  display: none;
+}
+
+#matchstate {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  margin-bottom: 0px;
+  padding-bottom: 1em;
+}
+
+.playtable {
+  margin-bottom: 0;
+  display: grid;
+  grid-template: "playarea playarea" 1fr "drawpile discardpile" auto/1fr 1fr;
+}
+
+.statusbox.drawpile,
+.statusbox.discardpile {
+  white-space: nowrap;
+  padding-top: 0.375em !important;
+}
+
+.drawpile {
+  grid-area: drawpile;
+}
+
+.discardpile {
+  grid-area: discardpile;
+}
+
+h6.statusbox {
+  margin: 0px !important;
+  padding: 0.75em 0.75em 0.75em 0.75em !important;
+  max-height: 3em;
+}
+
+.statusbox {
+  padding: 0px !important;
+  margin: 0px !important;
+}
+.statusbox h6 {
+  margin: 0px !important;
+  padding: 0.75em 0.75em 0.375em 0.75em !important;
+}
+.statusbox div {
+  font-size: 12px;
+  line-height: 1;
+  padding: 0.375em 0.75em 0.75em 0.75em;
+  min-height: 2em;
+}
+.statusbox .activePlayer {
+  border: 1px white solid;
+  border-radius: 6px;
+  padding: 0px 6px;
+}
+.statusbox.bank .playcards, .statusbox.playarea .playcards {
+  font-size: 170%;
+}
+.statusbox.playarea {
+  grid-area: playarea;
+  min-height: 80px;
+  position: relative;
+}
+.statusbox.bank {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.statusbox.bank .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0px;
+}
+.statusbox .btn.useraction {
+  z-index: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.statusbox .move-effect-revealer {
+  opacity: 1;
+  position: fixed;
+  z-index: 10;
+}

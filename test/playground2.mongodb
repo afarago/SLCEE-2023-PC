@@ -1,0 +1,43 @@
+use('spc22dev');
+
+//--  GET /matches/:id/moves?after=:moveid&wait=1&active=1
+db.moves.find(
+    { "matchId": ObjectId("637985a6087602593a89c1f0"), 
+    "_id": { $gt: ObjectId("637985ab087602593a89c1f9") } },
+    { "_id": 1, at:+1 }
+    );
+
+db.moves.find(
+    { "matchId": ObjectId("637985a6087602593a89c1f0"), "at": { $gt: new Date("2022-11-20T01:40:59.737Z") } },
+    { "_id": 1, at:+1 }
+);
+
+
+//--  admin get winners / for a tag / match
+db.matches.find(
+    //{ "state.winnerIdx": { $exists: true } },
+    { "state.winnerIdx": {$exists:true}, "creationParams.tags": {$in: ["apple"]} },
+    { "_id": +1, winnerId: { $arrayElemAt:[ "$players", "$state.winnerIdx" ] }, 
+    startedAt: +1,  }
+)
+
+
+
+db.matches.aggregate([
+    { $match: {
+        $expr: { $gte: [
+            "$startedAt",
+            { $dateTrunc: { unit: "month", date: ISODate() } }
+            ]}
+        }
+    },
+    { $group:
+        {
+            _id: { $dateTrunc: { unit: "day", date: "$startedAt"} },
+            count: {$count: {} }
+        }
+    },
+    { 
+        $sort: { _id: +1 } 
+    }
+])

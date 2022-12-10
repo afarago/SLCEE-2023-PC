@@ -1,0 +1,97 @@
+<nav>
+  <div class="nav-wrapper light-blue darken-1 row">
+    <div class="col left">
+      <% if (locals.header && locals.header.hasBackNav) { %>
+      <a href="/" class="breadcrumb">
+        <i class="material-icons"> list </i>
+        Matches
+      </a>
+      <% } %>
+
+      <span>
+        <a href="#!" class="breadcrumb" onClick="history.go(0);">
+          <% if (locals.header) { %>
+            <i class="material-icons"> <%= locals.header.icon %> </i>
+            <%- locals.header.text %>
+          <% }%>
+        </a>
+      </span>
+
+      <% if (locals.header && locals.header.showPicker) { %>
+      <a class="right col hide-on-small-and-down" href="?at=<%=new Date(filterDate.getTime()+864e5).toJSON().split('T')[0]%>"><i class="material-icons"> arrow_right </i></a>
+      <span class="col right">
+        <style>
+          .datepicker-container {
+            color: black;
+          }
+        </style>
+        @ <input type="text" class="datepicker white-text" style="width: initial" />
+        <script>
+          function calendarEventsToDateStr(data) {
+            return data.map(item=>new Date(item).toDateString());
+          }
+          let calendarStatStart = new Date('<%= locals.filterDate.toLocaleString() %>');
+          let calendarStatEvents = [];
+          $(document).ready(function () {
+            var $elem = document.querySelectorAll('.datepicker');
+            var instances = M.Datepicker.init($elem, {
+              defaultDate: calendarStatStart,
+              setDefaultDate: true,
+              maxDate: new Date(),
+              showDaysInNextAndPreviousMonths: true,
+              autoClose: true,
+              events: calendarStatEvents,
+              onClose: function () {
+                window.location = '?at=' + this.date.toLocaleDateString();
+              },
+              onDraw: function ($el) {
+                const calendar = $el?.calendars?.[0];
+                const date = new Date(calendar.year, calendar.month, 1);
+                if (calendarStatStart.getTime() != date.getTime()) {
+                  calendarStatStart = date;
+                  $.getJSON(`/api/matches/busydays?at=${date.toDateString()}`, function(data) {
+                    $el.options.events = calendarEventsToDateStr(data);
+                    $el.draw(true);
+                  });
+                }
+              },
+            });
+          });
+        </script>
+      </span>
+      <a class="right col hide-on-small-and-down" href="?at=<%=new Date(filterDate.getTime()-864e5).toJSON().split('T')[0]%>"><i class="material-icons"> arrow_left </i></a>
+      <% } %> <% if (locals.matchdto) { %>
+      <span class="hide-on-small-and-down">
+        <%- locals.matchdto.creationParams?.tags?.map(tag => `
+        <div class="chip blue lighten-1 white-text">#${tag}</div>
+        `).join(''); %>
+      </span>
+      <% } %>
+    </div>
+
+    <% if (locals.user) { %>
+    <a class="right col" href="#!" style="cursor: default"
+      ><i
+        class="material-icons dropdown-trigger"
+        data-target='dropdown-user'
+      >account_circle</i></a>
+
+      <!-- Dropdown Structure -->
+      <ul id='dropdown-user' class='dropdown-content'>
+        <li><a href="#!"><i class="material-icons"> account_circle </i> Logged in as <%=`${locals.user.name} <${locals.user.username}>`%></a></li>
+        <li class="divider" tabindex="-1"></li>
+        <li><a href="/logout"><i class="material-icons"> logout </i>Logout</a></li>
+      </ul>
+      
+    <% } else { %>
+    <a class="right col" href="/login"><i class="material-icons"> lock_open </i></a>
+    <% } %>
+
+    <ul class="right hide-on-med-and-down">
+      SAP Labs CEE Hub 2023 Programming Competition
+    </ul>
+    <ul class="right hide-on-large-only hide-on-extra-large-only">
+      SLCEE-2023-PC
+    </ul>
+  </div>
+</nav>

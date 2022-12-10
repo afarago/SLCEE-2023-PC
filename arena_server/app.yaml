@@ -1,0 +1,10 @@
+runtime: nodejs16
+env_variables:
+  MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:OOp874yvUjntNlrg@cluster0.prcmn0g.mongodb.net/?retryWrites=true&w=majority"
+  ADMIN_PASSWORD: "blahSecret!"
+  MONGODB_DBNAME: "spc22"
+  API_RETRY_TIMEOUT_MS: 30000
+  API_RETRY_DELAY_MS: 1000
+  NODE_ENV: production
+  PORT: 8080
+  LOGGING_NO_COLORS: true
