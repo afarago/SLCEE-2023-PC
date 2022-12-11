@@ -106,21 +106,20 @@ export default class MatchesController {
       }
     ).catch(() => [] as Match[]); // -- do not throw any errors, just default
 
-    const matchesdto = await Promise.all(
-      matches?.map(async (match: Match) => {
+    const matchesdto = await matches.reduce(
+      async (accPromise: Promise<MatchDTO[]>, match: Match): Promise<MatchDTO[]> => {
+        const acc = await accPromise;
         try {
-          // -- do not return all moves/events
-          const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, null, null);
-          return matchdto;
+          const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, undefined, undefined);
+          acc.push(matchdto);
         } catch {
-          // -- in case of error return and filter out a null
-          return null;
+          // -- NOOP
         }
-      })
+        return acc;
+      },
+      Promise.resolve(new Array<MatchDTO>())
     );
-
-    // TODO: add a DB limit to query
-    return matchesdto.filter((mdto) => mdto);
+    return matchesdto;
   }
 
   /**
@@ -203,7 +202,7 @@ export default class MatchesController {
 
     // -- retry retrieving the match either until auth user is same as current user or timeout
     // -- if doWaitForActive is false - we only retry once
-    let match: Match;
+    let match: Match | undefined;
     await retry(
       async () => {
         // -- retry promise reading matches
@@ -221,7 +220,7 @@ export default class MatchesController {
         timeout: apiRetryTimeoutMs,
         delay: apiRetryDelayMs,
         retries: doWaitForActive ? apiRetryMaxCount : 0,
-        until: (retval) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
+        until: (retval: Match) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
       }
     ).catch(() => null); // -- do not throw any errors, just default
 
@@ -234,7 +233,7 @@ export default class MatchesController {
     if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
       throw new APIError(409, 'Authenticated user is not the current player.');
 
-    const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, null, doShowEvents);
+    const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, undefined, doShowEvents);
     return matchdto;
   }
 
@@ -261,6 +260,7 @@ export default class MatchesController {
   @Post('{id}')
   @Tags('Game')
   @Security({ basic: [] })
+  @Response<ErrorResponse>(400, 'Invalid useraction input parameter.')
   @Response<ErrorResponse>(401, 'Match is visible only to participating players.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
   @Response<ErrorResponse>(409, 'Authenticated user is not the current player.')
@@ -274,11 +274,12 @@ export default class MatchesController {
   ): Promise<MatchEventDTO[]> {
     if (req.user?.isAdmin) throw new APIError(401, 'Admin user is not allowed to interfere with the match.'); // admin user is not allowed
     const data = UserAction.constructFromObject(params);
+    if (!data) throw new APIError(400, 'Invalid useraction input parameter.');
     const doWaitForExecution: boolean = parseBoolyFromString(wait);
 
     // -- retry executing the action either until auth user is same as current user or timeout
     // -- using https://www.npmjs.com/package/ts-retry-promise
-    let match: Match;
+    let match: Match | undefined;
     await retry(
       async () => {
         // -- retrieve and hydrate objects
@@ -309,12 +310,12 @@ export default class MatchesController {
       // -- add last move (match finished) events turnended and matchended
       const move = await this.dbaService.getLastMoveByMatchIdPromise(match._id.toString());
       const events = move
-        .getEvents()
+        ?.getEvents()
         .filter(
           (event) => event?.eventType === OMatchEventType.TurnEnded || event?.eventType === OMatchEventType.MatchEnded
         );
       throw new APIError(410, 'No action possible on finished matches.', {
-        events: events.map((event) => eventToDTO(event, { hidePlayerIndex: true })),
+        events: events?.map((event) => eventToDTO(event, { hidePlayerIndex: true })),
       });
     }
     if (!this.gameService.IsAuthUserIsActivePlayer(match, req.user))

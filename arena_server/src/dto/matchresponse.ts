@@ -7,7 +7,7 @@ import { IMoveAt, IMoveSequence } from '../models/game/move';
  * Match Response Event DTO
  */
 export interface MatchEventDTO extends IMatchEventCore, IMatchEventParameters {
-  playerIndex: integer;
+  playerIndex: integer | null;
 }
 
 /**
@@ -22,9 +22,9 @@ export interface MoveDTO extends IMoveAt, IMoveSequence {
  * Match Response item
  */
 export interface MatchDTO extends IMatchCore {
-  playernames: string[];
-  moves: MoveDTO[];
+  playernames?: string[];
+  moves?: MoveDTO[];
   drawPileSize: integer;
   discardPileSize: integer;
-  activePlayerIndex?: integer;
+  activePlayerIndex?: integer | null;
 }

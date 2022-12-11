@@ -23,12 +23,12 @@ export interface IMatchCoreReadonly {
 export interface IMatchCoreChanging {
   lastMoveAt: Date;
   moveCount: integer;
-  turnCount?: integer;
-  moveCountInTurn?: integer | null;
+  turnCount: integer;
+  moveCountInTurn: integer | null;
   state?: State;
   stateAtTurnStart?: State;
-  currentPlayerIndex?: integer | null;
-  currentPlayerId?: PlayerId | null;
+  currentPlayerIndex: integer | null;
+  currentPlayerId: PlayerId | null;
 }
 export interface IMatchCore extends IMatchCoreReadonly, IMatchCoreChanging {}
 
@@ -66,12 +66,12 @@ export default class Match implements IMatchCore {
 
   lastMoveAt: Date;
   moveCount: integer;
-  turnCount?: integer;
-  moveCountInTurn?: integer | null;
+  turnCount: integer;
+  moveCountInTurn: integer | null;
   stateCache?: State; // -- backup field, to cache value for db as 'state'
   stateAtTurnStart: State; // -- state at turn start
-  currentPlayerIndex?: number | null;
-  currentPlayerId?: PlayerId | null; //-- only for db search, do not return anywhere else
+  currentPlayerIndex: number | null;
+  currentPlayerId: PlayerId | null; // -- only for db search, do not return anywhere else
 
   move?: Move; // -- do not directly save moves, should be persisted on creation and last on should be retrieved upon db read
 
@@ -89,7 +89,7 @@ export default class Match implements IMatchCore {
     return this.toJSON();
   }
 
-  constructor(createdByPlayerId?: PlayerId, playerids?: PlayerId[], creationParams?: MatchCreationParams) {
+  constructor(createdByPlayerId?: PlayerId | null, playerids?: PlayerId[], creationParams?: MatchCreationParams) {
     this.playerids = playerids ?? [];
     this.createdByPlayerId = createdByPlayerId;
     this.creationParams = creationParams;
@@ -97,29 +97,31 @@ export default class Match implements IMatchCore {
   get numberOfPlayers(): number {
     return this.playerids?.length;
   }
-  getCurrentPlayerId(): PlayerId {
+  getCurrentPlayerId(): PlayerId | null {
     return this.move
       ? this.getCurrentPlayerIdFromMove() // -- after matchEnd this will be null
-      : this.playerids[this.state.currentPlayerIndex];
-  }
-  getActivePlayerIdx(): number {
-    // -- if moveCountInTurn is nulled, it means that we are waiting for the move of the next player
-    return !!this.getCurrentPlayerId() // -- match has not finished
-      ? (this?.state?.currentPlayerIndex + (!!this?.moveCountInTurn ? 0 : +1)) % this?.numberOfPlayers
+      : this.state && this.state.currentPlayerIndex !== null
+      ? this.playerids[this.state.currentPlayerIndex]
       : null;
   }
-  getActivePlayerId(): PlayerId {
+  getActivePlayerIdx(): number | null {
+    // -- if moveCountInTurn is nulled, it means that we are waiting for the move of the next player
+    return this.state && this.state.currentPlayerIndex !== null // -- match has not finished
+      ? (this.state.currentPlayerIndex + (this.moveCountInTurn !== null ? 0 : +1)) % this.numberOfPlayers
+      : null;
+  }
+  getActivePlayerId(): PlayerId | null {
     if (this.getActivePlayerIdx() === null) return null;
     else return this.getPlayerIdAt(this.getActivePlayerIdx());
   }
-  getCurrentPlayerIdFromMove(): PlayerId {
+  getCurrentPlayerIdFromMove(): PlayerId | null {
     return this.move ? this.getPlayerIdAt(this.move?.currentPlayerIndex) : this.getCurrentPlayerId();
   }
-  getCurrentPlayerIdxFromMove(): number {
+  getCurrentPlayerIdxFromMove(): number | undefined | null {
     return this.move ? this.move.currentPlayerIndex : undefined;
   }
-  getPlayerIdAt(idx: any): PlayerId {
-    return Number.isFinite(idx) ? this.playerids.at(idx) : null;
+  getPlayerIdAt(idx: any): PlayerId | null {
+    return Number.isFinite(idx) ? this.playerids.at(idx) ?? null : null;
   }
   // getNextPlayerId(): PlayerId {
   //   const currentPlayerIndex = !this.isFinished
@@ -137,7 +139,7 @@ export default class Match implements IMatchCore {
   get pendingEffect(): CardEffect | undefined {
     return this.state?.pendingEffect;
   }
-  get isFinished(): boolean | undefined {
+  get isFinished(): boolean {
     return !this.getCurrentPlayerId();
   }
 }

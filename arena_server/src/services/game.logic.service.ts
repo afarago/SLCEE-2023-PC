@@ -1,6 +1,6 @@
-import { timeStamp } from 'console';
 import 'core-js/es/array/at';
 
+import assert from 'node:assert/strict';
 import { Container, Inject } from 'typedi';
 import * as util from 'util';
 
@@ -18,14 +18,15 @@ import DBAService from './dba.service';
  * GameController class, main game controller
  */
 export default class GameLogicService {
-  constructor(private match: model.Match, private username: string, private clientip: string) {}
+  constructor(private match: model.Match | null, private username: string, private clientip: string) {}
 
   @Inject()
   private dbaService: DBAService = Container.get(DBAService);
 
   private _randomGenerator: RandomGenerator;
   private get randomGenerator() {
-    if (!this._randomGenerator) this._randomGenerator = new RandomGenerator(this.match?.creationParams?.randomSeed);
+    assert(this.match);
+    if (!this._randomGenerator) this._randomGenerator = new RandomGenerator(this.match.creationParams?.randomSeed);
     return this._randomGenerator;
   }
 
@@ -39,11 +40,18 @@ export default class GameLogicService {
    * @returns move
    */
   private newMove(): model.Move {
-    // -- copy state over frm previous move state to keep continuity
+    assert(this.match);
+    if (!this.match.state) this.match.stateCache = new model.State();
+
+    // -- copy state over from previous move state to keep continuity
+    assert(this.match.state);
     const move = new model.Move(this.match._id, State.clone(this.match.state));
     move.clientIP = this.clientip;
     move.sequenceId = Number.isFinite(this.match.moveCount) ? this.match.moveCount : 0;
-    this.match.moveCountInTurn = Number.isFinite(this.match.moveCountInTurn) ? this.match.moveCountInTurn + 1 : 1;
+    this.match.moveCountInTurn =
+      this.match.moveCountInTurn !== null && Number.isFinite(this.match.moveCountInTurn)
+        ? this.match.moveCountInTurn + 1
+        : 1;
     move.sequenceInTurnId = this.match.moveCountInTurn;
     move.turnId = this.match.turnCount;
     return move;
@@ -53,20 +61,17 @@ export default class GameLogicService {
    * Persists move and match
    */
   private async persistMoveAndMatchPromise(isNewMatch: boolean = false) {
+    assert(this.match && this.match.move);
+
     const originalMoveAt = this.match.lastMoveAt; // -- this will be the checkpoint to guard potential concurrent writes
 
-    this.match.moveCount = this.match.move?.sequenceId + 1;
+    this.match.moveCount = this.match.move.sequenceId + 1;
     this.match.lastMoveAt = this.match.move.at = new Date();
 
-    // -- ended turn increases currentPlayerId
-    const currentPlayerIndex = !!this.match.move
-      ? (this.match.getCurrentPlayerIdxFromMove() + (!!this.match.moveCountInTurn ? 0 : +1)) %
-        this.match.numberOfPlayers
-      : undefined;
-
     // -- this is to persist the player in the header as well, might be null after matchEnd
+    const currentPlayerIndex = this.match.currentPlayerIndex;
     this.match.currentPlayerIndex = currentPlayerIndex;
-    this.match.currentPlayerId = this.match.playerids[currentPlayerIndex];
+    this.match.currentPlayerId = currentPlayerIndex !== null ? this.match.playerids[currentPlayerIndex] : null;
     this.match.stateCache = this.match.move?.state;
 
     // -- persist in db
@@ -80,6 +85,9 @@ export default class GameLogicService {
    * @returns event added event
    */
   private addEvent(event: model.MatchEvent, oldState: model.State): model.State {
+    assert(this.match);
+    assert(this.match.move);
+
     // -- copy state to new state
     const state = model.State.clone(oldState);
     event.state = state;
@@ -95,9 +103,11 @@ export default class GameLogicService {
    * @returns started match parameters
    */
   public async actionStartMatchPromise(
-    createdByPlayerId: model.PlayerId,
+    createdByPlayerId: model.PlayerId | null,
     params: MatchCreationParams
   ): Promise<model.Match> {
+    if (!params.playerids) throw new Error('Need playerids to start a match');
+
     this.log(`>START_MATCH ${params.playerids} ${params.tags ?? ''}`);
 
     // -- create initial objects from user input, early checking of input data
@@ -110,14 +120,15 @@ export default class GameLogicService {
       throw new GameError('Invalid players specified, please check settings.');
     const initialPlayArea = new model.PlayArea();
     const initialDiscardPile = model.DiscardPile.create(params.discardPile);
-    const initialDrawPile = model.DrawCardPile.create(params.drawPile, this.randomGenerator);
+    const initialDrawPile = model.DrawCardPile.create(params?.drawPile, this.randomGenerator);
     const initialBanks = Array(playerData.length)
       .fill(null)
       .map((val, idx): model.Bank => {
         // -- warning: input format is [[Card]] --> [ [Bank1Card1,Bank1Card2], [Bank2Card1,Bank2Card2] ]
         const value = params?.banks?.[idx];
         const pile = model.CardPile.constructFromObject(value);
-        return model.Bank.fromCardPile(pile, new model.Bank()) as model.Bank;
+        const bank = model.Bank.fromCardPile(pile, new model.Bank()) as model.Bank;
+        return bank;
       });
 
     // -- check initial debug settings are OK - merge all cards and check for duplicates
@@ -150,14 +161,15 @@ export default class GameLogicService {
     this.match.move = this.newMove();
     {
       // -- announce match starting
+      assert(this.match.state);
       this.addEvent(
         new model.MatchEvent(model.OMatchEventType.MatchStarted, {
           matchStartedSeed: randomSeed,
         }),
-        new model.State()
+        this.match.state
       );
 
-      this.match.state.currentPlayerIndex = undefined;
+      // this.match.state.currentPlayerIndex = undefined;
       this.match.state.banks = initialBanks;
       this.match.state.playArea = initialPlayArea;
       this.match.state.discardPile = initialDiscardPile;
@@ -185,6 +197,8 @@ export default class GameLogicService {
    * @param [comment] termination comment
    */
   public async actionDeleteMatchPromise(winnerId: model.PlayerId, comment?: string) {
+    assert(this.match);
+
     // -- Guard: check not finished match
     if (this.match.isFinished) throw new GameError('No action possible on finished matches.');
 
@@ -207,6 +221,8 @@ export default class GameLogicService {
    * @returns promise to action
    */
   public async actionExecuteUserActionPromise(data: UserAction): Promise<model.Move> {
+    assert(this.match);
+
     // -- Guard: check correct action verb
     if (!IsMatchActionType(data.etype)) throw new GameError(`Unknown action verb: ${data.etype}`);
 
@@ -247,6 +263,7 @@ export default class GameLogicService {
           ) {
             this.log('Skipping as autopicking has already processed the pending event'); // NOOP
           } else {
+            assert(data.effect && pendingEffect);
             await this.subactionRespondToEffectPromise(data.effect, pendingEffect);
           }
           break;
@@ -254,16 +271,13 @@ export default class GameLogicService {
     }
 
     // -- check turn+match should be ended
-    if (
-      !this.match.isFinished &&
-      this.match.move?.state.drawPile.length === 0 &&
-      !this.match.move?.state?.pendingEffect
-    ) {
+    if (!this.match.isFinished && !this.match.move?.state?.drawPile?.length && !this.match.move?.state?.pendingEffect) {
       // -- do a standard tun ending and collection, this will trigger the match end
       this.turnEnding(true);
     }
 
     // -- persist to db
+    assert(this.match.move);
     this.match.move.userAction = data;
     await this.persistMoveAndMatchPromise();
 
@@ -274,6 +288,9 @@ export default class GameLogicService {
    * Start of a new turn, so make a delta and deliver it to the player
    */
   private newTurn() {
+    assert(this.match && this.match.state);
+    assert(this.match.state?.currentPlayerIndex !== null);
+
     // -- load last move, and the stateAtTurnStart
     // move = await this.dbaService.getLastMoveByMatchIdPromise(this.match._id);
     // if (!move) throw new GameError('Action on uninitialized match without initial move.');
@@ -294,15 +311,16 @@ export default class GameLogicService {
    * @param data
    * @returns pending effect (if available)
    */
-  private guardPendingEffect(data: UserAction): model.CardEffect {
-    let pendingEffect = this.match.state.pendingEffect;
+  private guardPendingEffect(data: UserAction): model.CardEffect | undefined {
+    assert(this.match);
+    let pendingEffect = this.match.state?.pendingEffect;
 
     // -- Silently cancelling pending Effects due to (EndTurn or Draw) "AutoPicking"
     // -- Iterate as long as we face new ones and are able and allowed to process them
     while (
       pendingEffect &&
       // -- (kraken and oracle auto accepts draw with default action, yet only steps one action, processed as main action Draw)
-      //--  autopick: all other suits need explicit autopick allowed to continue here
+      // --  autopick: all other suits need explicit autopick allowed to continue here
       data.autopick === true &&
       // -- has not yet hit endturn
       !this.match.move?.events?.some((ev) => ev.eventType === model.OMatchEventType.TurnEnded)
@@ -312,7 +330,7 @@ export default class GameLogicService {
 
       this.log(`>AutoPicking the pending ${pendingEffect.effectType} effect in response to User action ${data.etype}`);
       this.respondToEffectLogic(autopickedResponse, pendingEffect, true);
-      pendingEffect = this.match.state.pendingEffect;
+      pendingEffect = this.match.state?.pendingEffect;
       // -- pending effect is already removed, and if none added, we will exit the loop
     }
 
@@ -325,9 +343,9 @@ export default class GameLogicService {
           [model.OCardEffectType.Kraken, model.OCardEffectType.Oracle].includes(pendingEffect.effectType)) ||
         (data.etype === OMatchActionType.EndTurn && model.OCardEffectType.Oracle === pendingEffect.effectType)
       ) {
-        //-- NOOP, we can proceed to after the guardEffect function
+        // -- NOOP, we can proceed to after the guardEffect function
       } else {
-        //-- does not look good, user should respond explicitely first
+        // -- does not look good, user should respond explicitely first
         throw new GameError(`Respond to pending effect first: ${pendingEffect.effectType}`);
       }
     }
@@ -339,18 +357,22 @@ export default class GameLogicService {
    * @param cardsuit
    * @returns card for sword or cannon
    */
-  private pickCardForSwordOrCannon(cardsuit: string): model.Card {
+  private pickCardForSwordOrCannon(cardsuit?: string): model.Card | null {
+    assert(this.match && this.match.state && this.match.state?.currentPlayerIndex !== null);
     const currentBank = this.match.state.banks[this.match.state.currentPlayerIndex];
+    assert(currentBank);
 
-    let pickedCardForSwordOrCannon: model.Card = null;
-    for (const bank of this.match.state.banks) {
-      if (bank === currentBank || bank.flatSize === 0) continue;
-      for (const [s, cpack] of bank.piles) {
-        // -- sword cannot pick from suitstack that exists in out bank
-        if (cardsuit === model.OCardSuit.Sword && currentBank.piles.has(s)) continue;
-        // -- return top of stack
-        pickedCardForSwordOrCannon = new model.Card(s, cpack.max());
-        break;
+    let pickedCardForSwordOrCannon: model.Card | null = null;
+    if (this.match.state?.banks) {
+      for (const bank of this.match.state.banks) {
+        if (bank === currentBank || bank.flatSize === 0) continue;
+        for (const [s, cpack] of bank.piles) {
+          // -- sword cannot pick from suitstack that exists in out bank
+          if (cardsuit === model.OCardSuit.Sword && currentBank.piles.has(s)) continue;
+          // -- return top of stack
+          pickedCardForSwordOrCannon = new model.Card(s, cpack.max() as model.CardValue);
+          break;
+        }
       }
     }
     return pickedCardForSwordOrCannon;
@@ -362,11 +384,12 @@ export default class GameLogicService {
    * @returns void promise
    */
   private async subactionEndTurnPromise(): Promise<void> {
+    assert(this.match && this.match.state);
     this.log('>ENDTURN');
 
     // -- CHECK: are there any cards on the play area
     const state = this.match.state;
-    if (state.playArea.length === 0) throw new GameError('Cannot end turn with empty playarea.');
+    if (!state.playArea.length) throw new GameError('Cannot end turn with empty playarea.');
 
     // -- add initiator
     if (!this.match.move) this.match.move = this.newMove();
@@ -380,12 +403,14 @@ export default class GameLogicService {
    * @param [doRemoveFromPile] whether to remove item from the drawpile
    * @returns card drawn
    */
-  private drawCard(doRemoveFromPile: boolean = true): model.Card {
+  private drawCard(doRemoveFromPile: boolean = true): model.Card | undefined {
+    assert(this.match && this.match.state);
+
     // -- if drawpile is exhausted - annotation match end
-    if (this.match.state.drawPile.length === 0) {
+    if (!this.match.state.drawPile?.length) {
       // -- do a standard turn ending and collection, this will trigger the match end
       this.turnEnding(true); // TODO: check - could be unnneded
-      return null;
+      return undefined;
     }
 
     // -- execute the draw
@@ -405,7 +430,9 @@ export default class GameLogicService {
    * @param card selected card
    * @returns card
    */
-  private placeCard(card: model.Card): model.Card {
+  private placeCard(card: model.Card): model.Card | undefined {
+    assert(this.match && this.match.state);
+
     // == place card to playarea
     // -- check for busted
     const isSuccessful = !this.match.state.playArea.cards.find((c) => c.suit === card.suit);
@@ -413,8 +440,8 @@ export default class GameLogicService {
       // -- busted
       this.log(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}' BUSTED!`);
       this.discardCard(card);
-      this.turnEnding(false); //-- clears all effects anyhow
-      return null;
+      this.turnEnding(false); // -- clears all effects anyhow
+      return undefined;
     }
 
     // -- add drawn card
@@ -430,13 +457,13 @@ export default class GameLogicService {
       this.log(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}'`);
     }
 
-    //-- decrease the number of pending kraken cards
-    if (this.match.state.pendingEffect?.krakenCount > 0) {
+    // -- decrease the number of pending kraken cards
+    if (!!this.match.state.pendingEffect?.krakenCount) {
       this.match.state.pendingEffect.krakenCount -= 1;
       this.log(`PLACE_CARD - DEBUG: Kraken pending ${this.match.state.pendingEffect.krakenCount}`);
     }
 
-    //-- check of we need to maintain anything on previous state (Kraken or Oracle clearing)
+    // -- check of we need to maintain anything on previous state (Kraken or Oracle clearing)
     switch (this.match.state.pendingEffect?.effectType) {
       case model.OCardEffectType.Kraken:
         // -- maintain and check if Kraken forced card is fulfulled
@@ -487,8 +514,10 @@ export default class GameLogicService {
    * @param card
    */
   private postProcessMap(card: model.Card) {
+    assert(this.match && this.match.state);
+
     // -- if discard pile has no elements, just skip
-    if (this.match.state.discardPile.length > 0) {
+    if (!!this.match.state.discardPile?.length) {
       // -- remove (temp) cards from discard pile, until effect is fulfulled
       const cardsFromDiscard = this.drawCardsFromDiscardPile(3); // TODO: should modify state only after!
 
@@ -514,6 +543,8 @@ export default class GameLogicService {
    * @param card
    */
   private postProcessCannonSword(card: model.Card) {
+    assert(this.match && this.match.state);
+
     // -- if no other player bank has elements, just skip
     // --  important: Sword cannot choose from suitstack that exists in our bank, while Cannon can pick any
     const anyItemsInAnyBanksFromDifferentSuits = !!this.pickCardForSwordOrCannon(card.suit);
@@ -542,9 +573,10 @@ export default class GameLogicService {
    * @param card
    */
   private postProcessHook(card: model.Card) {
-    const bank = this.match.state.banks[this.match.state.currentPlayerIndex];
+    assert(this.match && this.match.state && this.match.state.currentPlayerIndex !== null);
+    const bank = this.match.state?.banks[this.match.state.currentPlayerIndex];
     // -- if own bank has no elements, just skip
-    if (bank.flatSize > 0) {
+    if (bank?.flatSize) {
       const effect = new model.CardEffect(model.OCardEffectType.Hook);
       {
         this.addEvent(
@@ -566,10 +598,14 @@ export default class GameLogicService {
    * @param card
    */
   private postProcessOracle(card: model.Card) {
+    assert(this.match && this.match.state);
+
     // -- if drawpile is empty or there is a kraken in progress, just skip
-    if (this.match.state.drawPile.length > 0) {
+    if (!!this.match.state.drawPile?.length) {
       const cardPeekedOracle = this.drawCard(false);
-      const effect = new model.CardEffect(model.OCardEffectType.Oracle, [cardPeekedOracle, null]); //!! //todo check handling, whether adding null as an option is not a big problem + UI implications
+      assert(cardPeekedOracle);
+
+      const effect = new model.CardEffect(model.OCardEffectType.Oracle, [cardPeekedOracle, null]); // !! //todo check handling, whether adding null as an option is not a big problem + UI implications
       {
         this.addEvent(
           new model.MatchEvent(model.OMatchEventType.CardPlayedEffect, {
@@ -590,7 +626,8 @@ export default class GameLogicService {
    * @param card
    */
   private postProcessKraken(card: model.Card) {
-    const krakenCardCount = Math.min(2, this.match.state.drawPile.length);
+    assert(this.match && this.match.state);
+    const krakenCardCount = Math.min(2, this.match.state?.drawPile?.length ?? 0);
     if (krakenCardCount > 0) {
       const effect = new model.CardEffect(model.OCardEffectType.Kraken, undefined, krakenCardCount);
       {
@@ -614,11 +651,13 @@ export default class GameLogicService {
    * cancels pending effect kraken, yet optionally transfers all pending kraken due cards
    */
   private postProcessAddEffect(newEffect: model.CardEffect, keepPendingKrakenCards: boolean = false): void {
-    //-- if needed (e.g. Oracle, Cannon) keep any due Kraken cards and move to the new effect
+    assert(this.match && this.match.state);
+
+    // -- if needed (e.g. Oracle, Cannon) keep any due Kraken cards and move to the new effect
     if (keepPendingKrakenCards && this.match.state.pendingEffect?.krakenCount)
       newEffect.krakenCount = this.match.state.pendingEffect?.krakenCount;
 
-    //-- if effect was Kraken, cancel it
+    // -- if effect was Kraken, cancel it
     if (this.match.state.pendingEffect?.effectType === model.OCardEffectType.Kraken) {
       this.log(
         `CARDEFFECT: ${model.OCardEffectType.Kraken} terminated due to new effect ${newEffect.effectType} ${
@@ -630,7 +669,7 @@ export default class GameLogicService {
       this.match.state.clearPendingEffect(); // -- process pending effect - delete
     }
 
-    //-- finally add the new effect
+    // -- finally add the new effect
     this.match.state.addPendingEffect(newEffect);
   }
 
@@ -639,8 +678,9 @@ export default class GameLogicService {
    * @param card selected card
    */
   private discardCard(card: model.Card): void {
+    assert(this.match && this.match.state);
     this.log(`DISCARD: '${util.inspect(card)}'`);
-    this.match.move.state.discardPile.cards.push(card);
+    this.match.state.discardPile?.cards.push(card);
   }
 
   /**
@@ -649,9 +689,10 @@ export default class GameLogicService {
    * @returns cards from discard pile
    */
   private drawCardsFromDiscardPile(numberOfCards: number): model.Card[] {
+    assert(this.match && this.match.state);
     const cardsFromDiscard = new Array<model.Card>();
     for (let i = 0; i < numberOfCards; i++) {
-      if (!this.match.state.discardPile.length) break;
+      if (!this.match.state.discardPile?.length) break;
 
       const idx = Math.floor(this.randomGenerator.getRandom(this.match.state.discardPile.length));
       const card = this.match.state.discardPile.cards[idx];
@@ -669,6 +710,7 @@ export default class GameLogicService {
    * @returns void promise
    */
   private async subactionDrawPromise(): Promise<void> {
+    assert(this.match);
     this.log('>DRAW');
     if (!this.match.move) this.match.move = this.newMove();
 
@@ -681,13 +723,14 @@ export default class GameLogicService {
    * @returns void promise
    */
   public async matchEnding(isTerminated?: boolean, forcedWinnerId?: model.PlayerId, comment?: string): Promise<void> {
+    assert(this.match && this.match.state);
     this.log('MATCH_ENDING');
 
     // -- calc scores by tuple: [playeridx, score]
     const scores = new Map<number, number>();
     for (let idx = 0; idx < this.match.playerids.length; idx++) {
       const bank = this.match.state.banks[idx];
-      scores.set(idx, bank.bankvalue);
+      if (bank) scores.set(idx, bank.bankvalue);
     }
 
     // -- sort by id
@@ -715,12 +758,12 @@ export default class GameLogicService {
           matchEndedWinnerIdx: winnerIdx,
           matchEndedScores: scoresFlat,
           ...(isTerminated ? { matchEndedTerminated: isTerminated } : {}),
-          ...(comment?.length > 0 ? { matchEndedComment: comment } : {}),
+          ...(comment?.length ? { matchEndedComment: comment } : {}),
         }),
         this.match.state
       );
       this.match.state.winnerIdx = winnerIdx;
-      delete this.match.state.currentPlayerIndex;
+      this.match.state.currentPlayerIndex = null;
     }
   }
 
@@ -729,6 +772,7 @@ export default class GameLogicService {
    * @param isSuccessful whether busted or not
    */
   private turnEnding(isSuccessful: boolean): void {
+    assert(this.match && this.match.state);
     this.log(`TURN_ENDING ${isSuccessful}`);
 
     const cardsCollected: model.Card[] = [];
@@ -783,6 +827,7 @@ export default class GameLogicService {
 
     {
       // -- collect cards & add event with turn ended
+      assert(this.match.state.currentPlayerIndex !== null);
       const bank = this.match.state.banks[this.match.state.currentPlayerIndex];
       cardsCollected.forEach((card) => {
         // -- add to player's bank
@@ -809,8 +854,8 @@ export default class GameLogicService {
     }
 
     // -- check if there are any drawpile left and move to next player
-    if (this.match.state.drawPile.length > 0) {
-      delete this.match.moveCountInTurn; // this indicates start of new turn
+    if (!!this.match.state?.drawPile?.length) {
+      this.match.moveCountInTurn = null; // this indicates start of new turn
       // -- no further action needed here
     } else {
       this.matchEnding();
@@ -822,6 +867,8 @@ export default class GameLogicService {
    * @param playerIndex selected player
    */
   private turnStarting(playerIndex: number): void {
+    assert(this.match && this.match.state);
+
     let delta: IStateDelta = {};
     if (this.match.stateAtTurnStart) {
       const state0 = this.match.stateAtTurnStart;
@@ -856,14 +903,15 @@ export default class GameLogicService {
    * @returns state delta
    */
   private calculateStateDelta(state0: model.State, state1: model.State): model.IStateDelta {
+    assert(this.match);
     const delta = {
       drawPile: (() => {
-        const removed = state0.drawPile.except(state1.drawPile);
+        const removed = state0.drawPile?.except(state1.drawPile);
         return { ...(removed?.length ? { removed } : {}) };
       })(),
       discardPile: (() => {
-        const removed = state0.discardPile.except(state1.discardPile);
-        const added = state1.discardPile.except(state0.discardPile);
+        const removed = state0.discardPile?.except(state1.discardPile);
+        const added = state1.discardPile?.except(state0.discardPile);
         return {
           ...(removed?.length ? { removed } : {}),
           ...(added?.length ? { added } : {}),
@@ -908,6 +956,8 @@ export default class GameLogicService {
     pendingEffect: model.CardEffect,
     doAllowAutoPickedResponse: boolean = false
   ): void {
+    assert(this.match);
+
     let responseCard = response.card ? model.Card.constructFromObject(response.card) : null;
     if (!doAllowAutoPickedResponse)
       this.log(`>RESPOND_CARDEFFECT: ${response.effectType}:= '${util.inspect(responseCard)}'`);
@@ -915,7 +965,7 @@ export default class GameLogicService {
 
     if (!this.match.move) this.match.move = this.newMove();
 
-    //-- act according to the effect type
+    // -- act according to the effect type
     switch (response.effectType) {
       case model.OCardEffectType.Oracle:
         responseCard = this.respondToEffectLogicOracle(response, responseCard, doAllowAutoPickedResponse);
@@ -951,20 +1001,21 @@ export default class GameLogicService {
    */
   private respondToEffectLogicMap(
     doAllowAutoPickedResponse: boolean,
-    responseCard: model.Card,
+    responseCard: model.Card | null | undefined,
     pendingEffect: model.CardEffect,
     response: model.CardEffectResponse
   ) {
+    assert(this.match && this.match.state && this.match.state.currentPlayerIndex !== null && pendingEffect);
     if (!doAllowAutoPickedResponse) {
       if (!responseCard) throw new GameError('Effect response must contain a card.');
     } else {
       // -- autopicked response - pick first card that would not bust (no such suit exists in playarea)
       const currentBank = this.match.state.banks[this.match.state.currentPlayerIndex];
-      responseCard = pendingEffect.cards.find(
-        (dcard) => !this.match.state.playArea.cards.find((pac) => pac.suit === dcard.suit)
+      responseCard = pendingEffect.cards?.find(
+        (dcard) => !this.match?.state?.playArea.cards.find((pac) => !!dcard && pac.suit === dcard.suit)
       );
       // -- if not found - pick any suit
-      if (!responseCard) responseCard = pendingEffect.cards.at(0);
+      if (!responseCard) responseCard = pendingEffect.cards?.at(0);
       if (!responseCard) throw new GameError('Server Error: no cards picked for autopicked Map'); // -- should not happen as we only allow effect to be raised when this is av
     }
 
@@ -982,16 +1033,16 @@ export default class GameLogicService {
 
     // -- check if selected card is within the possible cards
     const pendingEffectCards = pendingEffect?.cards;
-    if (!responseCard || !pendingEffectCards?.find((c) => responseCard.equals(c))) {
+    if (!responseCard || !pendingEffectCards?.find((c) => !!responseCard && !!c && responseCard.equals(c))) {
       throw new GameError('Inappropriate Card specified for effect response');
     }
 
     // -- place selected card to playarea AND play others back to discard
     pendingEffectCards?.forEach((c) => {
-      if (responseCard.equals(c)) {
+      if (c && responseCard?.equals(c)) {
         // -- add to playarea
         this.placeCard(c);
-      } else {
+      } else if (c) {
         // -- add back to discard
         // -- place back unchosen cards to discardPile -- it is OK not add a new state, modify ResponseToEffect state
         this.discardCard(c);
@@ -1010,10 +1061,11 @@ export default class GameLogicService {
    */
   private respondToEffectLogicCannonSword(
     doAllowAutoPickedResponse: boolean,
-    responseCard: model.Card,
+    responseCard: model.Card | null | undefined,
     pendingEffect: model.CardEffect,
     response: model.CardEffectResponse
   ) {
+    assert(this.match && this.match.state);
     if (!doAllowAutoPickedResponse) {
       if (!responseCard) throw new GameError('Effect response must contain a card.');
     } else {
@@ -1035,16 +1087,19 @@ export default class GameLogicService {
 
     // -- check if the picked card is the topmost on that stack
     const bankTargetIndex = this.match.state.banks.findIndex((bank, bankIndex) => {
-      if (bankIndex === this.match.state.currentPlayerIndex) return false;
+      if (bankIndex === this.match?.state?.currentPlayerIndex) return false;
+      assert(responseCard?.suit);
       const suitstack = bank.piles.get(responseCard?.suit);
       if (suitstack?.max() !== responseCard?.value) return false;
       return true;
     });
 
-    // -- check if card is valid == i.e. responded to AND exists in Bank AND is topmost on the stack
+    // -- check if card is valid - i.e. responded to AND exists in Bank AND is topmost on the stack
     if (bankTargetIndex < 0) throw new GameError('Card does not exist in Enemy Bank(s) or is not the topmost one.');
     // -- Sword: check if card is valid -- we cannot have this suit
     if (response.effectType === model.OCardEffectType.Sword) {
+      assert(this.match.state.currentPlayerIndex !== null);
+      assert(responseCard.suit);
       if (this.match.state.banks[this.match.state.currentPlayerIndex].piles.has(responseCard.suit))
         throw new GameError('Sword: Player cannot pick a suit that owned already in bank.');
     }
@@ -1063,9 +1118,10 @@ export default class GameLogicService {
 
       // -- remove card from bank
       const bankTarget = this.match.state.banks.at(bankTargetIndex);
+      assert(bankTarget && responseCard.suit && responseCard.value);
       const suitstack = bankTarget.piles.get(responseCard.suit);
-      suitstack.delete(responseCard.value);
-      if (suitstack.size === 0) bankTarget.piles.delete(responseCard.suit);
+      suitstack?.delete(responseCard.value);
+      if (!suitstack?.size) bankTarget.piles.delete(responseCard.suit);
     }
 
     if (response.effectType === model.OCardEffectType.Cannon) {
@@ -1087,23 +1143,26 @@ export default class GameLogicService {
    */
   private respondToEffectLogicHook(
     doAllowAutoPickedResponse: boolean,
-    responseCard: model.Card,
+    responseCard: model.Card | null | undefined,
     response: model.CardEffectResponse
   ) {
+    assert(this.match && this.match.state && this.match.state.currentPlayerIndex !== null);
+
     if (!doAllowAutoPickedResponse) {
       if (!responseCard) throw new GameError('Effect response must contain a card.');
     } else {
       // -- autopicked response - pick first card that would not bust (no such suit exists in playarea)
       const currentBank = this.match.state.banks[this.match.state.currentPlayerIndex];
       let pickeditem = [...currentBank.piles].find(
-        ([cpacks, cpack]) => !this.match.state.playArea.cards.find((pac) => pac.suit === cpacks)
+        ([cpacks, cpack]) => !this?.match?.state?.playArea?.cards.find((pac) => pac.suit === cpacks)
       );
       // -- if not found - pick any suit
       if (!pickeditem) pickeditem = [...currentBank.piles].find((kvp) => true);
+      assert(pickeditem);
 
       const [pickedsuit, pickedpile] = pickeditem;
       if (pickedpile) {
-        const pickedvalue = pickedpile.max();
+        const pickedvalue = pickedpile.max() as model.CardValue;
         responseCard = new model.Card(pickedsuit, pickedvalue);
       }
       if (!responseCard) throw new GameError('Server Error: no cards picked for autopicked Hook'); // -- should not happen as we only allow effect to be raised when this is av
@@ -1120,12 +1179,13 @@ export default class GameLogicService {
       this.clearPendingEffectRespectingKrakenCards(); // -- process pending effect - delete, keeping kraken cards if any
     }
 
-    //-- guard: check if card is really the top of the suit
+    // -- guard: check if card is really the top of the suit
     const bankTargetIndex = this.match.state.currentPlayerIndex;
     {
       const bank = this.match.state.banks[bankTargetIndex];
+      assert(responseCard?.suit);
       const suitstack = bank.piles.get(responseCard?.suit);
-      // -- check if card is valid == i.e. responded to AND exists in Bank AND is topmost on the stack
+      // -- check if card is valid - i.e. responded to AND exists in Bank AND is topmost on the stack
       if (bank.piles.get(responseCard?.suit)?.max() !== responseCard?.value) {
         // await this.redoCurrentMove(match); // not needed as this wil; not be persisted anyhow
         throw new GameError('Card does not exist in Own Bank or is not the topmost one.');
@@ -1146,7 +1206,9 @@ export default class GameLogicService {
 
       // -- remove card from bank
       const bankTarget = this.match.state.banks.at(bankTargetIndex);
-      const suitstack = bankTarget.piles.get(responseCard.suit);
+      assert(bankTarget);
+      const suitstack = bankTarget?.piles.get(responseCard.suit);
+      assert(suitstack && responseCard.value);
       suitstack.delete(responseCard.value);
       if (suitstack.size === 0) bankTarget.piles.delete(responseCard.suit);
     }
@@ -1163,7 +1225,7 @@ export default class GameLogicService {
   private respondToEffectLogicKraken() {
     // -- draw and place the card
     const card = this.drawCard(true);
-    this.placeCard(card);
+    if (card) this.placeCard(card);
   }
 
   /**
@@ -1175,10 +1237,11 @@ export default class GameLogicService {
    */
   private respondToEffectLogicOracle(
     response: model.CardEffectResponse,
-    responseCard: model.Card,
+    responseCard: model.Card | undefined | null,
     doAllowAutoPickedResponse: boolean
   ) {
-    const nextCardPeeked = this.match.state.drawPile.draw(false);
+    assert(this.match && this.match.state);
+    const nextCardPeeked = this.match.state.drawPile?.draw(false);
     if (!nextCardPeeked) throw new GameError('Oracle response without next card.');
     {
       this.addEvent(
@@ -1207,7 +1270,7 @@ export default class GameLogicService {
 
       // -- place the card
       const cardFromOracle = this.drawCard(true);
-      this.placeCard(cardFromOracle);
+      if (cardFromOracle) this.placeCard(cardFromOracle);
     }
     return responseCard;
   }
@@ -1216,9 +1279,10 @@ export default class GameLogicService {
    * Clears pending effect while keeping kraken cards intact
    */
   private clearPendingEffectRespectingKrakenCards() {
+    assert(this.match && this.match.state);
     const krakenCount = this.match.pendingEffect?.krakenCount;
     this.match.state.clearPendingEffect();
-    if (krakenCount > 0) {
+    if (!!krakenCount) {
       this.match.state.addPendingEffect(new model.CardEffect(model.OCardEffectType.Kraken, undefined, krakenCount));
     }
   }

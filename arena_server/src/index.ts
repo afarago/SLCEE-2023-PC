@@ -49,7 +49,7 @@ const [httpServer, io] = socketio.register(app);
 //   next();
 // });
 
-//=== API ==================
+// === API ==================
 // Configure Express to serve swagger OpenAPI
 app.use(
   '/docs',
@@ -63,10 +63,10 @@ app.use(
 
 // Configure routes
 // app.use('/api/v1', api);
-//app.use('/api', api);
-app.use('/', api); //-- digest authentication in passport cannot handle mapped path
+// app.use('/api', api);
+app.use('/', api); // -- digest authentication in passport cannot handle mapped path
 
-//=== FRONTEND ==================
+// === FRONTEND ==================
 app.use('/', frontend);
 
 // start the express server

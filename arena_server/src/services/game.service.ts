@@ -24,30 +24,34 @@ export default class GameService {
    */
   public async getMatchDTOPromise(
     idOrMatch: ObjectIdString | model.Match,
-    user: IUser,
-    playerNames: string[] | null,
-    doReturnAllMoves: boolean | null
+    user?: IUser,
+    playerNames?: string[],
+    doReturnAllMoves?: boolean
   ): Promise<MatchDTO> {
     // -- user incoming match or retrieve from db
     const match =
       typeof idOrMatch === 'string' ? await this.dbaService.getMatchByIdPromise(idOrMatch as string) : idOrMatch;
+    if (!match) throw new Error('Match not found');
 
     // const playerData = await this.dbaService.getPlayerByIdsPromise(params.playerids);
     // const playerNames = playerData.map(pd=>pd.name);
 
     // -- SHOW debug for matches started by this player or if Admin is requesting
-    const isDebug = user?.isAdmin || match.createdByPlayerId?.equals(user?.username);
+    const isDebug = user?.isAdmin || match.createdByPlayerId?.equals(user?.username ?? '');
     const retval = matchToDTO(match, playerNames, { isDebug });
 
     // -- collect and show moves & events
-    const moves = doReturnAllMoves
+    const moves: model.Move[] = doReturnAllMoves
       ? // -- TRUE: return all moves
         await this.dbaService.getAllMovesByMatchIdPromise(match._id.toString())
       : // -- FALSE (not NULL): still return match closing events if match is finished
       doReturnAllMoves !== null && match.isFinished
       ? // TODO: consider filtering events
-        [await this.dbaService.getLastMoveByMatchIdPromise(match._id.toString())]
-      : null;
+        await (async () => {
+          const lastmove = await this.dbaService.getLastMoveByMatchIdPromise(match._id.toString());
+          return lastmove ? [lastmove] : [];
+        })()
+      : [];
     const movesdto = moves?.map((move) => moveToDTO(move, { isDebug }));
     retval.moves = movesdto;
 
@@ -63,7 +67,7 @@ export default class GameService {
     return retval;
   }
 
-  public IsAuthUserIsActivePlayer(match: model.Match, user: IUser) {
-    return match?.getActivePlayerId()?.equals(user?.username);
+  public IsAuthUserIsActivePlayer(match: model.Match, user: IUser): boolean {
+    return match?.getActivePlayerId()?.equals(user?.username) ?? false;
   }
 }

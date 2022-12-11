@@ -9,6 +9,7 @@ import DBAService from '../services/dba.service';
 const dbaService = Container.get(DBAService);
 
 const ADMIN_USER = 'admin';
+const REALM = 'SLCEE-2023-PC';
 
 export interface IUser {
   username: string;
@@ -22,19 +23,26 @@ passport.use(new passportAnonymous.Strategy());
 async function httpSecretFunction(
   username: string,
   checkPassword: boolean,
-  password: string,
+  password: string | null,
   done: (error: any, user?: any, password?: any) => void
 ): Promise<void> {
   try {
     if (username === ADMIN_USER) {
-      if (!process.env.ADMIN_PASSWORD || (checkPassword && !comparePasswords(password, process.env.ADMIN_PASSWORD)))
+      if (
+        !process.env.ADMIN_PASSWORD ||
+        (checkPassword && (!password || !comparePasswords(password, process.env.ADMIN_PASSWORD)))
+      )
         throw new Error();
 
       const user = { username, isAdmin: true } as IUser;
       return done(null, user, process.env.ADMIN_PASSWORD);
     } else {
       const player = await dbaService.getPlayerByIdPromise(username);
-      if (!player || (checkPassword && !comparePasswords(player.passwordhash, password))) throw new Error();
+      if (
+        !player ||
+        (checkPassword && (!password || !player.passwordhash || !comparePasswords(password, player.passwordhash)))
+      )
+        throw new Error();
 
       const user = { username, isAdmin: false, email: player.email, name: player.name } as IUser;
       return done(null, user, player.passwordhash);
@@ -45,7 +53,7 @@ async function httpSecretFunction(
 }
 
 passport.use(
-  new passportHttp.BasicStrategy({ realm: 'slhpc23' }, async (username, password, done) => {
+  new passportHttp.BasicStrategy({ realm: REALM }, async (username, password, done) => {
     const done1 = (error: any, user?: any, password?: any) => {
       done(error, user);
     };
@@ -54,7 +62,7 @@ passport.use(
 );
 
 passport.use(
-  new passportHttp.DigestStrategy({ realm: 'slhpc23', qop: 'auth' }, async (username, done) => {
+  new passportHttp.DigestStrategy({ realm: REALM, qop: 'auth' }, async (username, done) => {
     const done1 = (error: any, user?: any, password?: any) => {
       done(error, user, password);
     };
@@ -81,9 +89,13 @@ export const ensureAdmin = (req: Request, res: Response, next: NextFunction) => 
   next();
 };
 
-const comparePasswords = (candidate: string, fact: string): boolean => {
+const comparePasswords = (candidate?: string, fact?: string): boolean => {
   return candidate === fact;
 };
+
+function newFunction(): string | undefined {
+  return 'slhpc23';
+}
 /*
 const timingSafeEqual = require('crypto').timingSafeEqual
 

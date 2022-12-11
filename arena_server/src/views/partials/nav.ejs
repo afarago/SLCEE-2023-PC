@@ -47,7 +47,7 @@
               onDraw: function ($el) {
                 const calendar = $el?.calendars?.[0];
                 const date = new Date(calendar.year, calendar.month, 1);
-                if (calendarStatStart.getTime() != date.getTime()) {
+                if (calendarStatStart.getTime() !== date.getTime()) {
                   calendarStatStart = date;
                   $.getJSON(`/api/matches/busydays?at=${date.toDateString()}`, function(data) {
                     $el.options.events = calendarEventsToDateStr(data);

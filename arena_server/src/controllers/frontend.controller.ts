@@ -33,15 +33,15 @@ export default class FrontendController {
       const tempdate = new Date(filter.at + 'UTC');
       if (!isNaN(tempdate.valueOf())) filterDate = tempdate;
     }
-    const filterTags = filter.tags ? filter.tags.split(',') : null;
+    const filterTags = filter.tags ? filter.tags.split(',') : undefined;
 
-    const limit = 100; //-- db will return 100+1, indicating we have more available
+    const limit = 100; // -- db will return 100+1, indicating we have more available
     const matches = await this.dbaService.getMatchesPromise({
-      playerId: !req.user?.isAdmin ? req.user?.username : null,
+      playerId: !req.user?.isAdmin ? req.user?.username : undefined,
       date: filterDate,
       tags: filterTags,
       limit: {
-        //!! startId
+        // !! startId
         count: limit,
       },
     });
@@ -61,7 +61,9 @@ export default class FrontendController {
       ?.map((match) => {
         try {
           return matchToHeaderDTO(match, players);
-        } catch {}
+        } catch {
+          // -- NOOP
+        }
       })
       ?.filter((matchdata) => matchdata);
 
@@ -70,12 +72,12 @@ export default class FrontendController {
 
   /**
    * Return the Busy days for any match exists
-   * @param req 
-   * @param input 
-   * @returns match statistics busy days 
+   * @param req
+   * @param input
+   * @returns match statistics busy days
    */
   public async getMatchStatisticsBusyDays(req: any, input: Date): Promise<string[]> {
-    //TODO: should consider filters as well (tags)
+    // TODO: should consider filters as well (tags)
     // TODO: DEVELOPMENT IN PROGRESS temp route for calendar statistics
     const adate = new Date(input);
     const dateFrom = new Date(adate.getFullYear(), adate.getMonth(), 1 - 7);
@@ -100,7 +102,7 @@ export default class FrontendController {
     if (!match) throw new Error('Match does not exist.');
 
     const _playerobjs = await this.dbaService.getPlayersCache();
-    const playernames = match.playerids.map((pid) => _playerobjs.get(pid.toString())?.name);
+    const playernames = match.playerids.map((pid) => _playerobjs.get(pid.toString())?.name ?? '');
     const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, playernames, true);
 
     res.render('match', { matchdto });
@@ -117,7 +119,7 @@ export default class FrontendController {
    */
   public async callbackMatchChangedPromise(id: ObjectIdString, operationType: string, item: any) {
     try {
-      if (!this.socketIOService.connectCounter) return; //-- optimization point: just dont don't send anything if there are no clients connected
+      if (!this.socketIOService.connectCounter) return; // -- optimization point: just dont don't send anything if there are no clients connected
 
       if (operationType === 'replace' || operationType === 'update' || operationType === 'insert') {
         const playerObjs = await this.dbaService.getPlayersCache();
@@ -125,6 +127,7 @@ export default class FrontendController {
         const match = item.hasOwnProperty('fullDocument')
           ? model.Match.constructFromObject(item.fullDocument)
           : await this.dbaService.getMatchByIdPromise(id);
+        if (!match) throw new Error('Match not found or constructable from Db object');
 
         // -- header
         {
@@ -138,7 +141,7 @@ export default class FrontendController {
         // -- details
         {
           // TODO: to be handled based on user
-          const emitdata = await this.gameService.getMatchDTOPromise(match, null, null, null);
+          const emitdata = await this.gameService.getMatchDTOPromise(match);
           if (emitdata) {
             const emitroom = `match_${match._id.toString()}`;
             this.socketIOService.emitMessage('match:update:details', emitroom, emitdata);
@@ -158,10 +161,11 @@ export default class FrontendController {
    */
   public async callbackMoveChangedPromise(id: ObjectIdString, operationType: string, item: any) {
     try {
-      if (!this.socketIOService.connectCounter) return; //-- optimization point: just dont don't send anything if there are no clients connected
+      if (!this.socketIOService.connectCounter) return; // -- optimization point: just dont don't send anything if there are no clients connected
 
       if (operationType === 'insert') {
         const move = model.Move.constructFromObject(item.fullDocument);
+        if (!move) throw new Error('Cannot construct move from Db Object');
 
         const isDebug = false; // TODO: to be handled based on user
 

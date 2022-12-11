@@ -24,7 +24,7 @@ export interface MatchHeaderPartialDTO {
 export interface MatchHeaderFullDTO extends MatchHeaderPartialDTO {
   startedat: Date;
   tags?: string[];
-  playernames: ObjectIdString[];
+  playernames: string[];
 }
 
 export type MatchHeaderDTO = MatchHeaderFullDTO | MatchHeaderPartialDTO;

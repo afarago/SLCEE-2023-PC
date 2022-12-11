@@ -11,7 +11,7 @@ export default class CardSuitStack {
 
       data = data.stack || data;
       // set type is lost during ts->js, cannot retrieve type info! // if (data) obj.stack = Hydrate.convertToType(data, Set<CardValue>);
-      if (data && Array.isArray(data)) data.forEach((item: any) => obj.stack.add(item));
+      if (data && Array.isArray(data)) data.forEach((item: any) => obj?.stack.add(item));
     }
     return obj;
   }

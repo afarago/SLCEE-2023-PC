@@ -7,7 +7,7 @@ import FlatCardPile from './flatcardpile';
  * Discard pile - object to represent discard pile
  */
 export default class DiscardCardPile extends FlatCardPile {
-  static constructFromObject(data: any, obj?: DiscardCardPile) {
+  static override constructFromObject(data: any, obj?: DiscardCardPile) {
     if (data) {
       obj = obj || new DiscardCardPile();
       FlatCardPile.constructFromObject(data, obj);
@@ -18,7 +18,7 @@ export default class DiscardCardPile extends FlatCardPile {
   public static create(cards?: (Card | any)[]): DiscardCardPile {
     const retval = new DiscardCardPile();
 
-    if (cards !== undefined) {
+    if (!!cards) {
       // -- using debug stack
       DiscardCardPile.constructFromObject(cards, retval);
     } else {

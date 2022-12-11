@@ -110,8 +110,8 @@ export default class MatchEvent implements IMatchEvent {
     // //Object.assign(this, params);
   }
 
-  get currentPlayerIndex(): number | undefined {
-    return this.state?.currentPlayerIndex;
+  get currentPlayerIndex(): number | null {
+    return this.state ? this.state.currentPlayerIndex : null;
   }
 
   // -- implement IMatchEventCore

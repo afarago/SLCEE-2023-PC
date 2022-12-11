@@ -67,6 +67,9 @@
       background-color: yellow;
     }
   }
+  &[data-card='null'] {
+    padding-bottom: 0.15em;
+  }
 }
 
 .bigcard {

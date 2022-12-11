@@ -18,6 +18,7 @@ export default class DbService {
 
   async connectToDatabase() {
     dotenv.config();
+    if (!process.env.MONGODB_CONN_STRING || !process.env.MONGODB_DBNAME) throw new Error('No DBConnection initialized');
     this.client = new mongoDB.MongoClient(process.env.MONGODB_CONN_STRING);
 
     await this.client.connect();
@@ -34,10 +35,12 @@ export default class DbService {
     if (!this._inited) await this.connectToDatabase();
   }
   public get databaseName(): string {
-    return process.env.MONGODB_DBNAME;
+    return process.env.MONGODB_DBNAME ?? '';
   }
 
-  private monitorChangeStream(collection: mongoDB.Collection, cb: MonitorDBASyncCallback): void {
+  private monitorChangeStream(collection: mongoDB.Collection | undefined, cb: MonitorDBASyncCallback): void {
+    if (!collection) throw new Error('Internal Error while initializing database connection');
+
     // await this.ensureConnected();
     const changeStream = collection.watch();
     changeStream.on('change', async (item: any) => {

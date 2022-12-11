@@ -1,6 +1,7 @@
 import Card, { CardSuit } from './card';
 import CardPile from './cardpile';
 import CardSuitStack from './cardsuitstack';
+import { IsCardSuit } from './card';
 
 /**
  * Ordered card pile - for effective representation of bank collection ordered by suits
@@ -16,7 +17,7 @@ export default class OrderedCardPile {
         // obj.piles = Hydrate.convertToType(data, Map<CardSuit, CardSuitStack>);
         Object.getOwnPropertyNames(data).forEach((k: any) => {
           const stack = CardSuitStack.constructFromObject(data[k]);
-          obj.piles.set(k, stack);
+          if (stack) obj?.piles.set(k, stack);
         });
       }
     }
@@ -61,10 +62,10 @@ export default class OrderedCardPile {
   /**
    * Converts and fills up from a CardPile object
    */
-  static fromCardPile(value: CardPile, obj?: OrderedCardPile): OrderedCardPile {
+  static fromCardPile(pile?: CardPile, obj?: OrderedCardPile): OrderedCardPile {
     obj = obj || new OrderedCardPile();
     obj.piles.clear();
-    value?.cards.forEach((card) => obj.add(card));
+    pile?.cards.forEach((card) => obj?.add(card));
     return obj;
   }
 
@@ -73,8 +74,10 @@ export default class OrderedCardPile {
    * @param value
    */
   add(card: Card): void {
-    if (!this.piles.has(card.suit)) this.piles.set(card.suit, new CardSuitStack());
-    this.piles.get(card.suit).add(card.value);
+    if (card && card.suit && card.value && IsCardSuit(card.suit)) {
+      if (!this.piles.has(card.suit)) this.piles.set(card.suit, new CardSuitStack());
+      this.piles.get(card.suit)?.add(card.value);
+    }
   }
 
   /**

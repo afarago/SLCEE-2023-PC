@@ -8,7 +8,7 @@ import FlatCardPile from './flatcardpile';
  * Draw card pile - contains all remining cards
  */
 export default class DrawCardPile extends FlatCardPile {
-  static constructFromObject(data: any, obj?: DrawCardPile) {
+  static override constructFromObject(data: any, obj?: DrawCardPile) {
     if (data) {
       obj = obj || new DrawCardPile();
       FlatCardPile.constructFromObject(data, obj);
@@ -16,10 +16,10 @@ export default class DrawCardPile extends FlatCardPile {
     return obj;
   }
 
-  public static create(cards: (Card | any)[], randomService: RandomService): DrawCardPile {
+  public static create(cards: (Card | any)[] | undefined, randomService: RandomService): DrawCardPile {
     const retval = new DrawCardPile();
 
-    if (cards !== undefined) {
+    if (!!cards) {
       // -- using debug stack
       DrawCardPile.constructFromObject(cards, retval);
     } else {
@@ -35,9 +35,9 @@ export default class DrawCardPile extends FlatCardPile {
 
       // -- randomize cards, preordering them
       while (tempcards.length) {
-        const pickedCardIdx = randomService.getRandom(tempcards.length);
+        const pickedCardIdx = randomService.getRandom(tempcards.length) ?? 0;
         const pickedCard = tempcards.splice(pickedCardIdx, 1).at(0);
-        retval.cards.push(pickedCard);
+        if (pickedCard) retval.cards.push(pickedCard);
       }
     }
 

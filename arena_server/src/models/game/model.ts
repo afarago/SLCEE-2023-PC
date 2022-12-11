@@ -6,7 +6,7 @@ import 'core-js/es/array/at';
 export type integer = number;
 
 export { default as Bank } from './bank';
-export { default as Card, CardSuit, OCardSuit } from './card';
+export { default as Card, CardValue, CardSuit, OCardSuit } from './card';
 export { default as CardEffect, CardEffectType, OCardEffectType } from './cardeffect';
 export { default as CardEffectResponse } from './cardeffectresponse';
 export { default as CardSuitStack } from './cardsuitstack';

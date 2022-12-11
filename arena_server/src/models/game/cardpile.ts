@@ -34,7 +34,8 @@ export default class CardPile {
    * @param second
    * @returns
    */
-  public except(second: CardPile): Card[] {
-    return this.cards.filter((ca) => second?.cards.findIndex((cb) => ca.equals(cb)) < 0);
+  public except(second?: CardPile): Card[] {
+    if (!second) return this.cards;
+    return this.cards.filter((ca) => second.cards?.findIndex((cb) => ca.equals(cb)) < 0);
   }
 }

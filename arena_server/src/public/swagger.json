@@ -102,7 +102,12 @@
 					},
 					"cards": {
 						"items": {
-							"$ref": "#/components/schemas/Card"
+							"allOf": [
+								{
+									"$ref": "#/components/schemas/Card"
+								}
+							],
+							"nullable": true
 						},
 						"type": "array"
 					},
@@ -225,7 +230,12 @@
 						"$ref": "#/components/schemas/IStateDelta"
 					},
 					"playerIndex": {
-						"$ref": "#/components/schemas/integer"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
 					}
 				},
 				"required": [
@@ -420,18 +430,29 @@
 						"$ref": "#/components/schemas/PlayArea"
 					},
 					"currentPlayerIndex": {
-						"$ref": "#/components/schemas/integer"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
 					},
 					"pendingEffect": {
 						"$ref": "#/components/schemas/CardEffect"
 					},
 					"winnerIdx": {
-						"$ref": "#/components/schemas/integer"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
 					}
 				},
 				"required": [
 					"banks",
-					"playArea"
+					"playArea",
+					"currentPlayerIndex"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -522,7 +543,12 @@
 						"$ref": "#/components/schemas/integer"
 					},
 					"activePlayerIndex": {
-						"$ref": "#/components/schemas/integer"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/integer"
+							}
+						],
+						"nullable": true
 					}
 				},
 				"required": [
@@ -531,8 +557,10 @@
 					"startedAt",
 					"lastMoveAt",
 					"moveCount",
-					"playernames",
-					"moves",
+					"turnCount",
+					"moveCountInTurn",
+					"currentPlayerIndex",
+					"currentPlayerId",
 					"drawPileSize",
 					"discardPileSize"
 				],
@@ -998,6 +1026,16 @@
 										"$ref": "#/components/schemas/MatchEventDTO"
 									},
 									"type": "array"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid useraction input parameter.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
 								}
 							}
 						}

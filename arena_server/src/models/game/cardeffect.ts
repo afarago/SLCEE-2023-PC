@@ -22,7 +22,7 @@ export type CardEffectType = 'Oracle' | 'Hook' | 'Cannon' | 'Sword' | 'Map' | 'K
 export default class CardEffect {
   static constructFromObject(data: any, obj?: CardEffect) {
     if (data) {
-      obj = obj || new CardEffect();
+      obj = obj || new CardEffect(data.effectType);
 
       Hydrate.convertFrom(data, 'effectType', 'CardEffectType', obj);
       Hydrate.convertFrom(data, 'cards', [Card], obj);
@@ -31,10 +31,7 @@ export default class CardEffect {
     return obj;
   }
 
-  public effectType: CardEffectType;
-  public cards?: Card[];
-  public krakenCount?: number;
-  constructor(effectType?: CardEffectType, cards?: Card[], krakenCount?: number) {
+  constructor(public effectType: CardEffectType, public cards?: (Card | null)[], public krakenCount?: number) {
     if (effectType) this.effectType = effectType;
     if (cards) this.cards = cards;
     if (krakenCount) this.krakenCount = krakenCount;

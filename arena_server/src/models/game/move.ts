@@ -89,7 +89,7 @@ export default class Move implements IMove {
   }
 
   constructor(matchId?: MatchId, initialState?: State) {
-    this.matchId = matchId;
+    if (!!matchId) this.matchId = matchId;
     this.stateCache = initialState;
   }
 
@@ -99,8 +99,8 @@ export default class Move implements IMove {
   get lastEvent(): MatchEvent | undefined {
     return this.events?.at(-1);
   }
-  get currentPlayerIndex(): number | undefined {
-    return this.state?.currentPlayerIndex;
+  get currentPlayerIndex(): number | null {
+    return this.state ? this.state.currentPlayerIndex : null;
   }
   getEvents(): MatchEvent[] {
     return this.events;

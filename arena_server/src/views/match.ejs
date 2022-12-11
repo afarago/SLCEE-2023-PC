@@ -54,7 +54,7 @@
             return $('.pendingeffect .playcards');
           case 'Oracle':
             //-- add "flip back" as an extra card
-            $('.pendingeffect .playcards').after(`<span class='playcards' data-card='null'>flip&nbsp;back</span>`);
+            $('.pendingeffect .playcards').after(`<span class='playcards' data-card='null'><span class='cardvalue'>flip&nbsp;back</span></span>`);
             return $('.pendingeffect .playcards');
           case 'Cannon':
             return $(`.bank:not(.player${matchdto.state.currentPlayerIndex}) .playcards`);
@@ -179,7 +179,7 @@
         (card1, index, self) =>
           card1 &&
           //-- is unique (finds only first occurence)
-          self.findIndex((card2) => card2 && card1.suit == card2.suit && card1.value == card2.value) === index
+          self.findIndex((card2) => card2 && card1.suit === card2.suit && card1.value === card2.value) === index
         )
       .map(c=>renderCard(c))
       .join('');
@@ -234,7 +234,7 @@
         ).filter(
           //-- is unique (finds only first occurence)
           (card1, index, self) => card1 &&
-          self.findIndex((card2) => card2 && card1.suit == card2.suit && card1.value == card2.value) === index
+          self.findIndex((card2) => card2 && card1.suit === card2.suit && card1.value === card2.value) === index
         );
 
       if (cards_pa.length) {

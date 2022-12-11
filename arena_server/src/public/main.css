@@ -157,6 +157,9 @@ nav .breadcrumb i.material-icons {
 .playcards.pulse:hover {
   background-color: yellow;
 }
+.playcards[data-card=null] {
+  padding-bottom: 0.15em;
+}
 
 .bigcard {
   font-size: 250% !important;

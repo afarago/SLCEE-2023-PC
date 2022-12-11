@@ -8,6 +8,7 @@ import Logger from '../config/logger';
 import Match, { IMatchCoreChanging } from '../models/game/match';
 import Move from '../models/game/move';
 import Player from '../models/game/player';
+import State from '../models/game/state';
 import DbService from './db.service';
 
 // -- confidentiality protection, removing e.g. passwordhash field
@@ -80,23 +81,23 @@ export default class DBAService {
 
     await this.dbService.ensureConnected();
     const matchesCursor = this.dbService.matchesCollection
-      .find(filterOption)
+      ?.find(filterOption)
       .sort({ startedAt: options.sortAscending ? +1 : -1 })
-      //-- A limit() value of 0 (i.e. .limit(0)) is equivalent to setting no limit.
-      //-- By passing a negative limit, the client indicates to the server that it will not ask for a subsequent batch via getMore
-      .limit(options?.limit?.count > 0 ? -(options.limit.count + 1) : 0);
-    const dbitems = await matchesCursor.toArray();
+      // -- A limit() value of 0 (i.e. .limit(0)) is equivalent to setting no limit.
+      // -- By passing a negative limit, the client indicates to the server that it will not ask for a subsequent batch via getMore
+      .limit(options?.limit?.count ?? 0 > 0 ? -(options?.limit?.count ?? 0 + 1) : 0);
+    const dbitems = await matchesCursor?.toArray();
 
-    const results = dbitems
-      ?.map((pojo: any) => {
+    const results =
+      dbitems?.reduce((acc, pojo: any) => {
         try {
-          return Match.constructFromObject(pojo);
+          const item = Match.constructFromObject(pojo);
+          if (!!item) acc.push(item);
         } catch {
           Logger.error(`Invalid object: ${util.inspect(pojo)}`);
         }
-      })
-      .filter((elem) => !!elem);
-
+        return acc;
+      }, new Array<Match>()) ?? [];
     return results;
   }
 
@@ -105,10 +106,10 @@ export default class DBAService {
    * @param id
    * @returns match by id promise
    */
-  public async getMatchByIdPromise(id: ObjectIdString): Promise<Match | null> {
+  public async getMatchByIdPromise(id: ObjectIdString): Promise<Match | undefined> {
     await this.dbService.ensureConnected();
-    const dbitem = await this.dbService.matchesCollection.findOne({ _id: new ObjectId(id) });
-    if (!dbitem) return null;
+    const dbitem = await this.dbService.matchesCollection?.findOne({ _id: new ObjectId(id) });
+    if (!dbitem) return undefined;
 
     const result = Match.constructFromObject(dbitem);
     return result;
@@ -121,16 +122,18 @@ export default class DBAService {
   public async getPlayersPromise(isHeadOnly?: boolean): Promise<Player[]> {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService.playersCollection.find({}, options).toArray();
-    const results = dbitems
-      ?.map((pojo: any) => {
+    const dbitems = await this.dbService?.playersCollection?.find({}, options ?? {}).toArray();
+
+    const results =
+      dbitems?.reduce((acc, pojo: any) => {
         try {
-          return Player.constructFromObject(pojo);
+          const item = Player.constructFromObject(pojo);
+          if (!!item) acc.push(item);
         } catch {
           Logger.error(`Invalid object: ${util.inspect(pojo)}`);
         }
-      })
-      .filter((elem) => !!elem);
+        return acc;
+      }, new Array<Player>()) ?? [];
     return results;
   }
 
@@ -139,11 +142,11 @@ export default class DBAService {
    * @param id
    * @returns player by id promise
    */
-  public async getPlayerByIdPromise(id: ObjectIdString, isHeadOnly?: boolean): Promise<Player | null> {
+  public async getPlayerByIdPromise(id: ObjectIdString, isHeadOnly?: boolean): Promise<Player | undefined> {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     await this.dbService.ensureConnected();
-    const dbitem = await this.dbService.playersCollection.findOne({ _id: new ObjectId(id) }, options);
-    if (!dbitem) return null;
+    const dbitem = await this.dbService?.playersCollection?.findOne({ _id: new ObjectId(id) }, options ?? {});
+    if (!dbitem) return undefined;
 
     const result = Player.constructFromObject(dbitem);
     return result;
@@ -158,12 +161,13 @@ export default class DBAService {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     const oids = ids?.map((id) => new ObjectId(id));
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService.playersCollection.find({ _id: { $in: oids } }, options).toArray();
+    const dbitems = await this.dbService?.playersCollection?.find({ _id: { $in: oids } }, options ?? {}).toArray();
     if (!dbitems) throw new Error('Error retrieving players');
 
     const result: Player[] = ids?.map((id) => {
       const dbitem = dbitems?.find((item: any) => item._id?.equals(id));
-      if (dbitem) return Player.constructFromObject(dbitem);
+      const player = Player.constructFromObject(dbitem);
+      if (player) return player;
       throw new Error(`Player ${id} is not valid.`);
     });
 
@@ -175,10 +179,10 @@ export default class DBAService {
    * @param matchId
    * @returns last move by match id promise
    */
-  public async getLastMoveByMatchIdPromise(matchId: ObjectIdString): Promise<Move> {
+  public async getLastMoveByMatchIdPromise(matchId: ObjectIdString): Promise<Move | undefined> {
     await this.dbService.ensureConnected();
     const matchIdObj = new ObjectId(matchId);
-    const dbitem = await this.dbService.movesCollection.findOne(
+    const dbitem = await this.dbService?.movesCollection?.findOne(
       { matchId: matchIdObj },
       {
         // limit: 1,
@@ -199,21 +203,22 @@ export default class DBAService {
   public async getAllMovesByMatchIdPromise(matchId: ObjectIdString): Promise<Move[]> {
     const matchIdObj = new ObjectId(matchId);
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService.movesCollection
-      .find({ matchId: matchIdObj })
+    const dbitems = await this.dbService?.movesCollection
+      ?.find({ matchId: matchIdObj })
       .sort({ sequenceId: +1 })
       .toArray();
     if (!dbitems) throw new Error('Error retrieving moves');
 
-    const results = dbitems
-      ?.map((pojo: any) => {
+    const results =
+      dbitems?.reduce((acc, pojo: any) => {
         try {
-          return Move.constructFromObject(pojo);
+          const item = Move.constructFromObject(pojo);
+          if (!!item) acc.push(item);
         } catch {
           Logger.error(`Invalid object: ${util.inspect(pojo)}`);
         }
-      })
-      .filter((elem) => !!elem);
+        return acc;
+      }, new Array<Move>()) ?? [];
     return results;
   }
 
@@ -244,10 +249,10 @@ export default class DBAService {
       await session.withTransaction(async () => {
         // beware: on write conflict the complete transaction will be retried -- should stop it with outside read of initial state, makes no harm, still not neccessary
 
-        //-- if new match: insert new match
+        // -- if new match: insert new match
         if (isNewMatch) {
           match.startedAt = new Date();
-          const dbitem = await this.dbService.matchesCollection.insertOne(match, { session });
+          const dbitem = await this.dbService?.matchesCollection?.insertOne(match, { session });
           if (!dbitem) throw new Error('Could not create Match.');
           match._id = dbitem.insertedId;
           move.matchId = match._id;
@@ -255,7 +260,7 @@ export default class DBAService {
 
         // -- insert move
         {
-          const dbitem = await this.dbService.movesCollection.insertOne(move, { session });
+          const dbitem = await this.dbService?.movesCollection?.insertOne(move, { session });
           if (!dbitem) throw new Error('Could not create Move.');
           move._id = dbitem.insertedId;
         }
@@ -270,13 +275,13 @@ export default class DBAService {
             moveCount: matchObj.moveCount,
             moveCountInTurn: matchObj.moveCountInTurn,
             turnCount: matchObj.turnCount,
-            state: matchObj.state,
-            stateAtTurnStart: matchObj.stateAtTurnStart,
+            state: matchObj.state ?? new State(),
+            stateAtTurnStart: matchObj.stateAtTurnStart ?? new State(),
             currentPlayerId: matchObj.currentPlayerId,
             currentPlayerIndex: matchObj.currentPlayerIndex,
           };
 
-          const dbitem = await this.dbService.matchesCollection.updateOne(
+          const dbitem = await this.dbService?.matchesCollection?.updateOne(
             { _id: match._id, lastMoveAt: originalMoveAt },
             { $set: updateset },
             { session }
@@ -309,8 +314,8 @@ export default class DBAService {
     playerid: ObjectIdString
   ): Promise<{ day: Date; count: number }[]> {
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService.matchesCollection
-      .aggregate([
+    const dbitems = await this.dbService?.matchesCollection
+      ?.aggregate([
         {
           $match: {
             $and: [
@@ -332,7 +337,7 @@ export default class DBAService {
       ])
       .toArray();
 
-    const result = dbitems.map((pojo: any) => ({ day: pojo._id, count: pojo.count }));
+    const result = dbitems?.map((pojo: any) => ({ day: pojo._id, count: pojo.count })) ?? [];
     return result;
   }
 
@@ -353,5 +358,5 @@ export default class DBAService {
   public resetPlayersCache() {
     this.playersCache = null;
   }
-  private playersCache: Map<string, Player>;
+  private playersCache: Map<string, Player> | null;
 }

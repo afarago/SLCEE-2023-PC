@@ -8,7 +8,7 @@ import { PlayerDTO } from './playerresponse';
 
 export class BaseError extends Error {}
 export class APIError extends BaseError {
-  constructor(public statusCode: number, public message: string, public data?: any) {
+  constructor(public statusCode: number, public override message: string, public data?: any) {
     super(message);
     // Error.captureStackTrace(this);
   }
@@ -20,7 +20,7 @@ export function eventToDTO(input: MatchEvent, options?: { hidePlayerIndex?: bool
   delete item.state;
 
   const dto = item as MatchEventDTO;
-  if (!options?.hidePlayerIndex) dto.playerIndex = input.currentPlayerIndex;
+  if (!options?.hidePlayerIndex && input.currentPlayerIndex !== null) dto.playerIndex = input.currentPlayerIndex;
 
   return dto;
 }
@@ -51,7 +51,7 @@ export function moveToDTO(input: Move, options?: { isDebug?: boolean; hidePlayer
 
 export function matchToDTO(
   input: Match,
-  playerNames: string[],
+  playerNames?: string[],
   options?: { isDebug?: boolean; hidePlayerIndex?: boolean }
 ): MatchDTO {
   const retval: any = structuredCloneWA(input.toJSON());
@@ -75,8 +75,8 @@ export function matchToDTO(
 
   const dto = retval as MatchDTO;
   dto.activePlayerIndex = input.getActivePlayerIdx();
-  dto.drawPileSize = input.state?.drawPile?.length;
-  dto.discardPileSize = input.state?.discardPile?.length;
+  dto.drawPileSize = input.state?.drawPile?.length ?? -1;
+  dto.discardPileSize = input.state?.discardPile?.length ?? -1;
   if (playerNames) dto.playernames = playerNames;
 
   return dto;
@@ -87,7 +87,7 @@ export function matchToDTO(
  * @param value
  * @returns
  */
-export function parseBoolyFromString(value: BoolLikeString) {
+export function parseBoolyFromString(value?: BoolLikeString) {
   return value === 'true' || value === '1';
 }
 export type BoolLikeString = 'true' | 'false' | '1' | '0';
@@ -108,7 +108,7 @@ export function matchToHeaderDTO(match: Match, playersData?: Map<string, Player>
     ? {
         startedat: match.startedAt,
         tags: match.creationParams?.tags,
-        playernames: match.playerids?.map((pid) => playersData.get(pid.toString())?.name),
+        playernames: match.playerids?.map((pid) => playersData.get(pid.toString())?.name ?? ''),
       }
     : {};
 
@@ -119,15 +119,15 @@ export function matchToHeaderDTO(match: Match, playersData?: Map<string, Player>
     finished: match.isFinished,
     table: {
       effect: match.state?.pendingEffect?.effectType,
-      playarea: match.state?.playArea?.length,
-      drawpile: match.state?.drawPile?.length,
-      discardpile: match.state?.discardPile?.length,
+      playarea: match.state?.playArea?.length ?? -1,
+      drawpile: match.state?.drawPile?.length ?? -1,
+      discardpile: match.state?.discardPile?.length ?? -1,
     },
     playerdata: match.playerids?.map((pid, idx) => ({
       active: match.getActivePlayerIdx() === idx,
       winner: match.state?.winnerIdx === idx,
-      banksize: match.state?.banks?.[idx]?.flatSize,
-      bankvalue: match.state?.banks?.[idx]?.bankvalue,
+      banksize: match.state?.banks?.[idx]?.flatSize ?? -1,
+      bankvalue: match.state?.banks?.[idx]?.bankvalue ?? -1,
     })),
   };
 
@@ -140,7 +140,6 @@ export function matchToHeaderDTO(match: Match, playersData?: Map<string, Player>
 // Logger.error(e.message, { matchId: match?._id });
 // return undefined;
 // }
-
 
 export function playerToDTO(input: Player): PlayerDTO {
   const item = structuredCloneWA(input);

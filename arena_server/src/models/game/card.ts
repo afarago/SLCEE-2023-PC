@@ -98,6 +98,8 @@ class Card implements ICard {
 
   private checkCard(source?: ICard) {
     if (
+      !this.suit ||
+      !this.value ||
       !IsCardSuit(this.suit) ||
       !(this.suit !== OCardSuit.Mermaid ? this.value >= 2 && this.value <= 7 : this.value >= 4 && this.value <= 9)
     ) {

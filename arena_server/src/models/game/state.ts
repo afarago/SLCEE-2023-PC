@@ -1,6 +1,7 @@
 import 'core-js/es/array/at';
 
 import cloneDeep from 'lodash/cloneDeep';
+import assert from 'node:assert/strict';
 
 import { Hydrate } from '../../utils/hydration.util';
 import Bank from './bank';
@@ -35,9 +36,9 @@ export default class State {
   drawPile?: DrawCardPile;
   discardPile?: DiscardCardPile;
   playArea: PlayArea;
-  currentPlayerIndex?: integer;
+  currentPlayerIndex: integer | null;
   pendingEffect?: CardEffect; // -- e.g. Hook, Map (not Kraken)
-  winnerIdx?: integer;
+  winnerIdx?: integer | null;
 
   clearPendingEffect() {
     delete this.pendingEffect;
@@ -45,15 +46,14 @@ export default class State {
 
   addPendingEffect(effect: CardEffect): void {
     if (this.pendingEffect) {
-      throw new Error(
-        'Effect already in action: ' + this.pendingEffect.effectType + ' - cannot add next one'
-      );
+      throw new Error('Effect already in action: ' + this.pendingEffect.effectType + ' - cannot add next one');
     }
 
     this.pendingEffect = effect;
   }
 
   static clone(instance: State) {
+    assert(instance);
     // const source = structuredClone(this); // available in node 17, from LT update in 22'Oct
     // const copy = Object.create(Object.getPrototypeOf(source)) as State;
     // const copy = utils.deepCopy<State>(instance);
