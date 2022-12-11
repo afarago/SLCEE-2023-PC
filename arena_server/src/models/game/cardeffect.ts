@@ -2,8 +2,7 @@
 import 'core-js/es/array/at';
 
 import { Hydrate } from '../../utils/hydration.util';
-import Card from './card';
-import { OCardSuit } from './card';
+import Card, { CardOrNull, OCardSuit } from './card';
 
 export const OCardEffectType = {
   Oracle: OCardSuit.Oracle as CardEffectType,
@@ -31,7 +30,7 @@ export default class CardEffect {
     return obj;
   }
 
-  constructor(public effectType: CardEffectType, public cards?: (Card | null)[], public krakenCount?: number) {
+  constructor(public effectType: CardEffectType, public cards?: (CardOrNull)[], public krakenCount?: number) {
     if (effectType) this.effectType = effectType;
     if (cards) this.cards = cards;
     if (krakenCount) this.krakenCount = krakenCount;

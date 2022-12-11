@@ -94,6 +94,14 @@
 					"Kraken"
 				]
 			},
+			"CardOrNull": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Card"
+					}
+				],
+				"nullable": true
+			},
 			"CardEffect": {
 				"description": "Card effect associated with a special card",
 				"properties": {
@@ -102,12 +110,7 @@
 					},
 					"cards": {
 						"items": {
-							"allOf": [
-								{
-									"$ref": "#/components/schemas/Card"
-								}
-							],
-							"nullable": true
+							"$ref": "#/components/schemas/CardOrNull"
 						},
 						"type": "array"
 					},
@@ -219,12 +222,7 @@
 						"$ref": "#/components/schemas/CardEffectType"
 					},
 					"responseToEffectCard": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/Card"
-							}
-						],
-						"nullable": true
+						"$ref": "#/components/schemas/CardOrNull"
 					},
 					"turnStartedDelta": {
 						"$ref": "#/components/schemas/IStateDelta"
@@ -516,14 +514,6 @@
 						],
 						"nullable": true
 					},
-					"currentPlayerId": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/PlayerId"
-							}
-						],
-						"nullable": true
-					},
 					"playernames": {
 						"items": {
 							"type": "string"
@@ -560,7 +550,6 @@
 					"turnCount",
 					"moveCountInTurn",
 					"currentPlayerIndex",
-					"currentPlayerId",
 					"drawPileSize",
 					"discardPileSize"
 				],
@@ -634,14 +623,12 @@
 						"$ref": "#/components/schemas/CardEffectType"
 					},
 					"card": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/Card"
-							}
-						],
-						"nullable": true
+						"$ref": "#/components/schemas/CardOrNull"
 					}
 				},
+				"required": [
+					"effectType"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -687,7 +674,8 @@
 						"type": "string"
 					},
 					"name": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"username": {
 						"type": "string"
@@ -1007,6 +995,14 @@
 						"description": "optionally add events associated with the match",
 						"in": "query",
 						"name": "showevents",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"in": "query",
+						"name": "showdebug",
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/BoolLikeString"

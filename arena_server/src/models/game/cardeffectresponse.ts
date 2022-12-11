@@ -2,7 +2,7 @@
 import 'core-js/es/array/at';
 
 import { Hydrate } from '../../utils/hydration.util';
-import Card from './card';
+import Card, { CardOrNull } from './card';
 import { CardEffectType } from './cardeffect';
 
 export default class CardEffectResponse {
@@ -16,5 +16,5 @@ export default class CardEffectResponse {
     return obj;
   }
 
-  constructor(public effectType: CardEffectType, public card?: Card | null) {}
+  constructor(public effectType: CardEffectType, public card?: CardOrNull) {}
 }

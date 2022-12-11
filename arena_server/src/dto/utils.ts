@@ -60,8 +60,8 @@ export function matchToDTO(
 
   // if (!retval.state) retval.state = { ...match.state }; // -- backward compatibility, when state was not stored with match
   delete retval.stateAtTurnStart;
-  delete retval.currentPlayerId;
   delete retval.currentPlayerIndex;
+  delete retval.activePlayerIdCached;
   if (!options?.isDebug) {
     // -- delete sensitive data
     delete retval.state.drawPile;

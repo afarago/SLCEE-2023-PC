@@ -25,8 +25,7 @@ export default class GameLogicService {
 
   private _randomGenerator: RandomGenerator;
   private get randomGenerator() {
-    assert(this.match);
-    if (!this._randomGenerator) this._randomGenerator = new RandomGenerator(this.match.creationParams?.randomSeed);
+    if (!this._randomGenerator) this._randomGenerator = new RandomGenerator(this.match?.creationParams?.randomSeed);
     return this._randomGenerator;
   }
 
@@ -71,7 +70,7 @@ export default class GameLogicService {
     // -- this is to persist the player in the header as well, might be null after matchEnd
     const currentPlayerIndex = this.match.currentPlayerIndex;
     this.match.currentPlayerIndex = currentPlayerIndex;
-    this.match.currentPlayerId = currentPlayerIndex !== null ? this.match.playerids[currentPlayerIndex] : null;
+    this.match.activePlayerIdCached = this.match.getActivePlayerId();
     this.match.stateCache = this.match.move?.state;
 
     // -- persist in db

@@ -28,14 +28,17 @@ export interface IMatchCoreChanging {
   state?: State;
   stateAtTurnStart?: State;
   currentPlayerIndex: integer | null;
-  currentPlayerId: PlayerId | null;
+}
+export interface IMatchCoreChangingDb extends IMatchCoreChanging {
+  activePlayerIdCached: PlayerId | null; // -- do not return this in dto
 }
 export interface IMatchCore extends IMatchCoreReadonly, IMatchCoreChanging {}
+export interface IMatchCoreDb extends IMatchCoreReadonly, IMatchCoreChangingDb {}
 
 /**
  * Match object, representing the match header
  */
-export default class Match implements IMatchCore {
+export default class Match implements IMatchCoreDb {
   static constructFromObject(data: any, obj?: Match) {
     if (data) {
       obj = obj || new Match();
@@ -53,7 +56,7 @@ export default class Match implements IMatchCore {
       Hydrate.convertFrom(data, 'state', State, obj, 'stateCache');
       Hydrate.convertFrom(data, 'stateAtTurnStart', State, obj);
       Hydrate.convertFrom(data, 'currentPlayerIndex', 'Number', obj, 'currentPlayerIndex');
-      Hydrate.convertFrom(data, 'currentPlayerId', ObjectId, obj, 'currentPlayerId');
+      Hydrate.convertFrom(data, 'activePlayerIdCached', ObjectId, obj, 'activePlayerIdCached');
     }
     return obj;
   }
@@ -71,11 +74,11 @@ export default class Match implements IMatchCore {
   stateCache?: State; // -- backup field, to cache value for db as 'state'
   stateAtTurnStart: State; // -- state at turn start
   currentPlayerIndex: number | null;
-  currentPlayerId: PlayerId | null; // -- only for db search, do not return anywhere else
+  activePlayerIdCached: PlayerId | null; // -- only for db search, do not return anywhere else
 
   move?: Move; // -- do not directly save moves, should be persisted on creation and last on should be retrieved upon db read
 
-  toJSON(): IMatchCore {
+  toJSON(): IMatchCoreDb {
     const pojo: any = { ...this };
     delete pojo.move; // do not directly save moves, should be persisted on creation and last on should be retrieved upon db read
 

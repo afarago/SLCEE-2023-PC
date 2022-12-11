@@ -103,7 +103,11 @@ export default class FrontendController {
 
     const _playerobjs = await this.dbaService.getPlayersCache();
     const playernames = match.playerids.map((pid) => _playerobjs.get(pid.toString())?.name ?? '');
-    const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, playernames, true);
+    const matchdto = await this.gameService.getMatchDTOPromise(match, {
+      user: req.user,
+      playerNames: playernames,
+      doReturnAllMoves: true,
+    });
 
     res.render('match', { matchdto });
   }

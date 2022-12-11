@@ -27,6 +27,8 @@ export interface ICard {
   value?: CardValue;
 }
 
+export type CardOrNull = Card | null;
+
 // export type Suit = typeof OSuit[keyof typeof OSuit];
 // export type Suit =
 //   | "Anchor"

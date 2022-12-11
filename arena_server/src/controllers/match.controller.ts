@@ -1,22 +1,7 @@
 import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
 import { NotRetryableError, retry } from 'ts-retry-promise';
-import {
-  Body,
-  Delete,
-  Deprecated,
-  Get,
-  Hidden,
-  Path,
-  Post,
-  Query,
-  Request,
-  Response,
-  Route,
-  Security,
-  SuccessResponse,
-  Tags,
-} from 'tsoa';
+import { Body, Delete, Get, Path, Post, Query, Request, Response, Route, Security, SuccessResponse, Tags } from 'tsoa';
 import { Container, Inject } from 'typedi';
 
 import { ActionErrorResponse, ErrorResponse } from '../dto/errorresponse';
@@ -91,7 +76,7 @@ export default class MatchesController {
         // -- retry promise reading matches
         const matches = await this.dbaService.getMatchesPromise({
           playerId: filterPlayerId,
-          currentPlayerId: filterCurrentPlayerId,
+          activePlayerId: filterCurrentPlayerId,
           date: filterDate,
           tags: filterTags,
         });
@@ -110,7 +95,7 @@ export default class MatchesController {
       async (accPromise: Promise<MatchDTO[]>, match: Match): Promise<MatchDTO[]> => {
         const acc = await accPromise;
         try {
-          const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, undefined, undefined);
+          const matchdto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
           acc.push(matchdto);
         } catch {
           // -- NOOP
@@ -195,10 +180,12 @@ export default class MatchesController {
     @Request() req: any,
     @Path() id: ObjectIdString,
     @Query() waitactive?: BoolLikeString,
-    @Query() showevents?: BoolLikeString
+    @Query() showevents?: BoolLikeString,
+    @Query() showdebug?: BoolLikeString
   ): Promise<MatchDTO> {
     const doWaitForActive: boolean = parseBoolyFromString(waitactive);
     const doShowEvents: boolean = parseBoolyFromString(showevents);
+    const doShowDebug: boolean = parseBoolyFromString(showdebug);
 
     // -- retry retrieving the match either until auth user is same as current user or timeout
     // -- if doWaitForActive is false - we only retry once
@@ -233,7 +220,11 @@ export default class MatchesController {
     if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
       throw new APIError(409, 'Authenticated user is not the current player.');
 
-    const matchdto = await this.gameService.getMatchDTOPromise(match, req.user, undefined, doShowEvents);
+    const matchdto = await this.gameService.getMatchDTOPromise(match, {
+      user: req.user,
+      doReturnAllMoves: doShowEvents,
+      doAddDebug: doShowDebug,
+    });
     return matchdto;
   }
 

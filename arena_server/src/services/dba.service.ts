@@ -5,7 +5,7 @@ import { Service } from 'typedi';
 import * as util from 'util';
 
 import Logger from '../config/logger';
-import Match, { IMatchCoreChanging } from '../models/game/match';
+import Match, { IMatchCoreChangingDb } from '../models/game/match';
 import Move from '../models/game/move';
 import Player from '../models/game/player';
 import State from '../models/game/state';
@@ -35,7 +35,7 @@ export default class DBAService {
    */
   public async getMatchesPromise(options: {
     playerId?: ObjectIdString;
-    currentPlayerId?: ObjectIdString;
+    activePlayerId?: ObjectIdString;
     date?: Date;
     tags?: string[];
     limit?: {
@@ -47,12 +47,12 @@ export default class DBAService {
     let filterOption = {
       ...(options?.playerId
         ? {
-            playerids: new ObjectId(options?.playerId),
+            playerids: new ObjectId(options.playerId),
           }
         : {}),
-      ...(options?.currentPlayerId
+      ...(options?.activePlayerId
         ? {
-            currentPlayerId: new ObjectId(options?.currentPlayerId),
+            activePlayerIdCached: new ObjectId(options.activePlayerId),
           }
         : {}),
       ...(options?.tags
@@ -67,7 +67,7 @@ export default class DBAService {
         : {}),
     };
     if (options?.date) {
-      const filterToday1 = new Date(options?.date);
+      const filterToday1 = new Date(options.date);
       filterToday1.setHours(0, 0, 0, 0);
       const filterToday2 = new Date(filterToday1);
       filterToday2.setDate(filterToday2.getDate() + 1);
@@ -268,7 +268,7 @@ export default class DBAService {
         // -- if not new match: update changing part of match
         if (!isNewMatch) {
           // -- we ensure checking if in sync with Match definition
-          type IMatchCoreRequired = Required<IMatchCoreChanging>;
+          type IMatchCoreRequired = Required<IMatchCoreChangingDb>;
           const matchObj = match.toJSON(); // -- probably not good, still there is some pre-persistance logic executed encapsulated in the match logic
           const updateset: IMatchCoreRequired = {
             lastMoveAt: matchObj.lastMoveAt,
@@ -277,8 +277,8 @@ export default class DBAService {
             turnCount: matchObj.turnCount,
             state: matchObj.state ?? new State(),
             stateAtTurnStart: matchObj.stateAtTurnStart ?? new State(),
-            currentPlayerId: matchObj.currentPlayerId,
             currentPlayerIndex: matchObj.currentPlayerIndex,
+            activePlayerIdCached: matchObj.activePlayerIdCached,
           };
 
           const dbitem = await this.dbService?.matchesCollection?.updateOne(

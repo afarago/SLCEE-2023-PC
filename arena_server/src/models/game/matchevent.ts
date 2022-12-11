@@ -2,7 +2,7 @@
 import 'core-js/es/array/at';
 
 import { Hydrate } from '../../utils/hydration.util';
-import Card from './card';
+import Card, { CardOrNull } from './card';
 import CardEffect, { CardEffectType } from './cardeffect';
 import { integer } from './model';
 import State from './state';
@@ -52,7 +52,7 @@ export interface IMatchEventParameters {
   matchEndedComment?: string;
   matchEndedTerminated?: boolean;
   responseToEffectType?: CardEffectType;
-  responseToEffectCard?: Card | null;
+  responseToEffectCard?: CardOrNull;
   turnStartedDelta?: IStateDelta;
 
   // LATER: rework as
@@ -133,6 +133,6 @@ export default class MatchEvent implements IMatchEvent {
   matchEndedComment?: string;
   matchEndedTerminated?: boolean;
   responseToEffectType?: CardEffectType;
-  responseToEffectCard?: Card | null;
+  responseToEffectCard?: CardOrNull;
   turnStartedDelta?: IStateDelta;
 }

@@ -24,9 +24,12 @@ export default class GameService {
    */
   public async getMatchDTOPromise(
     idOrMatch: ObjectIdString | model.Match,
-    user?: IUser,
-    playerNames?: string[],
-    doReturnAllMoves?: boolean
+    options?: {
+      user?: IUser;
+      playerNames?: string[];
+      doReturnAllMoves?: boolean;
+      doAddDebug?: boolean;
+    }
   ): Promise<MatchDTO> {
     // -- user incoming match or retrieve from db
     const match =
@@ -37,15 +40,16 @@ export default class GameService {
     // const playerNames = playerData.map(pd=>pd.name);
 
     // -- SHOW debug for matches started by this player or if Admin is requesting
-    const isDebug = user?.isAdmin || match.createdByPlayerId?.equals(user?.username ?? '');
-    const retval = matchToDTO(match, playerNames, { isDebug });
+    const isDebug =
+      options?.doAddDebug && (options?.user?.isAdmin || match.createdByPlayerId?.equals(options?.user?.username ?? ''));
+    const retval = matchToDTO(match, options?.playerNames, { isDebug });
 
     // -- collect and show moves & events
-    const moves: model.Move[] = doReturnAllMoves
+    const moves: model.Move[] = !!options?.doReturnAllMoves
       ? // -- TRUE: return all moves
         await this.dbaService.getAllMovesByMatchIdPromise(match._id.toString())
       : // -- FALSE (not NULL): still return match closing events if match is finished
-      doReturnAllMoves !== null && match.isFinished
+      options?.doReturnAllMoves === false && match.isFinished
       ? // TODO: consider filtering events
         await (async () => {
           const lastmove = await this.dbaService.getLastMoveByMatchIdPromise(match._id.toString());

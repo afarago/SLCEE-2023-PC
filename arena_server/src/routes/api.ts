@@ -110,7 +110,13 @@ app
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
-        const response = await controller.getMatch(req, req.params.id, req.query.waitactive, req.query.showevents);
+        const response = await controller.getMatch(
+          req,
+          req.params.id,
+          req.query.waitactive,
+          req.query.showevents,
+          req.query.showdebug
+        );
         return res.send(response);
       })
       .catch(next); // Errors will be passed to Express.
