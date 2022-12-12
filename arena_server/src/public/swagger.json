@@ -318,6 +318,27 @@
 						"type": "array",
 						"description": "Tags to add to match for later filtering"
 					},
+					"playArea": {
+						"items": {
+							"$ref": "#/components/schemas/Card"
+						},
+						"type": "array",
+						"description": "[Debug purposes] Play Area initial contents of cards.",
+						"example": [
+							[
+								"Oracle",
+								4
+							],
+							[
+								"Anchor",
+								4
+							],
+							[
+								"Mermaid",
+								5
+							]
+						]
+					},
 					"drawPile": {
 						"items": {
 							"$ref": "#/components/schemas/Card"
