@@ -157,6 +157,10 @@ nav .breadcrumb i.material-icons {
 .playcards.pulse:hover {
   background-color: yellow;
 }
+.playcards.bustercard {
+  background-color: #c20000;
+  color: #efede7;
+}
 .playcards[data-card=null] {
   padding-bottom: 0.15em;
 }
@@ -167,10 +171,7 @@ nav .breadcrumb i.material-icons {
   box-shadow: 0.2em 0.2em 0.5em #333;
   padding-right: 0.1em;
 }
-.bigcard.bustercard {
-  border: 2px #ff5900 solid;
-}
-.bigcard.animateinitial {
+.bigcard.animate_initial_to_playarea {
   opacity: 0;
   top: 100px;
   position: relative;

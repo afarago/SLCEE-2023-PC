@@ -67,6 +67,10 @@
       background-color: yellow;
     }
   }
+  &.bustercard {
+    background-color: #c20000;
+    color: #efede7;
+  }
   &[data-card='null'] {
     padding-bottom: 0.15em;
   }
@@ -78,10 +82,7 @@
   box-shadow: 0.2em 0.2em 0.5em #333;
   padding-right: 0.1em;
 
-  &.bustercard {
-    border: 2px #ff5900 solid;
-  }
-  &.animateinitial {
+  &.animate_initial_to_playarea {
     opacity: 0;
     top: 100px;
     position: relative;

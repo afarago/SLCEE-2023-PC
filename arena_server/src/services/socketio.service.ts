@@ -16,6 +16,7 @@ export default class SocketIOService {
 
     this.io.on('connection', (socket: any) => {
       this.connectCounter++;
+      // console.log('connected');
 
       // -- request from client side to join a room
       socket.on('room', (room: string) => {

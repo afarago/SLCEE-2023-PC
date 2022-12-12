@@ -1,4 +1,5 @@
 import FlatCardPile from './flatcardpile';
+import Card from './card';
 
 /**
  * Play area - object to represent the play area
@@ -11,4 +12,11 @@ export default class PlayArea extends FlatCardPile {
     }
     return obj;
   }
-} // or Map<Suit, number>;
+
+  public static create(cards?: (Card | any)[]): PlayArea {
+    const retval = new PlayArea();
+    if (cards) PlayArea.constructFromObject(cards, retval);
+
+    return retval;
+  }
+}

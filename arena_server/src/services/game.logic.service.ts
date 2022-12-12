@@ -117,8 +117,8 @@ export default class GameLogicService {
     // -- guard: check if all players exists and there is exactly 2 players
     if (playerData.length !== 2 || playerData.some((pd) => !pd))
       throw new GameError('Invalid players specified, please check settings.');
-    const initialPlayArea = new model.PlayArea();
-    const initialDiscardPile = model.DiscardPile.create(params.discardPile);
+    const initialPlayArea = model.PlayArea.create(params?.playArea);
+    const initialDiscardPile = model.DiscardPile.create(params?.discardPile);
     const initialDrawPile = model.DrawCardPile.create(params?.drawPile, this.randomGenerator);
     const initialBanks = Array(playerData.length)
       .fill(null)

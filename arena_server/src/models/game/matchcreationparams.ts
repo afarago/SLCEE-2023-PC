@@ -13,6 +13,7 @@ export default class MatchCreationParams {
 
       Hydrate.convertFrom(data, 'playerids', ['ObjectIdString'], obj);
       Hydrate.convertFrom(data, 'tags', ['String'], obj);
+      Hydrate.convertFrom(data, 'playArea', [Card], obj);
       Hydrate.convertFrom(data, 'drawPile', [Card], obj);
       Hydrate.convertFrom(data, 'discardPile', [Card], obj);
       Hydrate.convertFrom(data, 'banks', [[Card]], obj); // -- important not Bank, rarher a simplified format
@@ -32,6 +33,11 @@ export default class MatchCreationParams {
    * Tags to add to match for later filtering
    */
   tags?: string[];
+  /**
+   * [Debug purposes] Play Area initial contents of cards.
+   * @example [ ["Oracle", 4], ["Anchor", 4], ["Mermaid", 5] ]
+   */
+  playArea?: Card[];
   /**
    * [Debug purposes] Draw pile initial contents of cards. When omitted default will be generated.
    * @example [ ["Oracle", 4], ["Anchor", 4], ["Mermaid", 5] ]
