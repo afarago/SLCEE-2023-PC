@@ -54,6 +54,10 @@ nav .breadcrumb i.material-icons {
   top: -0.5em;
 }
 
+.pulse::before {
+  pointer-events: none;
+}
+
 .matchestable thead th,
 .matchestable thead td {
   padding-top: 0px;

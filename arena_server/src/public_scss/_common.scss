@@ -61,3 +61,7 @@ nav .breadcrumb i.material-icons {
   position: relative;
   top: -0.5em;
 }
+
+.pulse::before {
+  pointer-events: none;
+}
