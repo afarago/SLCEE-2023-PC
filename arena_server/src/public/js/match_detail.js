@@ -1,9 +1,6 @@
 //=== Helper functions for render STATUS segments ===================================================================
 function renderMatchState(matchdto) {
   const $matchcontainer = $('#matchstate');
-  try {
-    $('.tooltipped', $('#matchstate')).tooltip('destroy');
-  } catch {}
   const content = `
       ${renderCreationParams(matchdto)}
       ${renderPlayer(matchdto, 0)}
@@ -76,11 +73,16 @@ function renderPlayArea(matchdto) {
     : !matchdto.activePlayerIndex
     ? 'light-green white-text'
     : 'orange white-text';
+  const cardsRendered = renderCards(matchdto.state.playArea);
   return `
       <div class="playarea statusbox col s12 ${plarea_color}" >
         <h6 class="${plarea_color} darken-2">Playarea</h6>
         <div>
-          ${renderCards(matchdto.state.playArea) || '(no cards on the table)'}
+          ${
+            !!cardsRendered
+              ? `<span>${cardsRendered}<span>`
+              : '<span class=empty_placeholder>(no cards on the table)</span>'
+          }
           ${
             matchdto.state.pendingEffect
               ? `<span class="pendingeffect" data-effecttype="${matchdto.state.pendingEffect.effectType}">(` +
@@ -114,10 +116,10 @@ function renderPlayer(matchdto, idx) {
   const bankinfo = getBankValueAndSize(bank);
   return `<div class="player${idx} bank statusbox col m3 s12 ${pcolor} white-text">
       <h6 class="${pcolor} darken-2">
-      <span class="tooltipped 
-        ${idx === matchdto.activePlayerIndex ? 'activePlayer' : ''} 
+      <span class="${idx === matchdto.activePlayerIndex ? 'activePlayer' : ''} 
         ${matchdto.state?.winnerIdx === idx ? 'winningPlayer' : ''}"
-        data-tooltip="#${playerid} · ${playername}">${playername}</span> · €${bankinfo.value}💶
+        >
+        ${playername}</span> · €${bankinfo.value}💶
       </h6>
       <div>${renderBank(bank)}</div>
       <div class="actions ${idx == matchdto.activePlayerIndex && isAuthUserIsThisPlayer(idx) ? '' : 'hide'}">
@@ -172,8 +174,7 @@ function renderMove(move) {
           <td class="bar">&nbsp;</td>
           <td>${move.turnId ?? ''}.${move.sequenceInTurnId ?? ''}</td>
           <td>
-            <span class="eventType ${!$.isEmptyObject(useraction_rest) ? 'tooltipped' : ''}" 
-              data-tooltip='${JSON.stringify(useraction_rest)}' data-position='top'>
+            <span class="eventType">
               ${move.userAction?.etype ?? event?.eventType}
             </span>
           </td>
@@ -207,24 +208,25 @@ function renderEventRow(event) {
 const delayFn = (ms) => new Promise((_) => setTimeout(_, ms));
 function animateMoveEventEffect(move, nextFn) {
   //-- 0. remove pending effect
-  const fnRemoveEffects = (resolve, reject) => {
+  const fnAnimateRemoveEffects = (resolve, reject) => {
     if (!matchdto.pendingEffect)
       return $('.playarea .pendingeffect')
         .removeClass('pulse') //-- remove any highlights
         .animate({ opacity: 0 }, 'fast')
         .promise()
-        .then(($el) => $el.remove());
+        .then(($el) => $el.remove())
+        .then(resolve);
   };
 
   //-- 1. animations for playarea changes
   const fnPlayAreaAnimations = (resolve, reject) => {
+    console.log('fnPlayAreaAnimations');
     //-- collect cards placed on play area
-    const cards_pa = move.events
+    const cards = move.events
       .flatMap(
         (e) =>
           e.drawCard ?? //-- show even if not placed due to bust
-          e.cardPlacedToPlayAreaCard ?? //-- mainly effects except for cannon
-          (e.responseToEffectType !== 'Cannon' ? e.responseToEffectCard : null) //-- mainly effects except for cannon
+          e.cardPlacedToPlayAreaCard
       )
       .filter(
         //-- is unique (finds only first occurence)
@@ -232,33 +234,29 @@ function animateMoveEventEffect(move, nextFn) {
           card1 &&
           self.findIndex((card2) => card2 && card1.suit === card2.suit && card1.value === card2.value) === index
       );
+    console.log(`fnPlayAreaAnimations:${JSON.stringify(cards)}`);
 
-    if (cards_pa.length) {
-      //-- render all cards and add them to the revealer object
-      const cardsContent = cards_pa.map((card, idx) =>
-        $(renderCard(card)).addClass('bigcard animate_initial_to_playarea')
-      );
-      $('<div>').html(cardsContent).addClass('move-effect-revealer').appendTo('.playarea h6');
-
-      //-- animate draw effect one-by-one on all cards
-      return cardsContent
-        .map(function ($e) {
+    if (cards?.length >= 0) {
+      return cards
+        .map((e) => {
           return function () {
-            return $e.animate({ opacity: 1, top: 0 }, 'fast').promise();
+            return $(renderCard(e))
+              .appendTo($('.playarea div'))
+              .css('opacity', 0)
+              .animate({ opacity: 1 }, 'fast')
+              .promise();
           };
         })
         .reduce(function (cur, next) {
           return cur.then(next);
         }, $().promise())
-        .then(() => delayFn(500))
-        .then(() => $('.bigcard').animate({ opacity: 0, display: 'none' }, 300).promise())
-        .then(() => $('.move-effect-revealer').remove())
         .then(resolve);
     }
   };
 
   //-- 2. animations for bank removals
   const fnGetBankRemovalAnimations = (resolve, reject) => {
+    console.log('fnGetBankRemovalAnimations');
     const events_cardremoved_bank = move.events.filter((e) => e.eventType === 'CardRemovedFromBank');
     if (events_cardremoved_bank.length) {
       const event = events_cardremoved_bank[0];
@@ -277,29 +275,31 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 3. bust
   const fnBustedAnimations = (resolve, reject) => {
+    console.log('fnBustedAnimations');
     const evTurnEnded = move.events.find((e) => e.eventType === 'TurnEnded');
     if (evTurnEnded && !evTurnEnded.turnEndedIsSuccessful) {
-      const $bustedCard = $("<span class='playcards bustercard cardvalue'>BUSTED</span>");
+      const $bustedCard = $("<span class='playcards virtual busted cardvalue'>BUSTED</span>");
       return $bustedCard
         .css({ opacity: 0 })
         .appendTo('.playarea div')
-        .animate({ opacity: 1 }, 'fast')
+        .animate({ opacity: 1 }, 'slow')
         .promise()
         .then(() => delayFn(750))
-        .then(() => $bustedCard.remove())
         .then(resolve);
     }
   };
 
   //-- 4: add bonus cards (if any)
   const fnTurnEndedBonusAnimations = (resolve, reject) => {
+    console.log('fnTurnEndedBonusAnimations');
     const cards = move.events.find((e) => e.eventType === 'TurnEnded')?.turnEndedBonusCards;
     if (!!cards?.length) {
-      const basepromise = $('.playarea .pendingeffect')
-        .removeClass('pulse') //-- remove any highlights
-        .animate({ opacity: 0 }, 'fast')
-        .promise()
-        .then(($el) => $el.remove());
+      const $bonusCard = $("<span class='playcards virtual bonus cardvalue'>BONUS</span>");
+      const basepromise = $bonusCard
+        .css({ opacity: 0 })
+        .appendTo('.playarea div')
+        .animate({ opacity: 1 }, 'slow')
+        .promise();
 
       return cards
         .map((e) => {
@@ -320,10 +320,11 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 5. animations for collect in TurnEnded
   const fnTurnEndedCollectAnimations = (resolve, reject) => {
+    console.log('fnTurnEndedCollectAnimations');
     const evTurnEnded = move.events.find((e) => e.eventType === 'TurnEnded');
 
     if (evTurnEnded) {
-      const playarea_cards = $('.playarea .playcards').get();
+      const playarea_cards = $('.playarea .playcards:not(.virtual)').get();
       //-- const collectedCards = evTurnEnded?.turnEndedDelta.banks.at(evTurnEnded?.playerIndex)?.added; // will not show cards acquired from own bank
       let collectedCards;
       const turnEndedIsSuccessful = evTurnEnded.turnEndedIsSuccessful;
@@ -337,7 +338,7 @@ function animateMoveEventEffect(move, nextFn) {
       if (collectedCards?.length) {
         //-- animate draw effect one-by-one on all cards
         $('.playarea .playcards').removeClass('pulse');
-        console.log(collectedCards);
+
         return $(collectedCards)
           .css({ position: 'relative', 'z-index': 2 })
           .get()
@@ -354,14 +355,22 @@ function animateMoveEventEffect(move, nextFn) {
   };
 
   //-- finally: execute the actual animations
-  Promise.resolve()
-    .then(fnRemoveEffects)
+  return Promise.resolve()
+    .then(() => console.log('start'))
+    .then(fnAnimateRemoveEffects)
+    .then(() => console.log('after:fnAnimateRemoveEffects'))
     .then(fnGetBankRemovalAnimations)
+    .then(() => console.log('after:fnGetBankRemovalAnimations'))
     .then(fnPlayAreaAnimations)
+    .then(() => console.log('after:fnPlayAreaAnimations'))
     .then(fnBustedAnimations)
+    .then(() => console.log('after:fnBustedAnimations'))
     .then(fnTurnEndedBonusAnimations)
+    .then(() => console.log('after:fnTurnEndedBonusAnimations'))
     .then(fnTurnEndedCollectAnimations)
-    .then(nextFn);
+    .then(() => console.log('after:fnTurnEndedCollectAnimations'))
+    .then(nextFn)
+    .then(() => console.log('after:NextFn'));
 }
 
 //=== Helper functions for render =================================================================================
@@ -378,7 +387,7 @@ function renderObjectIterator(key, value) {
     const retval = renderCard(value);
     return retval;
   } else if (key === 'effectType' || key === 'responseToEffectType') {
-    const retval = renderSuit(value, true);
+    const retval = renderSuit(value);
     return retval;
   } else if (key === 'matchEndedWinnerIdx') {
     const pidx = value;
@@ -403,10 +412,9 @@ function renderObjectIterator(key, value) {
     return value;
   }
 }
-function renderSuit(suit, doAddTitle) {
+function renderSuit(suit) {
   return `<img src='/img/suit_${suit?.toLowerCase()}.png' 
-      class='cardsuit ${doAddTitle ? 'tooltipped' : ''}'
-      ${doAddTitle ? 'data-tooltip="' + suit + '"' : ''} 
+      class='cardsuit'
       alt="${suit}"/>`;
 }
 function renderCards(cards) {
@@ -415,8 +423,7 @@ function renderCards(cards) {
 }
 function renderCard(card) {
   if (!card) return null;
-  return `<span class="playcards tooltipped" 
-      data-tooltip="${card.suit} ${card.value}" 
+  return `<span class="playcards" 
       data-card='${JSON.stringify(card)}'>
         ${renderSuit(card.suit)}${renderCardValues(card.value)}
       </span>`;
@@ -428,15 +435,14 @@ function renderBank(bank) {
       const cardvalues = cpack?.sort().reverse();
       const cardvalues_str = cardvalues.map((item) => `<span>${item}</span>`).join('');
       return (
-        `<span class="playcards tooltipped" 
-              data-tooltip="${cpacksuit} ${cardvalues.join(', ')}"
+        `<span class="playcards" 
               data-suit='${cpacksuit}'
               data-card='${JSON.stringify({ suit: cpacksuit, value: cardvalues.at(0) })}'>` +
         `${renderSuit(cpacksuit)}${renderCardValues(cardvalues_str)}</span>`
       );
     })
     .join(' ');
-  return retval || '(no cards in the bank)';
+  return !!retval ? `<span>${retval}</span>` : '<span class=empty_placeholder>(no cards in the bank)</span>';
 }
 function renderCardValues(value) {
   return `<span class="cardvalue">${value}</span>`;
@@ -487,8 +493,7 @@ const debug_switch = { log_socketio: false };
 $(() => {
   const socket = io();
   socket.onAny((event, ...args) => {
-    // if (debug_switch?.log_socketio) 
-    console.log('socketio', event, args);
+    if (debug_switch?.log_socketio) console.log('socketio', event, args);
   });
 
   //-- join room, so that this browser receives only day specific updates
@@ -504,54 +509,54 @@ let matchRenderingFn = null;
 function updateMatchCSR(payload) {
   let newvalue = typeof payload === 'object' ? payload : JSON.parse(payload);
   const oldvalue = matchdto;
-  if (!!oldvalue) delete newvalue.moves; //-- make sure no moves are coming in
-  matchdto = { ...oldvalue, ...newvalue };
 
   //-- guard match rendering, do not update match until move related animation is completed
-  //-- theoreticall match update follows the move update, so could do everything here - no delivery order guarantee yet
-  matchRenderingFn = function () {
-    const $content = renderMatchState(matchdto);
-    $('.tooltipped', $content).tooltip();
-  };
-  if (!isMoveRendering) {
-    //-- if no move rendering is in place, just render the update, otherwise the updateMatchInsertMoveCSR will trigger matchRenderingFn as a callback
-    matchRenderingFn();
+  //-- theoretically match update follows the move update, so could do everything here - no delivery order guarantee yet, also animation will delay matchdto usage
+  matchRenderingFn = () => {
+    console.log('before:matchRenderingFn');
     matchRenderingFn = null;
-  }
+    if (!!oldvalue) delete newvalue.moves; //-- make sure no moves are coming in
+    matchdto = { ...oldvalue, ...newvalue };
+    const $content = renderMatchState(matchdto);
+    console.log('after:matchRenderingFn');
+  };
+
+  //-- if no move rendering is in place, just render the update, otherwise the updateMatchInsertMoveCSR will trigger matchRenderingFn as a callback
+  if (!isMoveRendering) matchRenderingFn();
 }
 
 function updateMatchInsertMoveCSR(payload) {
   const movedto = typeof payload === 'object' ? payload : JSON.parse(payload);
   matchdto.moves = [movedto, ...matchdto.moves];
   const $content = renderMovesTableAppend([movedto], true);
-  $('.tooltipped', $content).tooltip();
 
-  isMoveRendering = true;
   //-- guard match rendering, see comment above
-  animateMoveEventEffect(movedto, () => {
+  isMoveRendering = true;
+  const animatePromise = animateMoveEventEffect(movedto, () => {
+    if (matchRenderingFn) matchRenderingFn();
     isMoveRendering = false;
-    if (matchRenderingFn) {
-      matchRenderingFn();
-      matchRenderingFn = null;
-    }
   });
 
-  //TODO; add for loop with reverse+break on matchended/turnended
-  movedto.events.forEach((ev) => {
-    if (ev.eventType === 'TurnEnded') {
-      if (matchdto.playerids.indexOf(authenticated_username) < 0) {
-        M.toast({ html: `The turn of ${matchdto.playernames[matchdto.state?.currentPlayerIndex]} has ended. ` });
-        //-- NOTE:moves is updated first, the ony the Match - activePlayerIndex will not be ok here prob / nor reliable
-      } else {
-        if (isAuthUserIsThisPlayer(matchdto.state?.currentPlayerIndex)) {
-          if (!ev.turnEndedIsSuccessful) M.toast({ html: 'Your turn is busted, moving to next player.' });
-        } else {
-          M.toast({ html: `It's your turn, ${matchdto.playernames[matchdto.activePlayerIndex]}!` });
+  //-- check events in reverse order to give MatchEnded a chance to hoist
+  animatePromise.then(() => {
+    if (matchdto.playerids.indexOf(authenticated_username) >= 0) {
+      for (let idx = movedto.events.length - 1; idx >= 0; idx--) {
+        const ev = movedto.events[idx];
+        if (ev.eventType === 'TurnEnded') {
+          //-- important matchdto might/and will be out of sync here as we are in move update phase
+          const nextPlayerIndex = (ev.playerIndex + 1) % 2;
+          if (isAuthUserIsThisPlayer(nextPlayerIndex)) {
+            M.toast({ html: `It's your turn, ${matchdto.playernames[nextPlayerIndex]}!` });
+          }
+        } else if (ev.eventType === 'MatchEnded') {
+          const message = (typeof ev.matchEndedWinnerIdx === 'number') ?
+            (matchdto.playerids[ev.matchEndedWinnerIdx] === authenticated_username ? 
+                'You Win' : 'You Lose') : 
+            'It is a Tie';
+          M.toast({ html: `${message} - match ended.` });
+          break;
         }
       }
-    } else if (ev.eventType === 'MatchEnded') {
-      //-- broadcast to everyone
-      M.toast({ html: 'Match ended!' });
     }
   });
 }

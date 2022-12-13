@@ -157,8 +157,12 @@ nav .breadcrumb i.material-icons {
 .playcards.pulse:hover {
   background-color: yellow;
 }
-.playcards.bustercard {
+.playcards.busted {
   background-color: #c20000;
+  color: #efede7;
+}
+.playcards.bonus {
+  background-color: #e7ad00;
   color: #efede7;
 }
 .playcards[data-card=null] {
@@ -228,77 +232,74 @@ nav .breadcrumb i.material-icons {
   margin-bottom: 0px;
   padding-bottom: 1em;
 }
-
-.playtable {
+#matchstate .playtable {
   margin-bottom: 0;
   display: grid;
   grid-template: "playarea playarea" 1fr "drawpile discardpile" auto/1fr 1fr;
 }
-
-.statusbox.drawpile,
-.statusbox.discardpile {
+#matchstate .statusbox.drawpile,
+#matchstate .statusbox.discardpile {
   white-space: nowrap;
   padding-top: 0.375em !important;
 }
-
-.drawpile {
+#matchstate .drawpile {
   grid-area: drawpile;
 }
-
-.discardpile {
+#matchstate .discardpile {
   grid-area: discardpile;
 }
-
-h6.statusbox {
+#matchstate h6.statusbox {
   margin: 0px !important;
   padding: 0.75em 0.75em 0.75em 0.75em !important;
   max-height: 3em;
 }
-
-.statusbox {
+#matchstate .statusbox {
   padding: 0px !important;
   margin: 0px !important;
 }
-.statusbox h6 {
+#matchstate .statusbox h6 {
   margin: 0px !important;
   padding: 0.75em 0.75em 0.375em 0.75em !important;
 }
-.statusbox div {
+#matchstate .statusbox div {
   font-size: 12px;
   line-height: 1;
   padding: 0.375em 0.75em 0.75em 0.75em;
   min-height: 2em;
 }
-.statusbox .activePlayer {
+#matchstate .statusbox .activePlayer {
   border: 1px white solid;
   border-radius: 6px;
   padding: 0px 6px;
 }
-.statusbox.bank .playcards, .statusbox.playarea .playcards {
+#matchstate .statusbox.bank .playcards, #matchstate .statusbox.playarea .playcards {
   font-size: 170%;
 }
-.statusbox.playarea {
+#matchstate .statusbox.playarea {
   grid-area: playarea;
   min-height: 80px;
   position: relative;
 }
-.statusbox.bank {
+#matchstate .statusbox.bank {
   display: grid;
   grid-template-rows: auto 1fr auto;
 }
-.statusbox.bank .actions {
+#matchstate .statusbox.bank .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 0px;
 }
-.statusbox .btn.useraction {
+#matchstate .statusbox .btn.useraction {
   z-index: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.statusbox .move-effect-revealer {
+#matchstate .statusbox .move-effect-revealer {
   opacity: 1;
   position: fixed;
   z-index: 10;
+}
+#matchstate .statusbox .empty_placeholder:not(:only-child) {
+  display: none;
 }

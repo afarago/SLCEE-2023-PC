@@ -236,9 +236,6 @@
 						"nullable": true
 					}
 				},
-				"required": [
-					"playerIndex"
-				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -527,14 +524,6 @@
 					"stateAtTurnStart": {
 						"$ref": "#/components/schemas/State"
 					},
-					"currentPlayerIndex": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/integer"
-							}
-						],
-						"nullable": true
-					},
 					"playernames": {
 						"items": {
 							"type": "string"
@@ -570,7 +559,6 @@
 					"moveCount",
 					"turnCount",
 					"moveCountInTurn",
-					"currentPlayerIndex",
 					"drawPileSize",
 					"discardPileSize"
 				],

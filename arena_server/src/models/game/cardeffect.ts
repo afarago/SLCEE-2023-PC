@@ -30,7 +30,10 @@ export default class CardEffect {
     return obj;
   }
 
-  constructor(public effectType: CardEffectType, public cards?: (CardOrNull)[], public krakenCount?: number) {
+  public effectType: CardEffectType;
+  public cards?: CardOrNull[];
+  public krakenCount?: number;
+  constructor(effectType: CardEffectType, cards?: CardOrNull[], krakenCount?: number) {
     if (effectType) this.effectType = effectType;
     if (cards) this.cards = cards;
     if (krakenCount) this.krakenCount = krakenCount;

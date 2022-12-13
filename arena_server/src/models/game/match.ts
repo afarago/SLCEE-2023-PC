@@ -27,9 +27,9 @@ export interface IMatchCoreChanging {
   moveCountInTurn: integer | null;
   state?: State;
   stateAtTurnStart?: State;
-  currentPlayerIndex: integer | null;
 }
 export interface IMatchCoreChangingDb extends IMatchCoreChanging {
+  currentPlayerIndex: integer | null;
   activePlayerIdCached: PlayerId | null; // -- do not return this in dto
 }
 export interface IMatchCore extends IMatchCoreReadonly, IMatchCoreChanging {}

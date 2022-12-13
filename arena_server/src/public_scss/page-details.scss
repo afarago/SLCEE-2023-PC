@@ -67,8 +67,12 @@
       background-color: yellow;
     }
   }
-  &.bustercard {
+  &.busted {
     background-color: #c20000;
+    color: #efede7;
+  }
+  &.bonus {
+    background-color: #e7ad00;
     color: #efede7;
   }
   &[data-card='null'] {
@@ -170,88 +174,92 @@
   position: relative;
   margin-bottom: 0px;
   padding-bottom: 1em;
-}
 
-.playtable {
-  margin-bottom: 0;
-  display: grid;
-  grid-template:
-    'playarea playarea' 1fr
-    'drawpile discardpile' auto / 1fr 1fr;
-}
-.statusbox.drawpile,
-.statusbox.discardpile {
-  white-space: nowrap;
-  padding-top: 0.375em !important;
-}
-.drawpile {
-  grid-area: drawpile;
-}
-.discardpile {
-  grid-area: discardpile;
-}
-
-h6.statusbox {
-  margin: 0px !important;
-  padding: 0.75em 0.75em 0.75em 0.75em !important;
-  max-height: 3em;
-}
-
-.statusbox {
-  padding: 0px !important;
-  margin: 0px !important;
-
-  h6 {
-    margin: 0px !important;
-    padding: 0.75em 0.75em 0.375em 0.75em !important;
-  }
-
-  div {
-    font-size: 12px;
-    line-height: 1;
-    padding: 0.375em 0.75em 0.75em 0.75em;
-    min-height: 2em;
-  }
-
-  .activePlayer {
-    border: 1px white solid;
-    border-radius: 6px;
-    padding: 0px 6px;
-  }
-
-  &.bank,
-  &.playarea {
-    .playcards {
-      font-size: 170%;
-    }
-  }
-  &.playarea {
-    grid-area: playarea;
-    min-height: 80px;
-    position: relative;
-  }
-
-  &.bank {
+  .playtable {
+    margin-bottom: 0;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      padding: 0px;
-    }
+    grid-template:
+      'playarea playarea' 1fr
+      'drawpile discardpile' auto / 1fr 1fr;
   }
-
-  .btn.useraction {
-    z-index: 1;
+  .statusbox.drawpile,
+  .statusbox.discardpile {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding-top: 0.375em !important;
+  }
+  .drawpile {
+    grid-area: drawpile;
+  }
+  .discardpile {
+    grid-area: discardpile;
   }
 
-  .move-effect-revealer {
-    opacity: 1;
-    position: fixed;
-    z-index: 10;
+  h6.statusbox {
+    margin: 0px !important;
+    padding: 0.75em 0.75em 0.75em 0.75em !important;
+    max-height: 3em;
+  }
+
+  .statusbox {
+    padding: 0px !important;
+    margin: 0px !important;
+
+    h6 {
+      margin: 0px !important;
+      padding: 0.75em 0.75em 0.375em 0.75em !important;
+    }
+
+    div {
+      font-size: 12px;
+      line-height: 1;
+      padding: 0.375em 0.75em 0.75em 0.75em;
+      min-height: 2em;
+    }
+
+    .activePlayer {
+      border: 1px white solid;
+      border-radius: 6px;
+      padding: 0px 6px;
+    }
+
+    &.bank,
+    &.playarea {
+      .playcards {
+        font-size: 170%;
+      }
+    }
+    &.playarea {
+      grid-area: playarea;
+      min-height: 80px;
+      position: relative;
+    }
+
+    &.bank {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 0px;
+      }
+    }
+
+    .btn.useraction {
+      z-index: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .move-effect-revealer {
+      opacity: 1;
+      position: fixed;
+      z-index: 10;
+    }
+
+    .empty_placeholder:not(:only-child) {
+      display: none;
+    }
   }
 }

@@ -7,7 +7,7 @@ import { IMoveAt, IMoveSequence } from '../models/game/move';
  * Match Response Event DTO
  */
 export interface MatchEventDTO extends IMatchEventCore, IMatchEventParameters {
-  playerIndex: integer | null;
+  playerIndex?: integer | null;
 }
 
 /**
