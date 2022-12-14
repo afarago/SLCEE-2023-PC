@@ -1,16 +1,17 @@
 import express from 'express';
 import { ValidateError } from 'tsoa';
 
+import * as util from 'util';
 import Logger from '../config/logger';
 import { authenticate, authenticateOptionally, ensureAdmin } from '../config/passport';
 import FrontendController from '../controllers/frontend.controller';
 import HelloController from '../controllers/hello.controller';
 import MatchesController from '../controllers/match.controller';
 import PlayersController from '../controllers/players.controller';
+import SessionInfoController from '../controllers/sessioninfo.controller';
 import WhoAmIController from '../controllers/whoami.controller';
 import { BaseError } from '../dto/utils';
 import { fnSetMapSerializer } from '../utils/json.utils';
-import * as util from 'util';
 
 const app = express();
 export default app;
@@ -49,6 +50,17 @@ app.route('/api/whoami').get(authenticate, async (req, res, next) => {
     .then(async () => {
       const controller = new WhoAmIController();
       const response = await controller.getAuthenticatedUser(req);
+      return res.send(response);
+    })
+    .catch(next); // Errors will be passed to Express.
+});
+
+// -- SessionInfo endpoint handler
+app.route('/api/sessioninfo').get(authenticateOptionally, async (req, res, next) => {
+  Promise.resolve()
+    .then(async () => {
+      const controller = new SessionInfoController();
+      const response = await controller.getSessionInfo(req);
       return res.send(response);
     })
     .catch(next); // Errors will be passed to Express.

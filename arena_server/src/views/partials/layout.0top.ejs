@@ -13,3 +13,11 @@
 </head>
 
 <%- include('header.ejs') %>
+<%-
+`<script>
+  const sessiondata = {
+    dbname: ${JSON.stringify(locals.databaseName)},
+    user: ${JSON.stringify(locals.user?.name)}
+  }
+</script>`
+%>

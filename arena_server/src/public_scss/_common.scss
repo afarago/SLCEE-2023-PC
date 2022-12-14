@@ -1,5 +1,6 @@
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:color';
 
 //--- VARIABLES ---
 $player_colors: #7cb342 #ff8f00;
@@ -17,9 +18,17 @@ main {
 
 footer {
   width: 100%;
+  .col {
+    display: flex;
+    align-items: center;
+  }
+  i.material-icons {
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+  }
 }
 
-nav .breadcrumb i.material-icons {
+header i.material-icons {
   float: unset;
   vertical-align: bottom;
 }
@@ -48,8 +57,15 @@ nav .breadcrumb i.material-icons {
 @each $color in $player_colors {
   $pidx: index($player_colors, $color);
 
-  .player#{$pidx - 1} {
+  .player#{$pidx - 1},
+  .player-#{$pidx - 1}-color {
     color: $color;
+  }
+  .player-#{$pidx - 1}-background-color {
+    background-color: $color;
+  }
+  .player-#{$pidx - 1}-background-header-color {
+    background-color: color.adjust($color, $lightness: -5%);
   }
 }
 .activePlayer {

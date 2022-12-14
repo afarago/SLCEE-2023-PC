@@ -1,6 +1,9 @@
 <footer class="page-footer light-blue darken-3">
   <div class="row">
-    <div class="col">2022-2023, Attila & Csaba</div>
+    <div class="col">
+      <a href="/" class="breadcrumb"><i class="material-icons"> help </i></a>
+      2022-2023, Attila & Csaba
+    </div>
     <div class="col right">
       <%=
         Array.from(new Map([["user",locals.user?.name], ["db",locals.databaseName]]).entries())

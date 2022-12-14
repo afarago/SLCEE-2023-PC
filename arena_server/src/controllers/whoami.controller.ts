@@ -1,7 +1,8 @@
 import { Get, Request, Route, Security, Tags } from 'tsoa';
+
 import { IUser } from '../config/passport';
 
-type WhoAmiIResponse = { username: string; name: string | null; ip: string };
+type WhoAmiIResponse = { username: string; name: string | null };
 
 @Route('/api/whoami')
 export default class WhoAmIController {
@@ -18,7 +19,6 @@ export default class WhoAmIController {
     return {
       username: user?.username,
       name: user?.name ?? null,
-      ip: req.res.locals.clientip,
     };
   }
 }

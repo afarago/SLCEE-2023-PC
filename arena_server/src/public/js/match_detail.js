@@ -70,13 +70,11 @@ function renderCreationParams(matchdto) {
 function renderPlayArea(matchdto) {
   const plarea_color = isFinished(matchdto)
     ? 'white grey-text'
-    : !matchdto.activePlayerIndex
-    ? 'light-green white-text'
-    : 'orange white-text';
+    : `player-${matchdto.activePlayerIndex}-background-color white-text`;
   const cardsRendered = renderCards(matchdto.state.playArea);
   return `
       <div class="playarea statusbox col s12 ${plarea_color}" >
-        <h6 class="${plarea_color} darken-2">Playarea</h6>
+        <h6 class="player-${matchdto.activePlayerIndex}-background-header-color">Playarea</h6>
         <div>
           ${
             !!cardsRendered
@@ -85,9 +83,9 @@ function renderPlayArea(matchdto) {
           }
           ${
             matchdto.state.pendingEffect
-              ? `<span class="pendingeffect" data-effecttype="${matchdto.state.pendingEffect.effectType}">(` +
+              ? `<span class="pendingeffect" data-effecttype="${matchdto.state.pendingEffect.effectType}">` +
                 renderObject(matchdto.state.pendingEffect) +
-                ')</span>'
+                '</span>'
               : ''
           }
         </div>
@@ -96,26 +94,27 @@ function renderPlayArea(matchdto) {
 function renderDrawPile(matchdto) {
   drawpile_color = isFinished(matchdto) ? 'white grey-text' : 'grey';
   return `
-      <h6 class="drawpile statusbox col ${drawpile_color} lighten-4">Draw · 
+      <h6 class="drawpile statusbox ${drawpile_color} lighten-4">Draw · 
         <span class='playcards back cardvalue'>${matchdto.drawPileSize}</span>
       </h6>
-      `;
+    `;
 }
 function renderDiscardPile(matchdto) {
   return `
-      <h6 class="discardpile statusbox col grey darken-1 white-text">Discard · 
+      <h6 class="discardpile statusbox grey darken-1 white-text">Discard · 
         <span class='playcards back cardvalue'>${matchdto.discardPileSize}</span>
       </h6>
-      `;
+    `;
 }
 function renderPlayer(matchdto, idx) {
   const bank = matchdto.state?.banks[idx];
   const playerid = matchdto.playerids?.[idx];
   const playername = matchdto.playernames?.[idx];
-  const pcolor = `${!idx ? 'light-green' : 'orange'}`;
+  const pcolor = `player-${idx}-background-color white-text`;
+  const phcolor = `player-${idx}-background-header-color white-text`;
   const bankinfo = getBankValueAndSize(bank);
   return `<div class="player${idx} bank statusbox col m3 s12 ${pcolor} white-text">
-      <h6 class="${pcolor} darken-2">
+      <h6 class="${phcolor}">
       <span class="${idx === matchdto.activePlayerIndex ? 'activePlayer' : ''} 
         ${matchdto.state?.winnerIdx === idx ? 'winningPlayer' : ''}"
         >
@@ -220,7 +219,6 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 1. animations for playarea changes
   const fnPlayAreaAnimations = (resolve, reject) => {
-    console.log('fnPlayAreaAnimations');
     //-- collect cards placed on play area
     const cards = move.events
       .flatMap(
@@ -234,7 +232,6 @@ function animateMoveEventEffect(move, nextFn) {
           card1 &&
           self.findIndex((card2) => card2 && card1.suit === card2.suit && card1.value === card2.value) === index
       );
-    console.log(`fnPlayAreaAnimations:${JSON.stringify(cards)}`);
 
     if (cards?.length >= 0) {
       return cards
@@ -256,7 +253,6 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 2. animations for bank removals
   const fnGetBankRemovalAnimations = (resolve, reject) => {
-    console.log('fnGetBankRemovalAnimations');
     const events_cardremoved_bank = move.events.filter((e) => e.eventType === 'CardRemovedFromBank');
     if (events_cardremoved_bank.length) {
       const event = events_cardremoved_bank[0];
@@ -275,7 +271,6 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 3. bust
   const fnBustedAnimations = (resolve, reject) => {
-    console.log('fnBustedAnimations');
     const evTurnEnded = move.events.find((e) => e.eventType === 'TurnEnded');
     if (evTurnEnded && !evTurnEnded.turnEndedIsSuccessful) {
       const $bustedCard = $("<span class='playcards virtual busted cardvalue'>BUSTED</span>");
@@ -291,7 +286,6 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 4: add bonus cards (if any)
   const fnTurnEndedBonusAnimations = (resolve, reject) => {
-    console.log('fnTurnEndedBonusAnimations');
     const cards = move.events.find((e) => e.eventType === 'TurnEnded')?.turnEndedBonusCards;
     if (!!cards?.length) {
       const $bonusCard = $("<span class='playcards virtual bonus cardvalue'>BONUS</span>");
@@ -320,7 +314,6 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- 5. animations for collect in TurnEnded
   const fnTurnEndedCollectAnimations = (resolve, reject) => {
-    console.log('fnTurnEndedCollectAnimations');
     const evTurnEnded = move.events.find((e) => e.eventType === 'TurnEnded');
 
     if (evTurnEnded) {
@@ -356,21 +349,13 @@ function animateMoveEventEffect(move, nextFn) {
 
   //-- finally: execute the actual animations
   return Promise.resolve()
-    .then(() => console.log('start'))
     .then(fnAnimateRemoveEffects)
-    .then(() => console.log('after:fnAnimateRemoveEffects'))
     .then(fnGetBankRemovalAnimations)
-    .then(() => console.log('after:fnGetBankRemovalAnimations'))
     .then(fnPlayAreaAnimations)
-    .then(() => console.log('after:fnPlayAreaAnimations'))
     .then(fnBustedAnimations)
-    .then(() => console.log('after:fnBustedAnimations'))
     .then(fnTurnEndedBonusAnimations)
-    .then(() => console.log('after:fnTurnEndedBonusAnimations'))
     .then(fnTurnEndedCollectAnimations)
-    .then(() => console.log('after:fnTurnEndedCollectAnimations'))
-    .then(nextFn)
-    .then(() => console.log('after:NextFn'));
+    .then(nextFn);
 }
 
 //=== Helper functions for render =================================================================================
@@ -513,12 +498,10 @@ function updateMatchCSR(payload) {
   //-- guard match rendering, do not update match until move related animation is completed
   //-- theoretically match update follows the move update, so could do everything here - no delivery order guarantee yet, also animation will delay matchdto usage
   matchRenderingFn = () => {
-    console.log('before:matchRenderingFn');
     matchRenderingFn = null;
     if (!!oldvalue) delete newvalue.moves; //-- make sure no moves are coming in
     matchdto = { ...oldvalue, ...newvalue };
     const $content = renderMatchState(matchdto);
-    console.log('after:matchRenderingFn');
   };
 
   //-- if no move rendering is in place, just render the update, otherwise the updateMatchInsertMoveCSR will trigger matchRenderingFn as a callback
@@ -549,10 +532,12 @@ function updateMatchInsertMoveCSR(payload) {
             M.toast({ html: `It's your turn, ${matchdto.playernames[nextPlayerIndex]}!` });
           }
         } else if (ev.eventType === 'MatchEnded') {
-          const message = (typeof ev.matchEndedWinnerIdx === 'number') ?
-            (matchdto.playerids[ev.matchEndedWinnerIdx] === authenticated_username ? 
-                'You Win' : 'You Lose') : 
-            'It is a Tie';
+          const message =
+            typeof ev.matchEndedWinnerIdx === 'number'
+              ? matchdto.playerids[ev.matchEndedWinnerIdx] === authenticated_username
+                ? 'You Win'
+                : 'You Lose'
+              : 'It is a Tie';
           M.toast({ html: `${message} - match ended.` });
           break;
         }

@@ -10,7 +10,7 @@ import SocketIOService from '../services/socketio.service';
 
 export default class FrontendController {
   @Inject()
-  private dbService: DbService = Container.get(DbService); // !! //TODO: should work out of the box, still for manyal construction does not
+  private dbService: DbService = Container.get(DbService);
   @Inject()
   private dbaService: DBAService = Container.get(DBAService);
   @Inject()

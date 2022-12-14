@@ -12,8 +12,16 @@ main {
 footer {
   width: 100%;
 }
+footer .col {
+  display: flex;
+  align-items: center;
+}
+footer i.material-icons {
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
 
-nav .breadcrumb i.material-icons {
+header i.material-icons {
   float: unset;
   vertical-align: bottom;
 }
@@ -36,12 +44,30 @@ nav .breadcrumb i.material-icons {
     display: none !important;
   }
 }
-.player0 {
+.player0,
+.player-0-color {
   color: #7cb342;
 }
 
-.player1 {
+.player-0-background-color {
+  background-color: #7cb342;
+}
+
+.player-0-background-header-color {
+  background-color: #6fa03b;
+}
+
+.player1,
+.player-1-color {
   color: #ff8f00;
+}
+
+.player-1-background-color {
+  background-color: #ff8f00;
+}
+
+.player-1-background-header-color {
+  background-color: #e68100;
 }
 
 .activePlayer {
@@ -183,6 +209,10 @@ nav .breadcrumb i.material-icons {
   opacity: 0;
   top: 100px;
   position: relative;
+}
+
+.pendingeffect {
+  white-space: nowrap;
 }
 
 #moveslist td {
