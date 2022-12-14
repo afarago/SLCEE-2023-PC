@@ -12,9 +12,9 @@ export default class SessionInfoController {
   private dbService: DbService = Container.get(DbService);
 
   /**
-   * Returns information on authenticated User
-   * @summary Returns authenticated User
-   * @returns The id of the authenticated User.
+   * Returns generic information on session
+   * @summary Returns session information
+   * @returns The user, database, ip information.
    */
   @Get('/')
   @Tags('Diagnostic')

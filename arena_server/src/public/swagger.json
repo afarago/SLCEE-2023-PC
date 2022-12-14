@@ -1432,7 +1432,7 @@
 				"operationId": "GetSessionInfo",
 				"responses": {
 					"200": {
-						"description": "The id of the authenticated User.",
+						"description": "The user, database, ip information.",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -1442,8 +1442,8 @@
 						}
 					}
 				},
-				"description": "Returns information on authenticated User",
-				"summary": "Returns authenticated User",
+				"description": "Returns generic information on session",
+				"summary": "Returns session information",
 				"tags": [
 					"Diagnostic"
 				],
