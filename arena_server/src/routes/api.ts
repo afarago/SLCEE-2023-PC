@@ -203,7 +203,9 @@ app.use(function errorHandler(err: any, req: any, res: any, next: any) {
   const status = err.statusCode || 400;
 
   //-- API error returns either message or data payload
-  if (err instanceof APIError && err.data) res.status(status).json(err.data);
+  if (err instanceof APIError && err.data) {
+    return res.status(status).json(err.data);
+  }
 
   //-- other types can return message
   if (err.message) {

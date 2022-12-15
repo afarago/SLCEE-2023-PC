@@ -32,6 +32,9 @@ export default class GameLogicService {
   private log(message: string): void {
     Logger.info(`[${this.match?._id}:${this.username}] ${message}`);
   }
+  private logDebug(message: string): void {
+    Logger.debug(`[${this.match?._id}:${this.username}] ${message}`);
+  }
 
   /**
    * Creates a Move object on the global match
@@ -107,7 +110,7 @@ export default class GameLogicService {
   ): Promise<model.Match> {
     if (!params.playerids) throw new Error('Need playerids to start a match');
 
-    this.log(`>START_MATCH ${params.playerids} ${params.tags ?? ''}`);
+    this.logDebug(`>START_MATCH`);
 
     // -- create initial objects from user input, early checking of input data
     // -- when not set, but generated, remove "0." from the start - write it back so it will be saved as well
@@ -182,7 +185,7 @@ export default class GameLogicService {
 
     // -- persist to db
     await this.persistMoveAndMatchPromise(true);
-    this.log(`MATCH_STARTED: ${this.match._id.toString()}`);
+    this.log(`MATCH_STARTED: ${this.match._id.toString()} ${params.playerids} ${params.tags ?? ''}`);
 
     // -- return result
     return this.match;
@@ -240,7 +243,7 @@ export default class GameLogicService {
       this.match.move?.events?.some((ev) => ev.eventType === model.OMatchEventType.TurnEnded)
     ) {
       // -- stop if something important happened during pre-execution (due to previous pending effect an silent autopick)
-      this.log(
+      this.logDebug(
         'Something important (turnEnded or new pending effect) changed, so we cannot move on with normal processing'
       );
     } else {
@@ -260,7 +263,7 @@ export default class GameLogicService {
             !pendingEffect &&
             this.match.move?.events.some((event) => event.eventType === model.OMatchEventType.ResponseToEffect)
           ) {
-            this.log('Skipping as autopicking has already processed the pending event'); // NOOP
+            this.logDebug('Skipping as autopicking has already processed the pending event'); // NOOP
           } else {
             assert(data.effect && pendingEffect);
             await this.subactionRespondToEffectPromise(data.effect, pendingEffect);
@@ -327,7 +330,7 @@ export default class GameLogicService {
       // -- process effects with empty choice without user roundtrip - "autopick" user input
       const autopickedResponse = new model.CardEffectResponse(pendingEffect.effectType, null);
 
-      this.log(`>AutoPicking the pending ${pendingEffect.effectType} effect in response to User action ${data.etype}`);
+      this.logDebug(`>AutoPicking the pending ${pendingEffect.effectType} effect in response to User action ${data.etype}`);
       this.respondToEffectLogic(autopickedResponse, pendingEffect, true);
       pendingEffect = this.match.state?.pendingEffect;
       // -- pending effect is already removed, and if none added, we will exit the loop
@@ -419,7 +422,7 @@ export default class GameLogicService {
     if (doRemoveFromPile)
       this.addEvent(new model.MatchEvent(model.OMatchEventType.Draw, { drawCard: cardDrawn }), this.match.state);
 
-    this.log(`${doRemoveFromPile ? 'DRAW_CARD' : 'PEEK_CARD'}: '${util.inspect(cardDrawn)}'`);
+    this.logDebug(`${doRemoveFromPile ? 'DRAW_CARD' : 'PEEK_CARD'}: '${util.inspect(cardDrawn)}'`);
 
     return cardDrawn;
   }
@@ -437,7 +440,7 @@ export default class GameLogicService {
     const isSuccessful = !this.match.state.playArea.cards.find((c) => c.suit === card.suit);
     if (!isSuccessful) {
       // -- busted
-      this.log(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}' BUSTED!`);
+      this.logDebug(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}' BUSTED!`);
       this.discardCard(card);
       this.turnEnding(false); // -- clears all effects anyhow
       return undefined;
@@ -453,13 +456,13 @@ export default class GameLogicService {
       );
       this.match.state.playArea.cards.push(card);
 
-      this.log(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}'`);
+      this.logDebug(`PLACE_CARD: '${util.inspect(card)}' area: '${util.inspect(this.match.state.playArea)}'`);
     }
 
     // -- decrease the number of pending kraken cards
     if (!!this.match.state.pendingEffect?.krakenCount) {
       this.match.state.pendingEffect.krakenCount -= 1;
-      this.log(`PLACE_CARD - DEBUG: Kraken pending ${this.match.state.pendingEffect.krakenCount}`);
+      this.logDebug(`PLACE_CARD - DEBUG: Kraken pending ${this.match.state.pendingEffect.krakenCount}`);
     }
 
     // -- check of we need to maintain anything on previous state (Kraken or Oracle clearing)
@@ -530,10 +533,10 @@ export default class GameLogicService {
         );
         this.postProcessAddEffect(effect);
 
-        this.log(`CARDEFFECT: ${card.suit}: ${util.inspect(cardsFromDiscard)} [requires user response]`);
+        this.logDebug(`CARDEFFECT: ${card.suit}: ${util.inspect(cardsFromDiscard)} [requires user response]`);
       }
     } else {
-      this.log(`CARDEFFECT ${card.suit}: ignored - due to empty discardpile`);
+      this.logDebug(`CARDEFFECT ${card.suit}: ignored - due to empty discardpile`);
     }
   }
 
@@ -561,9 +564,9 @@ export default class GameLogicService {
         );
         this.postProcessAddEffect(effect, effect.effectType === model.OCardEffectType.Cannon);
       }
-      this.log(`CARDEFFECT: ${card.suit} [requires user response]`);
+      this.logDebug(`CARDEFFECT: ${card.suit} [requires user response]`);
     } else {
-      this.log(`CARDEFFECT: ${card.suit}: ignored - due to empty or same_suited enemy banks`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: ignored - due to empty or same_suited enemy banks`);
     }
   }
 
@@ -586,9 +589,9 @@ export default class GameLogicService {
         );
         this.postProcessAddEffect(effect);
       }
-      this.log(`CARDEFFECT: ${card.suit} [requires user response]`);
+      this.logDebug(`CARDEFFECT: ${card.suit} [requires user response]`);
     } else {
-      this.log(`CARDEFFECT: ${card.suit}: ignored - due to empty bank`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: ignored - due to empty bank`);
     }
   }
 
@@ -614,9 +617,9 @@ export default class GameLogicService {
         );
         this.postProcessAddEffect(effect, true);
       }
-      this.log(`CARDEFFECT: ${card.suit}: '${util.inspect(cardPeekedOracle)}' [requires user response]`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: '${util.inspect(cardPeekedOracle)}' [requires user response]`);
     } else {
-      this.log(`CARDEFFECT: ${card.suit}: ignored - due to empty drawpile or Kraken.`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: ignored - due to empty drawpile or Kraken.`);
     }
   }
 
@@ -639,9 +642,9 @@ export default class GameLogicService {
         this.match.state.addPendingEffect(effect);
       }
 
-      this.log(`CARDEFFECT: ${card.suit}: ${krakenCardCount} cards [requires user response]`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: ${krakenCardCount} cards [requires user response]`);
     } else {
-      this.log(`CARDEFFECT: ${card.suit}: ignored - due to empty drawpile.`);
+      this.logDebug(`CARDEFFECT: ${card.suit}: ignored - due to empty drawpile.`);
     }
   }
 
@@ -658,7 +661,7 @@ export default class GameLogicService {
 
     // -- if effect was Kraken, cancel it
     if (this.match.state.pendingEffect?.effectType === model.OCardEffectType.Kraken) {
-      this.log(
+      this.logDebug(
         `CARDEFFECT: ${model.OCardEffectType.Kraken} terminated due to new effect ${newEffect.effectType} ${
           keepPendingKrakenCards
             ? ' - keeping pending Kraken cards of ' + this.match.state.pendingEffect.krakenCount
@@ -678,7 +681,7 @@ export default class GameLogicService {
    */
   private discardCard(card: model.Card): void {
     assert(this.match && this.match.state);
-    this.log(`DISCARD: '${util.inspect(card)}'`);
+    this.logDebug(`DISCARD: '${util.inspect(card)}'`);
     this.match.state.discardPile?.cards.push(card);
   }
 
@@ -699,7 +702,7 @@ export default class GameLogicService {
       cardsFromDiscard.push(card);
 
       this.match.state.discardPile.cards.splice(idx, 1);
-      this.log(`DRAW_CARD_DISCARDPILE: '${util.inspect(card)}'`);
+      this.logDebug(`DRAW_CARD_DISCARDPILE: '${util.inspect(card)}'`);
     }
     return cardsFromDiscard;
   }
@@ -723,7 +726,7 @@ export default class GameLogicService {
    */
   public async matchEnding(isTerminated?: boolean, forcedWinnerId?: model.PlayerId, comment?: string): Promise<void> {
     assert(this.match && this.match.state);
-    this.log('MATCH_ENDING');
+    this.logDebug('MATCH_ENDING');
 
     // -- calc scores by tuple: [playeridx, score]
     const scores = new Map<number, number>();
@@ -772,7 +775,7 @@ export default class GameLogicService {
    */
   private turnEnding(isSuccessful: boolean): void {
     assert(this.match && this.match.state);
-    this.log(`TURN_ENDING ${isSuccessful}`);
+    this.logDebug(`TURN_ENDING ${isSuccessful}`);
 
     const cardsCollected: model.Card[] = [];
     {
@@ -804,7 +807,7 @@ export default class GameLogicService {
       cardsCollected.find((c) => c.suit === model.OCardSuit.Key)
     ) {
       const bonusCardAmount = cardsCollected.length;
-      this.log(`BONUS: Key&Chest ${bonusCardAmount}`);
+      this.logDebug(`BONUS: Key&Chest ${bonusCardAmount}`);
       bonusCards = this.drawCardsFromDiscardPile(bonusCardAmount);
       // NOTE: incorrect, should add this to a new state, but new state is only created at the end - rework later
       bonusCards.forEach((card) => cardsCollected.push(card));
@@ -831,7 +834,7 @@ export default class GameLogicService {
       cardsCollected.forEach((card) => {
         // -- add to player's bank
         bank.add(card);
-        this.log(`COLLECT: '${util.inspect(card)}'`);
+        this.logDebug(`COLLECT: '${util.inspect(card)}'`);
       });
       // NOTE: incorrect, should add this to a new state, but new state is only created at the end - rework later
 
@@ -959,7 +962,7 @@ export default class GameLogicService {
 
     let responseCard = response.card ? model.Card.constructFromObject(response.card) : null;
     if (!doAllowAutoPickedResponse)
-      this.log(`>RESPOND_CARDEFFECT: ${response.effectType}:= '${util.inspect(responseCard)}'`);
+      this.logDebug(`>RESPOND_CARDEFFECT: ${response.effectType}:= '${util.inspect(responseCard)}'`);
     if (!pendingEffect) throw new GameError('No pending effects to respond to');
 
     if (!this.match.move) this.match.move = this.newMove();
@@ -1113,7 +1116,7 @@ export default class GameLogicService {
         }),
         this.match.state
       );
-      this.log(`REMOVE_CARD_FROM_BANK: '${util.inspect(cardFrombank)}' player:${bankTargetIndex}`);
+      this.logDebug(`REMOVE_CARD_FROM_BANK: '${util.inspect(cardFrombank)}' player:${bankTargetIndex}`);
 
       // -- remove card from bank
       const bankTarget = this.match.state.banks.at(bankTargetIndex);
@@ -1201,7 +1204,7 @@ export default class GameLogicService {
         }),
         this.match.state
       );
-      this.log(`REMOVE_CARD_FROM_BANK: '${util.inspect(cardFrombank)}' player:${bankTargetIndex}`);
+      this.logDebug(`REMOVE_CARD_FROM_BANK: '${util.inspect(cardFrombank)}' player:${bankTargetIndex}`);
 
       // -- remove card from bank
       const bankTarget = this.match.state.banks.at(bankTargetIndex);
