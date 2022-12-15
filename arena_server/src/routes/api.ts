@@ -10,7 +10,7 @@ import MatchesController from '../controllers/match.controller';
 import PlayersController from '../controllers/players.controller';
 import SessionInfoController from '../controllers/sessioninfo.controller';
 import WhoAmIController from '../controllers/whoami.controller';
-import { BaseError } from '../dto/utils';
+import { BaseError, APIError } from '../dto/utils';
 import { fnSetMapSerializer } from '../utils/json.utils';
 
 const app = express();
@@ -201,7 +201,12 @@ app.use(function errorHandler(err: any, req: any, res: any, next: any) {
   }
 
   const status = err.statusCode || 400;
+
+  //-- API error returns either message or data payload
+  if (err instanceof APIError && err.data) res.status(status).json(err.data);
+
+  //-- other types can return message
   if (err.message) {
-    res.status(status).json({ error: err.message, ...err.data });
+    res.status(status).json({ error: err.message });
   } else res.sendStatus(status);
 });

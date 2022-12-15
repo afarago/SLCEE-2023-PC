@@ -4,7 +4,7 @@ import { NotRetryableError, retry } from 'ts-retry-promise';
 import { Body, Delete, Get, Path, Post, Query, Request, Response, Route, Security, SuccessResponse, Tags } from 'tsoa';
 import { Container, Inject } from 'typedi';
 
-import { ActionErrorResponse, ErrorResponse } from '../dto/errorresponse';
+import { ErrorResponse } from '../dto/errorresponse';
 import { MatchCreateResponse } from '../dto/matchcreateresponse';
 import { MatchDTO, MatchEventDTO } from '../dto/matchresponse';
 import { APIError, BoolLikeString, eventToDTO, moveToDTO, parseBoolyFromString } from '../dto/utils';
@@ -174,7 +174,7 @@ export default class MatchesController {
   @Response<ErrorResponse>(401, 'Match is visible to participating players only.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
   @Response<ErrorResponse>(409, 'Authenticated user is not the current player.')
-  @Response<ErrorResponse>(410, 'No action possible on finished matches.')
+  @Response<MatchDTO>(410, 'No action possible on finished matches.')
   @Response<ErrorResponse>(500, 'Internal Server Error.')
   public async getMatch(
     @Request() req: any,
@@ -213,18 +213,22 @@ export default class MatchesController {
 
     // -- check if match not existing at all
     if (!match) throw new APIError(404, 'Match does not exist.');
-    if (doWaitForActive && match.isFinished) throw new APIError(410, 'No action possible on finished matches.');
     // -- check if auth user is any of the players (easier done here, than later with extra db step)
     if (!req.user?.isAdmin && !match.playerids.some((p) => p?.equals(req.user?.username)))
       throw new APIError(401, 'Match is visible to participating players only.');
-    if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
-      throw new APIError(409, 'Authenticated user is not the current player.');
 
+    // -- construct DTO object
     const matchdto = await this.gameService.getMatchDTOPromise(match, {
       user: req.user,
       doReturnAllMoves: doShowEvents,
       doAddDebug: doShowDebug,
     });
+
+    if (doWaitForActive && match.isFinished)
+      throw new APIError(410, 'No action possible on finished matches.', matchdto);
+    if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
+      throw new APIError(409, 'Authenticated user is not the current player.');
+
     return matchdto;
   }
 
@@ -255,7 +259,7 @@ export default class MatchesController {
   @Response<ErrorResponse>(401, 'Match is visible only to participating players.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
   @Response<ErrorResponse>(409, 'Authenticated user is not the current player.')
-  @Response<ActionErrorResponse>(410, 'No action possible on finished matches.')
+  @Response<MatchEventDTO[]>(410, 'No action possible on finished matches.')
   @Response<ErrorResponse>(500, 'Internal Server Error.')
   public async executeActionForMatch(
     @Request() req: any,
