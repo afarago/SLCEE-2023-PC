@@ -11,6 +11,9 @@ import * as util from 'util';
 import Logger from './config/logger';
 import api from './routes/api';
 import frontend from './routes/frontend';
+import DbService from './services/db.service';
+import DBAService from './services/dba.service';
+import * as googleWebApp from './config/google_web_app';
 import SocketIOService from './services/socketio.service';
 
 // initialize configuration
@@ -48,6 +51,9 @@ const [httpServer, io] = socketio.register(app);
 //   res.locals.user = req.user;
 //   next();
 // });
+
+// === Google specific handling ==================
+googleWebApp.register(app);
 
 // === API ==================
 // Configure Express to serve swagger OpenAPI

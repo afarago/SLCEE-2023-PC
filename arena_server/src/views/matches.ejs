@@ -38,7 +38,7 @@
   const matchesData = ${JSON.stringify(locals.matchesOnLoad)};
   const authenticated_username = ${JSON.stringify(locals?.user?.username)};
   const limit = ${locals.limit};
-  const socket_room = "date_${new Date(filterDate).toJSON().split('T')[0]}";
+  const socket_room = "${locals?.user?locals.user.username:'*'}.date_${new Date(filterDate).toJSON().split('T')[0]}";
 </script>
 ` %>
 

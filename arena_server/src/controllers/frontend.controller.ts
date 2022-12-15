@@ -18,13 +18,21 @@ export default class FrontendController {
   @Inject()
   private socketIOService: SocketIOService = Container.get(SocketIOService);
 
+  constructor(doRegisterToDbChanges: boolean = false) {
+    if (doRegisterToDbChanges) {
+      // -- subscribe to change streams so app can react on frontend
+      this.dbaService.onMatchesChanged.on('changed', this.handleMatchChangedPromise.bind(this));
+      this.dbaService.onMovesChanged.on('changed', this.handleMoveChangedPromise.bind(this));
+    }
+  }
+
   /**
    * Render matches for Frontend
    * @param filter
    * @param res
    * @returns matches
    */
-  public async getMatches(req: any, filter: { at?: string; tags?: string }, res: any): Promise<void> {
+  async getMatches(req: any, filter: { at?: string; tags?: string }, res: any): Promise<void> {
     res.locals.databaseName = this.dbService?.databaseName;
     res.locals.user = req.user;
 
@@ -76,7 +84,7 @@ export default class FrontendController {
    * @param input
    * @returns match statistics busy days
    */
-  public async getMatchStatisticsBusyDays(req: any, input: Date): Promise<string[]> {
+  async getMatchStatisticsBusyDays(req: any, input: Date): Promise<string[]> {
     // TODO: should consider filters as well (tags)
     // TODO: DEVELOPMENT IN PROGRESS temp route for calendar statistics
     const adate = new Date(input);
@@ -94,7 +102,7 @@ export default class FrontendController {
    * @param res
    * @returns match
    */
-  public async getMatch(req: any, filter: { matchId: ObjectIdString }, res: any): Promise<void> {
+  async getMatch(req: any, filter: { matchId: ObjectIdString }, res: any): Promise<void> {
     res.locals.databaseName = this.dbService?.databaseName;
     res.locals.user = req.user;
 
@@ -121,35 +129,51 @@ export default class FrontendController {
    * @param operationType
    * @param item
    */
-  public async callbackMatchChangedPromise(id: ObjectIdString, operationType: string, item: any) {
+  private async handleMatchChangedPromise(match: model.Match) {
     try {
       if (!this.socketIOService.connectCounter) return; // -- optimization point: just dont don't send anything if there are no clients connected
+      const playerObjs = await this.dbaService.getPlayersCache();
+      // -- header
+      {
+        const emitdata = matchToHeaderDTO(match, playerObjs);
+        if (emitdata) {
+          const datestr = `date_${match.startedAt.toJSON().split('T')[0]}`;
+          // const userprefix = `(${match.playerids.map((pid) => pid.toString()).join('|')})`;
+          // const roomstr = `\/${userprefix}\\.date_${datestr}`;
+          // const emitnamespaces = new RegExp(roomstr);    // -- todo: add *.
 
-      if (operationType === 'replace' || operationType === 'update' || operationType === 'insert') {
-        const playerObjs = await this.dbaService.getPlayersCache();
-        // -- 'update' is missing important fields --> should read from db->async cannot store in a transient state in res.local (as we are in multiple nodes)
-        const match = item.hasOwnProperty('fullDocument')
-          ? model.Match.constructFromObject(item.fullDocument)
-          : await this.dbaService.getMatchByIdPromise(id);
-        if (!match) throw new Error('Match not found or constructable from Db object');
+          /*
+            handle socket.io selective transport based on user auth
+            match update on 424242 for user1+user2
+            also todo auth user on room join
 
-        // -- header
-        {
-          const emitdata = matchToHeaderDTO(match, playerObjs);
-          if (emitdata) {
-            const emitroom = `date_${match.startedAt.toJSON().split('T')[0]}`;
-            this.socketIOService.emitMessage('match:update:header', emitroom, emitdata);
-          }
+            list> on page 2022-12-15    --> deliver to "(all|user1|user2).match_424242" // does matter
+            unauth: join all.date_2022-12-15  --> deliver
+            user1:  join user1.date_2022-12-15 --> deliver as involved
+            user3:  join user3.date_2022-12-15 --> skip as not involved
+
+            detail> on match 424242     --> deliver to "(all).match_424242" // does not matter
+            unauth: join room all.match_424242   --> deliver
+            user1:  join room user1.match_424242 --> deliver
+            user3:  join room user3.match_424242 --> deliver
+          */
+
+          //-- emit message in generic room : *.date_ and all players' rooms player1.date_ and player2.date_
+          let emitrooms = ['*']
+            .concat(match.playerids.map((pid) => pid.toString()))
+            .filter((val, idx, arr) => arr.findIndex((val2) => val === val2) == idx) // -- unique
+            .map((pid) => `${pid.toString()}.${datestr}`);
+          // this.socketIOService.emitMessage('match:update:header', emitnamespaces, emitdata)
+          emitrooms.forEach((emitroom) => this.socketIOService.emitMessage('match:update:header', emitroom, emitdata));
         }
+      }
 
-        // -- details
-        {
-          // TODO: to be handled based on user
-          const emitdata = await this.gameService.getMatchDTOPromise(match);
-          if (emitdata) {
-            const emitroom = `match_${match._id.toString()}`;
-            this.socketIOService.emitMessage('match:update:details', emitroom, emitdata);
-          }
+      // -- details
+      {
+        const emitdata = await this.gameService.getMatchDTOPromise(match);
+        if (emitdata) {
+          const emitroom = `match_${match._id.toString()}`;
+          this.socketIOService.emitMessage('match:update:details', emitroom, emitdata);
         }
       }
     } catch (e) {
@@ -163,36 +187,19 @@ export default class FrontendController {
    * @param operationType
    * @param item
    */
-  public async callbackMoveChangedPromise(id: ObjectIdString, operationType: string, item: any) {
+  private async handleMoveChangedPromise(move: model.Move) {
     try {
       if (!this.socketIOService.connectCounter) return; // -- optimization point: just dont don't send anything if there are no clients connected
 
-      if (operationType === 'insert') {
-        const move = model.Move.constructFromObject(item.fullDocument);
-        if (!move) throw new Error('Cannot construct move from Db Object');
+      const isDebug = false; // TODO: to be handled based on user
 
-        const isDebug = false; // TODO: to be handled based on user
-
-        const movedto = moveToDTO(move, { isDebug });
-        if (movedto) {
-          const emitroom = `match_${move.matchId.toString()}`;
-          this.socketIOService.emitMessage('move:insert:details', emitroom, movedto);
-        }
+      const movedto = moveToDTO(move, { isDebug });
+      if (movedto) {
+        const emitroom = `match_${move.matchId.toString()}`;
+        this.socketIOService.emitMessage('move:insert:details', emitroom, movedto);
       }
     } catch (e) {
       Logger.error(e.message);
     }
-  }
-
-  /**
-   * Callbacks players changed
-   * @param id
-   * @param operationType
-   * @param item
-   */
-  public async callbackPlayersChangedPromise(id: ObjectIdString, operationType: string, item: any) {
-    // -- invalidate players' cache, do it even if noone is connected
-    this.dbaService.resetPlayersCache();
-    await this.dbaService.getPlayersCache();
   }
 }

@@ -4,6 +4,7 @@ import { Server as IOServer } from 'socket.io';
 import { Service } from 'typedi';
 
 import Logger from '../config/logger';
+import { authenticateOptionally } from '../config/passport';
 
 @Service()
 export default class SocketIOService {
@@ -14,38 +15,49 @@ export default class SocketIOService {
     const httpServer = createServer(app);
     this.io = new IOServer(httpServer);
 
-    this.io.on('connection', (socket: any) => {
-      this.connectCounter++;
-      // console.log('connected');
+    //-- add passport auth optionally - yet socket.request contains request
+    //this.io.use((socket, next) => authenticateOptionally(socket.request, null, next));
 
-      // -- request from client side to join a room
-      socket.on('room', (room: string) => {
-        // console.log('room', room);
-        socket.join(room);
+    //NOTE: later could rework onto using selective namespaces instead of rooms
+    //NOTE: later check if user registers to the correct room
+    this.io
+      //.of(/^\/.+$/)
+      .on('connection', (socket: any) => {
+        this.connectCounter++;
+        // console.log('connected');
+
+        // // socket.request.headers.authorization
+        // if (socket.request?.user) socket.emit(`Hello ${socket.request.user.name}`);
+        // if (socket.request?.user) socket.join(socket.request?.user.username)
+
+        // -- request from client side to join a room
+        socket.on('room', (room: string) => {
+          // console.log('[room] joining', room);
+          socket.join(room);
+        });
+
+        // //console.log('a user connected');
+        // try {
+        //   const authorization = socket.handshake.headers.authorization;
+        //   const parts = authorization.split(' ');
+        //   const scheme = parts[0];
+        //   const credentials = new Buffer(parts[1], 'base64').toString().split(':');
+        //   //if (!/Basic/i.test(scheme)) { return this.fail(this._challenge()); }
+        //   //if (credentials.length < 2) { return this.fail(400); }
+        //   const userid = credentials[0];
+        //   const password = credentials[1];
+
+        //   console.log(`Hello user: ${userid}`);
+        //   socket.emit('hello', userid);
+        //   socket.broadcast.emit('hello', 'other:'+userid);
+        // } catch {}
+        // //socket.broadcast.emit('hi');
+
+        socket.on('disconnect', () => {
+          // console.log('user disconnected');
+          this.connectCounter--;
+        });
       });
-
-      // //console.log('a user connected');
-      // try {
-      //   const authorization = socket.handshake.headers.authorization;
-      //   const parts = authorization.split(' ');
-      //   const scheme = parts[0];
-      //   const credentials = new Buffer(parts[1], 'base64').toString().split(':');
-      //   //if (!/Basic/i.test(scheme)) { return this.fail(this._challenge()); }
-      //   //if (credentials.length < 2) { return this.fail(400); }
-      //   const userid = credentials[0];
-      //   const password = credentials[1];
-
-      //   console.log(`Hello user: ${userid}`);
-      //   socket.emit('hello', userid);
-      //   socket.broadcast.emit('hello', 'other:'+userid);
-      // } catch {}
-      // //socket.broadcast.emit('hi');
-
-      socket.on('disconnect', () => {
-        // console.log('user disconnected');
-        this.connectCounter--;
-      });
-    });
 
     // app.on('hellox', () => {
     //   console.log('hellox');
@@ -59,7 +71,7 @@ export default class SocketIOService {
     // Logger.info(`${topic} ${room} connectCounter:${connectCounter}`);
 
     try {
-      let iotarget: any = !room ? this.io : this.io.in(room);
+      let iotarget: any = !room ? this.io : this.io.in(room); // -- .in() is room .of() is namespace
       if (volatile) iotarget = iotarget.volatile;
 
       // Note: Map and Set are not serializable and must be manually serialized:

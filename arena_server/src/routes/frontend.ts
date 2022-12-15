@@ -1,12 +1,10 @@
 import express from 'express';
 import path from 'path';
-import { Container } from 'typedi';
 
 import Logger from '../config/logger';
 import { authenticate, authenticateOptionally } from '../config/passport';
 import FrontendController from '../controllers/frontend.controller';
 import { BaseError } from '../dto/utils';
-import DbService from '../services/db.service';
 
 const app = express();
 export default app;
@@ -25,7 +23,7 @@ app.get('/login', authenticate, async (req: any, res, next) => {
 
 app.get('/logout', async (req: any, res, next) => {
   return res.redirect(401, req?.headers?.referer ?? '/matches');
-  return res.status(401).location('/matches').end();
+  // return res.status(401).location('/matches').end();
 });
 
 app.get('/matches', authenticateOptionally, async (req: any, res, next) => {
@@ -47,12 +45,8 @@ app.get('/matches/:matchId', authenticateOptionally, async (req: any, res, next)
 });
 
 app.on('mount', async (parent) => {
-  // -- subscribe to change streams so app can react on frontend
-  const dbService = Container.get(DbService);
-  const controller = new FrontendController();
-  await dbService.monitorMatchesPromise(controller.callbackMatchChangedPromise.bind(controller));
-  await dbService.monitorMovesPromise(controller.callbackMoveChangedPromise.bind(controller));
-  await dbService.monitorPlayersPromise(controller.callbackPlayersChangedPromise.bind(controller));
+  // -- instantiate controller, register for db changes - entry point for socket.io
+  const controller = new FrontendController(true);
 });
 
 // -- Error handling generic middleware - you define error-handling middleware last, after other app.use() and routes calls;

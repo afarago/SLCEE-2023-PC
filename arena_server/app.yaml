@@ -1,4 +1,5 @@
 runtime: nodejs16
+
 env_variables:
   MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:OOp874yvUjntNlrg@cluster0.prcmn0g.mongodb.net/?retryWrites=true&w=majority"
   ADMIN_PASSWORD: "blahSecret!"
@@ -8,3 +9,6 @@ env_variables:
   NODE_ENV: production
   PORT: 8080
   LOGGING_NO_COLORS: true
+
+inbound_services:
+  - warmup

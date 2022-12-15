@@ -1,9 +1,10 @@
 === TODOs ===
 P1
-* todo: add bust, winner/lost animations
-* SAP Labs CEE Hub 2023 Programming Competition / SLCEE-2023-PC
+* n/a
 
 P2
+* socket.io -- later could rework onto using selective namespaces instead of rooms
+* optimize: db changestream notification used in waiting on matches.controller / use playerscache in game.controller
 * consolidate filter/starteddate GMT/UTC incliding io rooms and filters
 * API usage measurement: usage { id, total_accesscount, day_accesscount, lastaccess }
 * env/option to selectively start/serve only FE or BE

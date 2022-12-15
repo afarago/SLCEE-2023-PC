@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import { ObjectId } from 'mongodb';
+import { EventEmitter } from 'node:events';
 import { Service } from 'typedi';
 import * as util from 'util';
 
@@ -26,14 +27,20 @@ export type ObjectIdString = string;
 
 @Service()
 export default class DBAService {
-  constructor(private dbService: DbService) {}
+  constructor(private dbService: DbService) {
+    this.dbService.onCollectionChanged.on(
+      'change',
+      async (collection: string, documentKey: string, operationType: string, item: any) =>
+        await this.handleDbCollectionChange(collection, documentKey, operationType, item)
+    );
+  }
 
   /**
    * Returns Gets all matches
    * @param options  filter user id, active/current user id, date day, tags
    * @returns matches promise
    */
-  public async getMatchesPromise(options: {
+  async getMatchesPromise(options: {
     playerId?: ObjectIdString;
     activePlayerId?: ObjectIdString;
     date?: Date;
@@ -80,7 +87,7 @@ export default class DBAService {
     }
 
     await this.dbService.ensureConnected();
-    const matchesCursor = this.dbService.matchesCollection
+    const matchesCursor = this.dbService.collections.matches
       ?.find(filterOption)
       .sort({ startedAt: options.sortAscending ? +1 : -1 })
       // -- A limit() value of 0 (i.e. .limit(0)) is equivalent to setting no limit.
@@ -106,9 +113,9 @@ export default class DBAService {
    * @param id
    * @returns match by id promise
    */
-  public async getMatchByIdPromise(id: ObjectIdString): Promise<Match | undefined> {
+  async getMatchByIdPromise(id: ObjectIdString): Promise<Match | undefined> {
     await this.dbService.ensureConnected();
-    const dbitem = await this.dbService.matchesCollection?.findOne({ _id: new ObjectId(id) });
+    const dbitem = await this.dbService.collections.matches?.findOne({ _id: new ObjectId(id) });
     if (!dbitem) return undefined;
 
     const result = Match.constructFromObject(dbitem);
@@ -119,10 +126,10 @@ export default class DBAService {
    * Gets players
    * @returns players promise
    */
-  public async getPlayersPromise(isHeadOnly?: boolean): Promise<Player[]> {
+  async getPlayersPromise(isHeadOnly?: boolean): Promise<Player[]> {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.playersCollection?.find({}, options ?? {}).toArray();
+    const dbitems = await this.dbService?.collections.players?.find({}, options ?? {}).toArray();
 
     const results =
       dbitems?.reduce((acc, pojo: any) => {
@@ -142,10 +149,10 @@ export default class DBAService {
    * @param id
    * @returns player by id promise
    */
-  public async getPlayerByIdPromise(id: ObjectIdString, isHeadOnly?: boolean): Promise<Player | undefined> {
+  async getPlayerByIdPromise(id: ObjectIdString, isHeadOnly?: boolean): Promise<Player | undefined> {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     await this.dbService.ensureConnected();
-    const dbitem = await this.dbService?.playersCollection?.findOne({ _id: new ObjectId(id) }, options ?? {});
+    const dbitem = await this.dbService?.collections.players?.findOne({ _id: new ObjectId(id) }, options ?? {});
     if (!dbitem) return undefined;
 
     const result = Player.constructFromObject(dbitem);
@@ -157,11 +164,11 @@ export default class DBAService {
    * @param ids
    * @returns players by ids promise
    */
-  public async getPlayerByIdsPromise(ids: ObjectIdString[], isHeadOnly?: boolean): Promise<Player[]> {
+  async getPlayerByIdsPromise(ids: ObjectIdString[], isHeadOnly?: boolean): Promise<Player[]> {
     const options = isHeadOnly ? playerConfidentialityProjection : null;
     const oids = ids?.map((id) => new ObjectId(id));
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.playersCollection?.find({ _id: { $in: oids } }, options ?? {}).toArray();
+    const dbitems = await this.dbService?.collections.players?.find({ _id: { $in: oids } }, options ?? {}).toArray();
     if (!dbitems) throw new Error('Error retrieving players');
 
     const result: Player[] = ids?.map((id) => {
@@ -179,10 +186,10 @@ export default class DBAService {
    * @param matchId
    * @returns last move by match id promise
    */
-  public async getLastMoveByMatchIdPromise(matchId: ObjectIdString): Promise<Move | undefined> {
+  async getLastMoveByMatchIdPromise(matchId: ObjectIdString): Promise<Move | undefined> {
     await this.dbService.ensureConnected();
     const matchIdObj = new ObjectId(matchId);
-    const dbitem = await this.dbService?.movesCollection?.findOne(
+    const dbitem = await this.dbService?.collections.moves?.findOne(
       { matchId: matchIdObj },
       {
         // limit: 1,
@@ -200,10 +207,10 @@ export default class DBAService {
    * @param matchId
    * @returns all moves by match id promise
    */
-  public async getAllMovesByMatchIdPromise(matchId: ObjectIdString): Promise<Move[]> {
+  async getAllMovesByMatchIdPromise(matchId: ObjectIdString): Promise<Move[]> {
     const matchIdObj = new ObjectId(matchId);
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.movesCollection
+    const dbitems = await this.dbService?.collections.moves
       ?.find({ matchId: matchIdObj })
       .sort({ sequenceId: +1 })
       .toArray();
@@ -229,7 +236,7 @@ export default class DBAService {
    * @param originalMoveAt safeguarding that we still update the original match record and there is no concurrent access
    * @returns match and create move promise
    */
-  public async upsertMatchAndCreateMovePromise(
+  async upsertMatchAndCreateMovePromise(
     match: Match,
     move: Move,
     originalMoveAt: Date,
@@ -252,7 +259,7 @@ export default class DBAService {
         // -- if new match: insert new match
         if (isNewMatch) {
           match.startedAt = new Date();
-          const dbitem = await this.dbService?.matchesCollection?.insertOne(match, { session });
+          const dbitem = await this.dbService?.collections.matches?.insertOne(match, { session });
           if (!dbitem) throw new Error('Could not create Match.');
           match._id = dbitem.insertedId;
           move.matchId = match._id;
@@ -260,7 +267,7 @@ export default class DBAService {
 
         // -- insert move
         {
-          const dbitem = await this.dbService?.movesCollection?.insertOne(move, { session });
+          const dbitem = await this.dbService?.collections.moves?.insertOne(move, { session });
           if (!dbitem) throw new Error('Could not create Move.');
           move._id = dbitem.insertedId;
         }
@@ -281,7 +288,7 @@ export default class DBAService {
             activePlayerIdCached: matchObj.activePlayerIdCached,
           };
 
-          const dbitem = await this.dbService?.matchesCollection?.updateOne(
+          const dbitem = await this.dbService?.collections.matches?.updateOne(
             { _id: match._id, lastMoveAt: originalMoveAt },
             { $set: updateset },
             { session }
@@ -308,13 +315,13 @@ export default class DBAService {
    * @param to
    * @returns match count for date range
    */
-  public async getMatchCountForDateRange(
+  async getMatchCountForDateRange(
     from: Date,
     to: Date,
     playerid: ObjectIdString
   ): Promise<{ day: Date; count: number }[]> {
     await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.matchesCollection
+    const dbitems = await this.dbService?.collections.matches
       ?.aggregate([
         {
           $match: {
@@ -345,7 +352,7 @@ export default class DBAService {
    * Gets players cache
    * @returns
    */
-  public async getPlayersCache() {
+  async getPlayersCache() {
     if (!this.playersCache) {
       const playerobjs = await this.getPlayersPromise();
       this.playersCache = playerobjs?.reduce(
@@ -355,8 +362,86 @@ export default class DBAService {
     }
     return this.playersCache;
   }
-  public resetPlayersCache() {
+  private resetPlayersCache() {
     this.playersCache = null;
   }
   private playersCache: Map<string, Player> | null;
+
+  // === DB Change monitoring =================================================
+
+  onMatchesChanged = new EventEmitter();
+  onMovesChanged = new EventEmitter();
+
+  /**
+   * Handles Db collection changes
+   * @param collection
+   * @param documentKey
+   * @param operationType
+   * @param item
+   */
+  private async handleDbCollectionChange(collection: string, documentKey: string, operationType: string, item: any) {
+    switch (collection) {
+      case 'players':
+        await this.handlePlayersChanged(documentKey, operationType, item);
+        break;
+      case 'matches':
+        await this.handleMatchesChanged(documentKey, operationType, item);
+        break;
+      case 'moves':
+        await this.handleMovesChanged(documentKey, operationType, item);
+        break;
+    }
+  }
+
+  /**
+   * Reacts to Players collection changed
+   * @param documentKey
+   * @param operationType
+   * @param item
+   */
+  private async handlePlayersChanged(documentKey: string, operationType: string, item: any) {
+    // -- invalidate players' cache, do it even if noone is connected
+    this.resetPlayersCache();
+    await this.getPlayersCache();
+  }
+
+  /**
+   * Reacts to Matches collection changed
+   * @param documentKey
+   * @param operationType
+   * @param item
+   */
+  private async handleMatchesChanged(documentKey: string, operationType: string, item: any) {
+    try {
+      if (operationType === 'replace' || operationType === 'update' || operationType === 'insert') {
+        // -- 'update' is missing important fields --> should read from db->async cannot store in a transient state in res.local (as we are in multiple nodes)
+        let match: Match | undefined;
+        if (item.hasOwnProperty('fullDocument')) match = Match.constructFromObject(item.fullDocument);
+        else match = await this.getMatchByIdPromise(documentKey);
+        if (!match) throw new Error('Match not found or constructable from Db object');
+
+        this.onMatchesChanged.emit('changed', match);
+      }
+    } catch (e) {
+      Logger.error(e.message);
+    }
+  }
+
+  /**
+   * Reacts to Moves collection changed
+   * @param documentKey
+   * @param operationType
+   * @param item
+   */
+  private async handleMovesChanged(documentKey: string, operationType: string, item: any) {
+    try {
+      if (operationType === 'insert') {
+        const move = Move.constructFromObject(item.fullDocument);
+        if (!move) throw new Error('Cannot construct move from Db Object');
+        this.onMovesChanged.emit('changed', move);
+      }
+    } catch (e) {
+      Logger.error(e.message);
+    }
+  }
 }

@@ -1,5 +1,9 @@
 import * as util from 'util';
 
+// const CardSuits1 = ['Anchor', 'Hook', 'Cannon', 'Key', 'Chest', 'Map', 'Oracle', 'Sword', 'Kraken', 'Mermaid'] as const;
+// type CardSuit1 = typeof CardSuits1[number];
+// type OCardSuit1 = Record<CardSuit1,string>;
+
 export const OCardSuit = {
   Anchor: 'Anchor',
   Hook: 'Hook',

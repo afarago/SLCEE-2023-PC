@@ -1,67 +1,71 @@
 import 'reflect-metadata';
 
+import { Mutex } from 'async-mutex';
 import dotenv from 'dotenv';
 import * as mongoDB from 'mongodb';
+import { EventEmitter } from 'node:events';
 import { Service } from 'typedi';
 
 import Logger from '../config/logger';
 
-type MonitorDBASyncCallback = (documentKey: string, operationType: string, item: any) => Promise<void>;
 @Service()
 export default class DbService {
-  public playersCollection?: mongoDB.Collection;
-  public matchesCollection?: mongoDB.Collection;
-  public movesCollection?: mongoDB.Collection;
-  public client: mongoDB.MongoClient;
-  private _db: mongoDB.Db;
-  private _inited: boolean;
+  private db: mongoDB.Db;
+  private inited: boolean;
+  client: mongoDB.MongoClient;
+  collections: {
+    matches: mongoDB.Collection<mongoDB.Document>;
+    moves: mongoDB.Collection<mongoDB.Document>;
+    players: mongoDB.Collection<mongoDB.Document>;
+  };
+  onCollectionChanged = new EventEmitter();
 
+  private initMutex = new Mutex();
   async connectToDatabase() {
-    dotenv.config();
-    if (!process.env.MONGODB_CONN_STRING || !process.env.MONGODB_DBNAME) throw new Error('No DBConnection initialized');
-    this.client = new mongoDB.MongoClient(process.env.MONGODB_CONN_STRING);
+    await this.initMutex.runExclusive(async () => {
+      if (this.inited) return;
 
-    await this.client.connect();
-    this._db = this.client.db(process.env.MONGODB_DBNAME);
-    Logger.info(`Using database ${this._db.databaseName}`);
+      dotenv.config();
+      if (!process.env.MONGODB_CONN_STRING || !process.env.MONGODB_DBNAME)
+        throw new Error('No DBConnection initialized');
+      this.client = new mongoDB.MongoClient(process.env.MONGODB_CONN_STRING);
 
-    this.playersCollection = this._db.collection('players');
-    this.matchesCollection = this._db.collection('matches');
-    this.movesCollection = this._db.collection('moves');
+      await this.client.connect();
+      this.db = this.client.db(process.env.MONGODB_DBNAME);
+      Logger.info(`Using database ${this.db.databaseName}`);
 
-    this._inited = true;
+      this.collections = {
+        matches: this.db.collection('matches'),
+        moves: this.db.collection('moves'),
+        players: this.db.collection('players'),
+      };
+
+      this.initChangeMonitoring();
+
+      this.inited = true;
+    });
   }
   async ensureConnected(): Promise<void> {
-    if (!this._inited) await this.connectToDatabase();
+    if (!this.inited) await this.connectToDatabase();
   }
-  public get databaseName(): string {
+  get databaseName(): string {
     return process.env.MONGODB_DBNAME ?? '';
   }
 
-  private monitorChangeStream(collection: mongoDB.Collection | undefined, cb: MonitorDBASyncCallback): void {
-    if (!collection) throw new Error('Internal Error while initializing database connection');
-
-    // await this.ensureConnected();
-    const changeStream = collection.watch();
-    changeStream.on('change', async (item: any) => {
-      if (item.hasOwnProperty('documentKey')) {
-        if (cb) {
-          await cb(item.documentKey?._id?.toString(), item.operationType, item);
+  private initChangeMonitoring(): void {
+    for (const [colname, collection] of Object.entries(this.collections)) {
+      const changeStream = collection.watch();
+      changeStream.on('change', async (item: any) => {
+        if (item.hasOwnProperty('documentKey')) {
+          this.onCollectionChanged.emit(
+            'change',
+            item.ns.coll,
+            item.documentKey?._id?.toString(),
+            item.operationType,
+            item
+          );
         }
-      }
-    });
-  }
-
-  async monitorMatchesPromise(cb: MonitorDBASyncCallback): Promise<void> {
-    await this.ensureConnected();
-    this.monitorChangeStream(this.matchesCollection, cb);
-  }
-  async monitorMovesPromise(cb: MonitorDBASyncCallback): Promise<void> {
-    await this.ensureConnected();
-    this.monitorChangeStream(this.movesCollection, cb);
-  }
-  async monitorPlayersPromise(cb: MonitorDBASyncCallback): Promise<void> {
-    await this.ensureConnected();
-    this.monitorChangeStream(this.playersCollection, cb);
+      });
+    }
   }
 }
