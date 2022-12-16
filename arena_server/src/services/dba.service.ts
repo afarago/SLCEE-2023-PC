@@ -12,11 +12,6 @@ import Player from '../models/game/player';
 import State from '../models/game/state';
 import DbService from './db.service';
 
-// -- confidentiality protection, removing e.g. passwordhash field
-const playerConfidentialityProjection = {
-  projection: { _id: 1, name: 1, email: 1 },
-};
-
 /**
  * Stringified Object Id.
  * @pattern [0-9a-f]{24}|[0-9a-f]{12}
@@ -123,40 +118,23 @@ export default class DBAService {
   }
 
   /**
-   * Gets players
-   * @returns players promise
-   */
-  async getPlayersPromise(isHeadOnly?: boolean): Promise<Player[]> {
-    const options = isHeadOnly ? playerConfidentialityProjection : null;
-    await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.collections.players?.find({}, options ?? {}).toArray();
-
-    const results =
-      dbitems?.reduce((acc, pojo: any) => {
-        try {
-          const item = Player.constructFromObject(pojo);
-          if (!!item) acc.push(item);
-        } catch {
-          Logger.error(`Invalid object: ${util.inspect(pojo)}`);
-        }
-        return acc;
-      }, new Array<Player>()) ?? [];
-    return results;
-  }
-
-  /**
    * Gets a player by id
    * @param id
    * @returns player by id promise
    */
-  async getPlayerByIdPromise(id: ObjectIdString, isHeadOnly?: boolean): Promise<Player | undefined> {
-    const options = isHeadOnly ? playerConfidentialityProjection : null;
-    await this.dbService.ensureConnected();
-    const dbitem = await this.dbService?.collections.players?.findOne({ _id: new ObjectId(id) }, options ?? {});
-    if (!dbitem) return undefined;
-
-    const result = Player.constructFromObject(dbitem);
-    return result;
+  async getPlayerByIdPromise(id: ObjectIdString): Promise<Player | undefined> {
+    // if (!doAllowCachedResponse) {
+    //   //-- normal Db retrieval
+    //   await this.dbService.ensureConnected();
+    //   const dbitem = await this.dbService?.collections.players?.findOne({ _id: new ObjectId(id) });
+    //   if (!dbitem) return undefined;
+    //   const result = Player.constructFromObject(dbitem);
+    //   return result;
+    // } else {
+    //-- return from the cache
+    const playerCache = await this.getPlayersCachePromise();
+    return playerCache.get(id);
+    // }
   }
 
   /**
@@ -164,21 +142,56 @@ export default class DBAService {
    * @param ids
    * @returns players by ids promise
    */
-  async getPlayerByIdsPromise(ids: ObjectIdString[], isHeadOnly?: boolean): Promise<Player[]> {
-    const options = isHeadOnly ? playerConfidentialityProjection : null;
-    const oids = ids?.map((id) => new ObjectId(id));
-    await this.dbService.ensureConnected();
-    const dbitems = await this.dbService?.collections.players?.find({ _id: { $in: oids } }, options ?? {}).toArray();
-    if (!dbitems) throw new Error('Error retrieving players');
+  async getPlayerByIdsPromise(ids: ObjectIdString[]): Promise<Array<Player>> {
+    // if (!doAllowCachedResponse) {
+    //   const oids = ids?.map((id) => new ObjectId(id));
+    //   await this.dbService.ensureConnected();
+    //   const dbitems = await this.dbService?.collections.players?.find({ _id: { $in: oids } }).toArray();
+    //   if (!dbitems) throw new Error('Error retrieving players');
 
-    const result: Player[] = ids?.map((id) => {
-      const dbitem = dbitems?.find((item: any) => item._id?.equals(id));
-      const player = Player.constructFromObject(dbitem);
-      if (player) return player;
-      throw new Error(`Player ${id} is not valid.`);
+    //   const result: Player[] = ids?.map((id) => {
+    //     const dbitem = dbitems?.find((item: any) => item._id?.equals(id));
+    //     const player = Player.constructFromObject(dbitem);
+    //     if (player) return player;
+    //     throw new Error(`Player ${id} is not valid.`);
+    //   });
+
+    //   return result;
+    // } else {
+    //-- return from the cache
+    const playerCache = await this.getPlayersCachePromise();
+    return ids?.map((pid) => {
+      const pobj = playerCache.get(pid);
+      if (!pobj) throw new Error(`Player ${pid} is not valid.`);
+      return pobj;
     });
+    //}
+  }
 
-    return result;
+  /**
+   * Gets players
+   * @returns players promise
+   */
+  async getPlayersPromise(): Promise<Map<ObjectIdString, Player>> {
+    if (!this.playersCache) {
+      await this.dbService.ensureConnected();
+      const dbitems = await this.dbService?.collections.players?.find({}).toArray();
+
+      const results =
+        dbitems?.reduce((acc, pojo: any) => {
+          try {
+            const item = Player.constructFromObject(pojo);
+            if (!!item) acc.push(item);
+          } catch {
+            Logger.error(`Invalid object: ${util.inspect(pojo)}`);
+          }
+          return acc;
+        }, new Array<Player>()) ?? [];
+      return results?.reduce((prev, current) => prev.set(current._id.toString(), current), new Map<string, Player>());
+    } else {
+      //-- return from the cache
+      return this.playersCache; //-- avoid im-possible circular loop await this.getPlayersCachePromise();
+    }
   }
 
   /**
@@ -349,23 +362,17 @@ export default class DBAService {
   }
 
   /**
-   * Gets players cache
+   * Gets players cache and fills it up if needed
    * @returns
    */
-  async getPlayersCache() {
-    if (!this.playersCache) {
-      const playerobjs = await this.getPlayersPromise();
-      this.playersCache = playerobjs?.reduce(
-        (prev, current) => prev.set(current._id.toString(), current),
-        new Map<string, Player>()
-      );
-    }
+  private async getPlayersCachePromise() {
+    if (!this.playersCache) this.playersCache = await this.getPlayersPromise();
     return this.playersCache;
   }
   private resetPlayersCache() {
     this.playersCache = null;
   }
-  private playersCache: Map<string, Player> | null;
+  private playersCache: Map<ObjectIdString, Player> | null;
 
   // === DB Change monitoring =================================================
 
@@ -402,7 +409,7 @@ export default class DBAService {
   private async handlePlayersChanged(documentKey: string, operationType: string, item: any) {
     // -- invalidate players' cache, do it even if noone is connected
     this.resetPlayersCache();
-    await this.getPlayersCache();
+    await this.getPlayersCachePromise();
   }
 
   /**

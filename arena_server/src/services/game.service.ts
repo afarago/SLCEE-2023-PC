@@ -36,9 +36,6 @@ export default class GameService {
       typeof idOrMatch === 'string' ? await this.dbaService.getMatchByIdPromise(idOrMatch as string) : idOrMatch;
     if (!match) throw new Error('Match not found');
 
-    // const playerData = await this.dbaService.getPlayerByIdsPromise(params.playerids);
-    // const playerNames = playerData.map(pd=>pd.name);
-
     // -- SHOW debug for matches started by this player or if Admin is requesting
     const isDebug =
       options?.doAddDebug && (options?.user?.isAdmin || match.createdByPlayerId?.equals(options?.user?.username ?? ''));

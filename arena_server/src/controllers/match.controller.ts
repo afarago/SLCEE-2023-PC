@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
-import { NotRetryableError, retry } from 'ts-retry-promise';
+import { isTooManyTries, retryAsync } from 'ts-retry';
 import { Body, Delete, Get, Path, Post, Query, Request, Response, Route, Security, SuccessResponse, Tags } from 'tsoa';
 import { Container, Inject } from 'typedi';
 
+import { IUser } from '../config/passport';
 import { ErrorResponse } from '../dto/errorresponse';
 import { MatchCreateResponse } from '../dto/matchcreateresponse';
 import { MatchDTO, MatchEventDTO } from '../dto/matchresponse';
@@ -20,16 +21,17 @@ import GameService from '../services/game.service';
 dotenv.config();
 const apiRetryTimeoutMs = Number(process.env.API_RETRY_TIMEOUT_MS) || 30 * 1000; // wait for 30 sec max //LATER add to dotenv config
 const apiRetryDelayMs = Number(process.env.API_RETRY_DELAY_MS) || 1000; // retry every 1000 ms
-const apiRetryMaxCount = 1000; // set a meaningful, yet high retry number (above the default 10)
+//const apiRetryMaxCount = 1000; // set a meaningful, yet high retry number (above the default 10)
+const apiRetryMaxCount = Math.floor(apiRetryTimeoutMs / apiRetryDelayMs) + 1;
 
 @Route('/api/matches')
 export default class MatchesController {
   // constructor(private auth: IUser, private clientip: string) {}
 
   @Inject()
-  private dbaService: DBAService = Container.get(DBAService); // !!
+  private dbaService: DBAService = Container.get(DBAService);
   @Inject()
-  private gameService: GameService = Container.get(GameService); // !!
+  private gameService: GameService = Container.get(GameService);
 
   /**
    * Retrieves the details of all Matches.
@@ -83,12 +85,10 @@ export default class MatchesController {
     // -- retrieve result - if doWaitForActive is false - we only retry once
     const matches = !doWaitForNonNull
       ? await fnWorker()
-      : await retry(fnWorker, {
+      : await retryAsync(fnWorker, {
           // -- retry executing the action either until auth user is same as current user or timeout
-          // -- retry config
-          timeout: apiRetryTimeoutMs,
           delay: apiRetryDelayMs,
-          retries: apiRetryMaxCount,
+          maxTry: apiRetryMaxCount,
           until: (retval) => retval?.length > 0, // end criteria - any matches are returned
         }).catch(() => [] as Match[]); // -- do not throw any errors, just default
 
@@ -188,33 +188,8 @@ export default class MatchesController {
     const doShowEvents: boolean = parseBoolyFromString(showevents);
     const doShowDebug: boolean = parseBoolyFromString(showdebug);
 
-    let match: Match | undefined;
-
     //-- setting up async worker to retrieve the result
-    const fnWorker = async () => {
-      // -- retry promise reading matches
-      match = await this.dbaService.getMatchByIdPromise(id);
-      // if non existing or finished - no need to wait anymore
-      if (doWaitForActive && (!match || match?.isFinished)) throw new NotRetryableError();
-      return match;
-    };
-
-    // -- retrieve result - if doWaitForActive is false - we only retry once
-    if (!doWaitForActive) await fnWorker();
-    else
-      await retry(fnWorker, {
-        // -- retry config
-        timeout: apiRetryTimeoutMs,
-        delay: apiRetryDelayMs,
-        retries: apiRetryMaxCount,
-        until: (retval) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
-      }).catch(() => null); // -- do not throw any errors, just default
-
-    // -- check if match not existing at all
-    if (!match) throw new APIError(404, 'Match does not exist.');
-    // -- check if auth user is any of the players (easier done here, than later with extra db step)
-    if (!req.user?.isAdmin && !match.playerids.some((p) => p?.equals(req.user?.username)))
-      throw new APIError(401, 'Match is visible to participating players only.');
+    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForActive, req.user);
 
     // -- construct DTO object
     const matchdto = await this.gameService.getMatchDTOPromise(match, {
@@ -271,34 +246,9 @@ export default class MatchesController {
     if (!data) throw new APIError(400, 'Invalid useraction input parameter.');
     const doWaitForExecution: boolean = parseBoolyFromString(wait);
 
-    let match: Match | undefined;
-
     //-- setting up async worker to retrieve the result
-    const fnWorker = async () => {
-      // -- retrieve and hydrate objects
-      match = await this.dbaService.getMatchByIdPromise(id);
-      if (doWaitForExecution && !match) throw new NotRetryableError();
-      if (doWaitForExecution && match?.isFinished) throw new NotRetryableError();
-      return match;
-    };
+    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForExecution, req.user);
 
-    // -- retrieve result - if doWaitForActive is false - we only retry once
-    if (!doWaitForExecution) await fnWorker();
-    else
-      await retry(fnWorker, {
-        // -- retry executing the action either until auth user is same as current user or timeout
-        // -- using https://www.npmjs.com/package/ts-retry-promise
-        // -- retry config
-        timeout: apiRetryTimeoutMs,
-        delay: apiRetryDelayMs,
-        retries: apiRetryMaxCount,
-        until: (retval) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
-      }).catch(() => match); // -- do not throw any errors, just default
-
-    // -- check if current user is adequate
-    if (!match) throw new APIError(404, 'Match does not exist.');
-    if (!match.playerids.some((p) => p?.equals(req.user?.username)))
-      throw new APIError(401, 'Match is visible only to participating players.');
     if (match.isFinished) {
       // -- add last move (match finished) events turnended and matchended
       const move = await this.dbaService.getLastMoveByMatchIdPromise(match._id.toString());
@@ -322,6 +272,41 @@ export default class MatchesController {
     const movedto = moveToDTO(move, { hidePlayerIndex: true });
     return movedto.events;
     // TODO: consider changing return type to MoveDTO
+  }
+
+  /**
+   * Retrieves a match with validations and optionally retrying and waiting
+   * @param id
+   * @param doWaitForExecution
+   * @param user
+   * @returns match
+   */
+  private async getMatchWithValidationAndOptionalWait(
+    id: string,
+    doWaitForExecution: boolean,
+    user: IUser
+  ): Promise<Match> {
+    let fnWorker = async () => {
+      return await this.dbaService.getMatchByIdPromise(id);
+    };
+
+    //TODO: improvement potential -- use the watch stream to avoid the polling
+
+    // -- retrieve result - if doWaitForActive is false - we only retry once
+    const match: Match | undefined = !doWaitForExecution
+      ? await fnWorker()
+      : await retryAsync(fnWorker, {
+          // -- retry executing the action either until auth user is same as current user or timeout
+          delay: apiRetryDelayMs,
+          maxTry: apiRetryMaxCount,
+          until: (retval) => !retval || retval.isFinished || this.gameService.IsAuthUserIsActivePlayer(retval, user),
+        }).catch((e) => (isTooManyTries(e) ? e.getLastResult() : undefined)); // -- do not throw any errors, just default
+
+    // -- check if current user is adequate
+    if (!match) throw new APIError(404, 'Match does not exist.');
+    if (!match.playerids.some((p) => p?.equals(user?.username)))
+      throw new APIError(401, 'Match is visible only to participating players.');
+    return match;
   }
 
   /**

@@ -64,7 +64,7 @@ export default class FrontendController {
     //   (prev, current) => prev.set(current._id.toString(), current),
     //   new Map<string, model.Player>()
     // );
-    const players = await this.dbaService.getPlayersCache();
+    const players = await this.dbaService.getPlayersPromise();
     const matchesOnLoad = matches
       ?.map((match) => {
         try {
@@ -109,7 +109,7 @@ export default class FrontendController {
     const match = await this.dbaService.getMatchByIdPromise(filter?.matchId);
     if (!match) throw new Error('Match does not exist.');
 
-    const _playerobjs = await this.dbaService.getPlayersCache();
+    const _playerobjs = await this.dbaService.getPlayersPromise();
     const playernames = match.playerids.map((pid) => _playerobjs.get(pid.toString())?.name ?? '');
     const matchdto = await this.gameService.getMatchDTOPromise(match, {
       user: req.user,
@@ -132,7 +132,7 @@ export default class FrontendController {
   private async handleMatchChangedPromise(match: model.Match) {
     try {
       if (!this.socketIOService.connectCounter) return; // -- optimization point: just dont don't send anything if there are no clients connected
-      const playerObjs = await this.dbaService.getPlayersCache();
+      const playerObjs = await this.dbaService.getPlayersPromise();
       // -- header
       {
         const emitdata = matchToHeaderDTO(match, playerObjs);

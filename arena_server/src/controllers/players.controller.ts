@@ -9,7 +9,7 @@ import DBAService, { ObjectIdString } from '../services/dba.service';
 @Route('/api/players')
 export default class PlayersController {
   @Inject()
-  private dbaService: DBAService = Container.get(DBAService); // !!
+  private dbaService: DBAService = Container.get(DBAService);
 
   /**
    * Retrieves the details of all Players.
@@ -23,8 +23,8 @@ export default class PlayersController {
   public async getPlayers(@Request() req: any): Promise<PlayerDTO[]> {
     if (!req.user?.isAdmin) throw new APIError(401, 'Not allowed for users to query players.');
     // admin can list all users
-    const items = await this.dbaService.getPlayersPromise(true);
-    const dtos = items.map(playerToDTO);
+    const items = await this.dbaService.getPlayersPromise();
+    const dtos = Array.from(items?.values()).map(playerToDTO);
     return dtos;
   }
 
@@ -45,7 +45,7 @@ export default class PlayersController {
     // -- guard that this is available for getting own user or all by admin
     if (!req.user?.isAdmin && req.user?.username !== id) throw new APIError(403, 'Not allowed to query other users.');
 
-    const player = await this.dbaService.getPlayerByIdPromise(id, true);
+    const player = await this.dbaService.getPlayerByIdPromise(id);
     if (!player) throw new APIError(404, 'Player record not found.');
 
     const dto = playerToDTO(player);
