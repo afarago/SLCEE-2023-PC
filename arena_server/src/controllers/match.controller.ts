@@ -69,27 +69,28 @@ export default class MatchesController {
     // -- tags filter
     const filterTags = tags?.split(',');
 
-    // -- retry executing the action either until auth user is same as current user or timeout
-    // -- if doWaitForActive is false - we only retry once
-    const matches = await retry(
-      async () => {
-        // -- retry promise reading matches
-        const matches = await this.dbaService.getMatchesPromise({
-          playerId: filterPlayerId,
-          activePlayerId: filterCurrentPlayerId,
-          date: filterDate,
-          tags: filterTags,
-        });
-        return matches;
-      },
-      {
-        // -- retry config
-        timeout: apiRetryTimeoutMs,
-        delay: apiRetryDelayMs,
-        retries: doWaitForNonNull ? apiRetryMaxCount : 0,
-        until: (matches) => matches?.length > 0, // end criteria - any matches are returned
-      }
-    ).catch(() => [] as Match[]); // -- do not throw any errors, just default
+    //-- setting up async worker to retrieve the result
+    const fnWorker = async () => {
+      const matches = await this.dbaService.getMatchesPromise({
+        playerId: filterPlayerId,
+        activePlayerId: filterCurrentPlayerId,
+        date: filterDate,
+        tags: filterTags,
+      });
+      return matches;
+    };
+
+    // -- retrieve result - if doWaitForActive is false - we only retry once
+    const matches = !doWaitForNonNull
+      ? await fnWorker()
+      : await retry(fnWorker, {
+          // -- retry executing the action either until auth user is same as current user or timeout
+          // -- retry config
+          timeout: apiRetryTimeoutMs,
+          delay: apiRetryDelayMs,
+          retries: apiRetryMaxCount,
+          until: (retval) => retval?.length > 0, // end criteria - any matches are returned
+        }).catch(() => [] as Match[]); // -- do not throw any errors, just default
 
     const matchesdto = await matches.reduce(
       async (accPromise: Promise<MatchDTO[]>, match: Match): Promise<MatchDTO[]> => {
@@ -187,29 +188,27 @@ export default class MatchesController {
     const doShowEvents: boolean = parseBoolyFromString(showevents);
     const doShowDebug: boolean = parseBoolyFromString(showdebug);
 
-    // -- retry retrieving the match either until auth user is same as current user or timeout
-    // -- if doWaitForActive is false - we only retry once
     let match: Match | undefined;
-    await retry(
-      async () => {
-        // -- retry promise reading matches
-        match = await this.dbaService.getMatchByIdPromise(id);
-        // if non existing or finished - no need to wait anymore
-        if (!match || match.isFinished) throw new NotRetryableError();
-        // -- if there is no waiting, throw execption to avoid the 1000ms wait/return
-        if (!doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
-          throw new NotRetryableError();
 
-        return match;
-      },
-      {
+    //-- setting up async worker to retrieve the result
+    const fnWorker = async () => {
+      // -- retry promise reading matches
+      match = await this.dbaService.getMatchByIdPromise(id);
+      // if non existing or finished - no need to wait anymore
+      if (doWaitForActive && (!match || match?.isFinished)) throw new NotRetryableError();
+      return match;
+    };
+
+    // -- retrieve result - if doWaitForActive is false - we only retry once
+    if (!doWaitForActive) await fnWorker();
+    else
+      await retry(fnWorker, {
         // -- retry config
         timeout: apiRetryTimeoutMs,
         delay: apiRetryDelayMs,
-        retries: doWaitForActive ? apiRetryMaxCount : 0,
-        until: (retval: Match) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
-      }
-    ).catch(() => null); // -- do not throw any errors, just default
+        retries: apiRetryMaxCount,
+        until: (retval) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
+      }).catch(() => null); // -- do not throw any errors, just default
 
     // -- check if match not existing at all
     if (!match) throw new APIError(404, 'Match does not exist.');
@@ -272,30 +271,29 @@ export default class MatchesController {
     if (!data) throw new APIError(400, 'Invalid useraction input parameter.');
     const doWaitForExecution: boolean = parseBoolyFromString(wait);
 
-    // -- retry executing the action either until auth user is same as current user or timeout
-    // -- using https://www.npmjs.com/package/ts-retry-promise
     let match: Match | undefined;
-    await retry(
-      async () => {
-        // -- retrieve and hydrate objects
-        match = await this.dbaService.getMatchByIdPromise(id);
-        if (!match) throw new NotRetryableError();
-        if (match.isFinished) throw new NotRetryableError();
 
-        // -- if there is no waiting, throw execption to avoid the 1000ms wait/return
-        if (!doWaitForExecution && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
-          throw new NotRetryableError();
+    //-- setting up async worker to retrieve the result
+    const fnWorker = async () => {
+      // -- retrieve and hydrate objects
+      match = await this.dbaService.getMatchByIdPromise(id);
+      if (doWaitForExecution && !match) throw new NotRetryableError();
+      if (doWaitForExecution && match?.isFinished) throw new NotRetryableError();
+      return match;
+    };
 
-        return match;
-      },
-      {
+    // -- retrieve result - if doWaitForActive is false - we only retry once
+    if (!doWaitForExecution) await fnWorker();
+    else
+      await retry(fnWorker, {
+        // -- retry executing the action either until auth user is same as current user or timeout
+        // -- using https://www.npmjs.com/package/ts-retry-promise
         // -- retry config
         timeout: apiRetryTimeoutMs,
         delay: apiRetryDelayMs,
-        retries: doWaitForExecution ? apiRetryMaxCount : 0,
-        until: (_m) => this.gameService.IsAuthUserIsActivePlayer(_m, req.user),
-      }
-    ).catch(() => match); // -- do not throw any errors, just default
+        retries: apiRetryMaxCount,
+        until: (retval) => !!retval && this.gameService.IsAuthUserIsActivePlayer(retval, req.user), // end criteria - any matches are returned
+      }).catch(() => match); // -- do not throw any errors, just default
 
     // -- check if current user is adequate
     if (!match) throw new APIError(404, 'Match does not exist.');
