@@ -21,9 +21,12 @@ footer i.material-icons {
   padding-right: 0.3rem;
 }
 
-header i.material-icons {
+nav header i.material-icons {
   float: unset;
   vertical-align: bottom;
+}
+nav .section:not(.shown) {
+  display: none;
 }
 
 .page-footer {
@@ -120,6 +123,10 @@ header i.material-icons {
 
 #btnCreatePracticeMatch {
   right: 24px;
+}
+
+.datepicker-container {
+  color: black;
 }
 
 .cardsuit {

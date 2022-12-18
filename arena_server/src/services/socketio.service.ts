@@ -33,6 +33,13 @@ export default class SocketIOService {
         // -- request from client side to join a room
         socket.on('room', (room: string) => {
           // console.log('[room] joining', room);
+
+          //-- leaving any other rooms
+          Array.from(socket.rooms).forEach((room) => {
+            if (room !== socket.id) socket.leave(room);
+          });
+
+          //-- joining target room
           socket.join(room);
         });
 

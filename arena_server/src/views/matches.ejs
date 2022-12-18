@@ -1,11 +1,11 @@
-<% locals.header = { hasBackNav: false, text: `Matches`, icon: 'list', showPicker: true }; -%>
 <%- include('partials/layout.0top.ejs') -%>
 
 <main>
-  <a id="btnCreatePracticeMatch" 
+  <a
+    id="btnCreatePracticeMatch"
     class="col btn-floating btn-large waves-effect waves-light right green tooltipped hide"
     data-tooltip="Create a Practice Match"
-    >
+  >
     <i class="material-icons">add</i>
   </a>
   <div class="container">
@@ -23,7 +23,7 @@
         </tr>
       </thead>
       <tbody class="data"></tbody>
-      <tbody class="nodata hide">
+      <tbody class="nodata">
         <tr>
           <td colspan="10"><h6>No data to display</h6></td>
         </tr>
@@ -32,17 +32,14 @@
   </div>
 </main>
 
-<%#=== SSR initial render =================================================================================%>
-<%- `
+<%#=== SSR initial render =================================================================================%> <%- `
 <script>
   const matchesData = ${JSON.stringify(locals.matchesOnLoad)};
   const authenticated_username = ${JSON.stringify(locals?.user?.username)};
   const limit = ${locals.limit};
-  const socket_room = "${locals?.user?locals.user.username:'*'}.date_${new Date(filterDate).toJSON().split('T')[0]}";
+  let filterDate = "${new Date(filterDate).toJSON().split('T')[0]}";
 </script>
-` %>
-
-<%#=== FOOTER =================================================================================%>
+` %> <%#=== FOOTER =================================================================================%>
 <script type="text/javascript" src="../js/match_list.js"></script>
 
 <%- include('partials/layout.9bottom.ejs') %>

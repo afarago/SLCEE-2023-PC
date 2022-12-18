@@ -28,9 +28,14 @@ footer {
   }
 }
 
-header i.material-icons {
-  float: unset;
-  vertical-align: bottom;
+nav {
+  header i.material-icons {
+    float: unset;
+    vertical-align: bottom;
+  }
+  .section:not(.shown) {
+    display: none;
+  }
 }
 
 .page-footer {

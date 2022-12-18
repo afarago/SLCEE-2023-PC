@@ -79,7 +79,8 @@ app
           req.query.at,
           req.query.active,
           req.query.tags,
-          req.query.wait
+          req.query.wait,
+          req.query.condensed
         );
         return res.send(response);
       })

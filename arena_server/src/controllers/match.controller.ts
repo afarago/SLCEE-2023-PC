@@ -7,8 +7,9 @@ import { Container, Inject } from 'typedi';
 import { IUser } from '../config/passport';
 import { ErrorResponse } from '../dto/errorresponse';
 import { MatchCreateResponse } from '../dto/matchcreateresponse';
+import { MatchHeaderFullDTO } from '../dto/matchheader';
 import { MatchDTO, MatchEventDTO } from '../dto/matchresponse';
-import { APIError, BoolLikeString, eventToDTO, moveToDTO, parseBoolyFromString } from '../dto/utils';
+import { APIError, BoolLikeString, eventToDTO, matchToHeaderDTO, moveToDTO, parseBoolyFromString } from '../dto/utils';
 import Match from '../models/game/match';
 import MatchCreationParams from '../models/game/matchcreationparams';
 import { OMatchEventType } from '../models/game/matchevent';
@@ -54,12 +55,14 @@ export default class MatchesController {
     @Query() at?: string,
     @Query() active?: BoolLikeString,
     @Query() tags?: string,
-    @Query() wait?: BoolLikeString
-  ): Promise<MatchDTO[]> {
+    @Query() wait?: BoolLikeString,
+    @Query() condensed?: BoolLikeString
+  ): Promise<Array<MatchDTO | MatchHeaderFullDTO>> {
     // -- normal user is allowed to see its own matches only
     const filterPlayerId = !req.user?.isAdmin ? req.user?.username : null;
     const filterCurrentPlayerId = parseBoolyFromString(active) ? filterPlayerId : null;
     const doWaitForNonNull: boolean = parseBoolyFromString(wait);
+    const isCondensed: boolean = parseBoolyFromString(condensed);
 
     // -- set date filter if available
     let filterDate: Date;
@@ -92,20 +95,29 @@ export default class MatchesController {
           until: (retval) => retval?.length > 0, // end criteria - any matches are returned
         }).catch(() => [] as Match[]); // -- do not throw any errors, just default
 
-    const matchesdto = await matches.reduce(
-      async (accPromise: Promise<MatchDTO[]>, match: Match): Promise<MatchDTO[]> => {
+    const result = await matches.reduce(
+      async (
+        accPromise: Promise<Array<MatchDTO | MatchHeaderFullDTO>>,
+        match: Match
+      ): Promise<Array<MatchDTO | MatchHeaderFullDTO>> => {
         const acc = await accPromise;
         try {
-          const matchdto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
-          acc.push(matchdto);
+          if (!isCondensed) {
+            const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
+            acc.push(dto);
+          } else {
+            const playerObjs = await this.dbaService.getPlayersPromise();
+            const dto = matchToHeaderDTO(match, playerObjs) as MatchHeaderFullDTO;
+            acc.push(dto);
+          }
         } catch {
           // -- NOOP
         }
         return acc;
       },
-      Promise.resolve(new Array<MatchDTO>())
+      Promise.resolve(new Array<MatchDTO | MatchHeaderFullDTO>())
     );
-    return matchesdto;
+    return result;
   }
 
   /**

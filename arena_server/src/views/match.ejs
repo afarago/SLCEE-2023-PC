@@ -1,41 +1,30 @@
-<%#=== HEADER =================================================================================%>
-<% 
-  const id = matchdto._id.toString();
-  locals.header = { 
-    hasBackNav: true, 
-    text: `Match ${id.slice(-7)}`,
-    //icon: !isFinished(matchdto) ? 'play_circle_outline' : 'check_circle' 
-}; %> 
-
-<%- include('partials/layout.0top.ejs') %>
-
-<%#=== MAIN =================================================================================%>
+<%#=== HEADER =================================================================================%> <%-
+include('partials/layout.0top.ejs') %> <%#=== MAIN
+=================================================================================%>
 <main>
   <div class="container">
     <div id="matchstate" class="row"></div>
     <ul class="collapsible">
       <li>
         <div class="collapsible-header">
-          <i class="material-icons">details</i>List of moves and events <span id="sequenceId"></span>
+          <i class="material-icons">details</i>List of moves and events
+          <span class="template" data-template="sequenceid"></span>
         </div>
         <div class="collapsible-body">
-          <table id="moveslist"></table>
+          <table class="template" id="moveslist"></table>
         </div>
       </li>
     </ul>
   </div>
 </main>
 
-<%#=== SSR initial render =================================================================================%>
-<%- `
+<%#=== SSR initial render =================================================================================%> <%- `
 <script>
   let matchdto = ${JSON.stringify(matchdto)};
   const authenticated_username = ${JSON.stringify(locals?.user?.username)};
   const socket_room = "match_${matchdto._id}";
 </script>
-` %>
-
-<%#=== FOOTER =================================================================================%>
+` %> <%#=== FOOTER =================================================================================%>
 <script type="text/javascript" src="../js/match_detail.js"></script>
 
 <%-include('partials/layout.9bottom.ejs') %>

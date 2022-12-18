@@ -24,7 +24,6 @@ CONSIDER
 * do not need to store state for _all_ events associated with a move?
 * icons: ⚓💣🎁🔱🗝️🐙🗺️🧜🏼‍♀️🗡️🔮 || backup 🔫💣,🧰🎁,🔱⛏,🧚🧜🏼‍♀️    
 * discriminator on classes for serialization/deserialization
-* NO:?use git issues/tracker instead of email?
 
 ARCH:
 * separate jamstack -> FE / even serverless SSR React   | all FE
@@ -34,7 +33,7 @@ ARCH:
 * serverless => close connections
 
 SYSTEM DESIGN:
-* mongodb connection pool is teh shortcoming ~57 parallel connections
+* mongodb connection pool is the shortcoming ~57 parallel connections
 theoretical should be M0 500 parallel connections
 Your M2 cluster has three nodes with a 500 connection limit per node. Atlas reserves 10 connections per node. If you set your 
 read preference to secondary, Atlas can read from the two secondary nodes for a combined 980 connection limit.

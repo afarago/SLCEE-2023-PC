@@ -1,16 +1,27 @@
 <footer class="page-footer light-blue darken-3">
   <div class="row">
     <div class="col">
-      <a href="https://github.com/afarago/SLCEE-2023-PC-public/#readme" class="breadcrumb"><i class="material-icons"> help </i></a>
+      <a href="https://github.com/afarago/SLCEE-2023-PC-public/#readme" class="breadcrumb"
+        ><i class="material-icons"> help </i></a
+      >
       2022-2023, Attila & Csaba
     </div>
-    <div class="col right">
-      <%=
-        Array.from(new Map([["user",locals.user?.name], ["db",locals.databaseName]]).entries())
-        .filter(([key, val])=>val)
-        .map(([key, val])=>`${key}: ${val}`)
-        .join(" · ")
-        %> 
-    </div>
+    <div class="col right template" data-template="footer_info"></div>
   </div>
 </footer>
+
+<script>
+  $(() => {
+    const footer_info = Array.from(
+      new Map([
+        ['user', sessiondata?.user?.name],
+        ['db', sessiondata.dbname],
+      ]).entries()
+    )
+      .filter(([key, val]) => val)
+      .map(([key, val]) => `${key}: ${val}`)
+      .join(' · ');
+
+    $('footer .template[data-template="footer_info"]').html(footer_info);
+  });
+</script>

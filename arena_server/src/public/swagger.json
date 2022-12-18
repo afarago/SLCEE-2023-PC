@@ -565,6 +565,99 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"MatchHeaderFullDTO": {
+				"properties": {
+					"id": {
+						"$ref": "#/components/schemas/ObjectIdString"
+					},
+					"sequence": {
+						"type": "string"
+					},
+					"lastmoveat": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"finished": {
+						"type": "boolean"
+					},
+					"table": {
+						"properties": {
+							"discardpile": {
+								"$ref": "#/components/schemas/integer"
+							},
+							"drawpile": {
+								"$ref": "#/components/schemas/integer"
+							},
+							"playarea": {
+								"$ref": "#/components/schemas/integer"
+							},
+							"effect": {
+								"$ref": "#/components/schemas/CardEffectType"
+							}
+						},
+						"required": [
+							"discardpile",
+							"drawpile",
+							"playarea"
+						],
+						"type": "object"
+					},
+					"playerdata": {
+						"items": {
+							"properties": {
+								"bankvalue": {
+									"$ref": "#/components/schemas/integer"
+								},
+								"banksize": {
+									"$ref": "#/components/schemas/integer"
+								},
+								"winner": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"active": {
+									"type": "boolean",
+									"nullable": true
+								}
+							},
+							"required": [
+								"bankvalue",
+								"banksize"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"startedat": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"playernames": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"sequence",
+					"lastmoveat",
+					"finished",
+					"table",
+					"playerdata",
+					"startedat",
+					"playernames"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"BoolLikeString": {
 				"type": "string",
 				"enum": [
@@ -757,7 +850,14 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/MatchDTO"
+										"anyOf": [
+											{
+												"$ref": "#/components/schemas/MatchDTO"
+											},
+											{
+												"$ref": "#/components/schemas/MatchHeaderFullDTO"
+											}
+										]
 									},
 									"type": "array"
 								}
@@ -808,6 +908,14 @@
 						"description": "optionally waits with timeout for any resulting match - useful for polling when the user receives invite for a new match to avoid polling",
 						"in": "query",
 						"name": "wait",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"in": "query",
+						"name": "condensed",
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/BoolLikeString"

@@ -67,11 +67,8 @@ export function matchToDTO(
     delete retval.state.drawPile;
     delete retval.state.discardPile;
     delete retval.state.stateAtTurnStart;
-    // -- delete unneccessary data
-    delete retval.creationParams;
-  } else {
-    if (retval.creationParams) delete retval.creationParams.playerids;
   }
+  if (retval.creationParams) delete retval.creationParams.playerids;
 
   const dto = retval as MatchDTO;
   dto.activePlayerIndex = input.getActivePlayerIdx();

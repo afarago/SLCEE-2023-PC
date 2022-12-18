@@ -2,22 +2,22 @@
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title><%= locals.header ? locals.header.text+' - ':'' %> SLCEE-2023-PC</title>
+  <title>SLCEE-2023-PC</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/materialize.min.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nerko+One&family=Mochiy Pop One">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nerko+One&family=Mochiy Pop One" />
   <link rel="stylesheet" href="/main.css" />
   <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
 </head>
 
-<%- include('header.ejs') %>
-<%-
-`<script>
-  const sessiondata = {
-    dbname: ${JSON.stringify(locals.databaseName)},
-    user: ${JSON.stringify(locals.user?.name)}
-  }
-</script>`
-%>
+<%- include('header.ejs') %> <%- `
+<script>
+  const sessiondata = ${JSON.stringify(
+    {
+      dbname: locals.databaseName,
+      user: locals.user,
+    })};
+</script>
+` %>
