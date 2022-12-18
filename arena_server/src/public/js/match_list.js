@@ -212,13 +212,10 @@
   }
 
   function retrieveBusyDays(date, cb) {
-    if (calendarStatStart.getTime() !== date.getTime()) {
-      calendarStatStart = date;
-      $.getJSON(`/api/matches/busydays?at=${date.toDateString()}`, (data) => {
-        const dataitems = data.map((item) => new Date(item).toDateString());
-        cb(dataitems);
-      });
-    }
+    $.getJSON(`/api/matches/busydays?at=${date.toDateString()}`, (data) => {
+      const dataitems = data.map((item) => new Date(item).toDateString());
+      cb(dataitems);
+    });
   }
 
   $(() => {
@@ -240,11 +237,13 @@
       onDraw: function ($el) {
         const calendar = $el?.calendars?.[0];
         const date = new Date(calendar.year, calendar.month, 1);
-        $el.options.events = [];
-        retrieveBusyDays(date, (dataitems) => {
-          $el.options.events = dataitems;
-          $el.draw(true);
-        });
+        if (calendarStatStart.getTime() !== date.getTime()) {
+          retrieveBusyDays(date, (dataitems) => {
+            calendarStatStart = date;
+            $el.options.events = dataitems;
+            $el.draw(true);
+          });
+        }
       },
     })[0];
 
