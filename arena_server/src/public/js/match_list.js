@@ -123,12 +123,16 @@
     //-- initial render of matches based on SSR start data
     renderMatchesCSR(matchesData);
 
+    //-- create a practice match
     if (!!authenticated_username) {
       $('#btnCreatePracticeMatch').toggleClass('hide', false);
       $('#btnCreatePracticeMatch').on('click', function () {
         $.post({
           url: `/api/matches`,
-        });
+        }).then(
+          //-- set date to today
+          () => setNavDate(new Date())
+        );
       });
     }
   });
@@ -206,7 +210,7 @@
         : typeof dateOrOffset === 'number'
         ? new Date(new Date(filterDate).getTime() + dateOrOffset * 864e5)
         : new Date();
-    setFilterDate(newdate.toJSON().split('T')[0], 'replace');
+    setFilterDate(newdate.toLocaleDateString("en-CA"), 'replace');
     dateTimePicker.setDate(newdate);
     dateTimePicker.setInputValue();
   }

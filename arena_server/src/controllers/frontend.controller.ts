@@ -38,7 +38,7 @@ export default class FrontendController {
 
     let filterDate = new Date(); // -- just today
     if (filter.at) {
-      const tempdate = new Date(filter.at + 'UTC');
+      const tempdate = new Date(filter.at);
       if (!isNaN(tempdate.valueOf())) filterDate = tempdate;
     }
     const filterTags = filter.tags ? filter.tags.split(',') : undefined;
@@ -137,7 +137,7 @@ export default class FrontendController {
       {
         const emitdata = matchToHeaderDTO(match, playerObjs);
         if (emitdata) {
-          const datestr = `date_${match.startedAt.toJSON().split('T')[0]}`;
+          const datestr = `date_${match.startedAt.toLocaleDateString("en-CA")}`;
           // const userprefix = `(${match.playerids.map((pid) => pid.toString()).join('|')})`;
           // const roomstr = `\/${userprefix}\\.date_${datestr}`;
           // const emitnamespaces = new RegExp(roomstr);    // -- todo: add *.
