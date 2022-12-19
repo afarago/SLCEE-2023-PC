@@ -1024,7 +1024,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/MatchDTO"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/MatchDTO"
+										},
+										{
+											"$ref": "#/components/schemas/MatchHeaderFullDTO"
+										}
+									]
 								}
 							}
 						}
@@ -1121,6 +1128,14 @@
 					{
 						"in": "query",
 						"name": "showdebug",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"in": "query",
+						"name": "condensed",
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/BoolLikeString"
@@ -1358,7 +1373,7 @@
 						"description": ""
 					},
 					"401": {
-						"description": "Match is visible only to participating players.",
+						"description": "Not authorized to perform action.",
 						"content": {
 							"application/json": {
 								"schema": {

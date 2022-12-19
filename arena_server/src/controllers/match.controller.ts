@@ -218,7 +218,7 @@ export default class MatchesController {
       dto = matchToHeaderDTO(match, playerObjs) as MatchHeaderFullDTO;
     }
 
-    if (doWaitForActive && match.isFinished) throw new APIError(410, 'No action possible on finished matches.', result);
+    if (doWaitForActive && match.isFinished) throw new APIError(410, 'No action possible on finished matches.', dto);
     if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
       throw new APIError(409, 'Authenticated user is not the current player.');
 
