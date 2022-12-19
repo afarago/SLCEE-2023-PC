@@ -201,7 +201,7 @@ export default class MatchesController {
     const doShowDebug: boolean = parseBoolyFromString(showdebug);
 
     //-- setting up async worker to retrieve the result
-    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForActive, req.user);
+    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForActive, req.user, true);
 
     // -- construct DTO object
     const matchdto = await this.gameService.getMatchDTOPromise(match, {
@@ -259,7 +259,7 @@ export default class MatchesController {
     const doWaitForExecution: boolean = parseBoolyFromString(wait);
 
     //-- setting up async worker to retrieve the result
-    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForExecution, req.user);
+    const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForExecution, req.user, false);
 
     if (match.isFinished) {
       // -- add last move (match finished) events turnended and matchended
@@ -296,7 +296,8 @@ export default class MatchesController {
   private async getMatchWithValidationAndOptionalWait(
     id: string,
     doWaitForExecution: boolean,
-    user: IUser
+    user: IUser,
+    doAllowAdmin: boolean
   ): Promise<Match> {
     let fnWorker = async () => {
       return await this.dbaService.getMatchByIdPromise(id);
@@ -316,7 +317,7 @@ export default class MatchesController {
 
     // -- check if current user is adequate
     if (!match) throw new APIError(404, 'Match does not exist.');
-    if (!match.playerids.some((p) => p?.equals(user?.username)))
+    if (!(doAllowAdmin && user?.isAdmin) && !match.playerids.some((p) => p?.equals(user?.username)))
       throw new APIError(401, 'Match is visible only to participating players.');
     return match;
   }
@@ -331,7 +332,7 @@ export default class MatchesController {
   @Delete('{id}/terminate')
   @Tags('Game')
   @Security({ basic: [] })
-  @Response<ErrorResponse>(401, 'Match is visible only to participating players.')
+  @Response<ErrorResponse>(401, 'Not authorized to perform action.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
   @SuccessResponse(200)
   public async deleteMatch(
@@ -339,7 +340,7 @@ export default class MatchesController {
     @Path() id: ObjectIdString,
     @Body() params: { winnerId: ObjectIdString; comment?: string }
   ): Promise<void> {
-    if (!req.user?.isAdmin) throw new APIError(401, 'Unauthorized.');
+    if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
     const match = await this.dbaService.getMatchByIdPromise(id);
     if (!match) throw new APIError(404, 'Match does not exist.');
 
