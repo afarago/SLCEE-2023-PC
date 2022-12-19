@@ -128,7 +128,8 @@ app
           req.params.id,
           req.query.waitactive,
           req.query.showevents,
-          req.query.showdebug
+          req.query.showdebug,
+          req.query.condensed
         );
         return res.send(response);
       })

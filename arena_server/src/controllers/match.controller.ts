@@ -194,28 +194,35 @@ export default class MatchesController {
     @Path() id: ObjectIdString,
     @Query() waitactive?: BoolLikeString,
     @Query() showevents?: BoolLikeString,
-    @Query() showdebug?: BoolLikeString
-  ): Promise<MatchDTO> {
+    @Query() showdebug?: BoolLikeString,
+    @Query() condensed?: BoolLikeString
+  ): Promise<MatchDTO | MatchHeaderFullDTO> {
     const doWaitForActive: boolean = parseBoolyFromString(waitactive);
     const doShowEvents: boolean = parseBoolyFromString(showevents);
     const doShowDebug: boolean = parseBoolyFromString(showdebug);
+    const isCondensed: boolean = parseBoolyFromString(condensed);
 
     //-- setting up async worker to retrieve the result
     const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForActive, req.user, true);
 
     // -- construct DTO object
-    const matchdto = await this.gameService.getMatchDTOPromise(match, {
-      user: req.user,
-      doReturnAllMoves: doShowEvents,
-      doAddDebug: doShowDebug,
-    });
+    let dto = null;
+    if (!isCondensed) {
+      dto = await this.gameService.getMatchDTOPromise(match, {
+        user: req.user,
+        doReturnAllMoves: doShowEvents,
+        doAddDebug: doShowDebug,
+      });
+    } else {
+      const playerObjs = await this.dbaService.getPlayersPromise();
+      dto = matchToHeaderDTO(match, playerObjs) as MatchHeaderFullDTO;
+    }
 
-    if (doWaitForActive && match.isFinished)
-      throw new APIError(410, 'No action possible on finished matches.', matchdto);
+    if (doWaitForActive && match.isFinished) throw new APIError(410, 'No action possible on finished matches.', result);
     if (doWaitForActive && !this.gameService.IsAuthUserIsActivePlayer(match, req.user))
       throw new APIError(409, 'Authenticated user is not the current player.');
 
-    return matchdto;
+    return dto;
   }
 
   /**
