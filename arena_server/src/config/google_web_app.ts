@@ -10,7 +10,7 @@ export const register = (app: express.Application) => {
     const dbService = Container.get(DbService);
     const dbaService = Container.get(DBAService);
     dbService.ensureConnected();
-    //-- this will fill up the cache
+    // -- this will fill up the cache
     await dbaService.getPlayersPromise();
     res.sendStatus(200);
   });

@@ -15,13 +15,13 @@ export default class SocketIOService {
     const httpServer = createServer(app);
     this.io = new IOServer(httpServer);
 
-    //-- add passport auth optionally - yet socket.request contains request
-    //this.io.use((socket, next) => authenticateOptionally(socket.request, null, next));
+    // -- add passport auth optionally - yet socket.request contains request
+    // this.io.use((socket, next) => authenticateOptionally(socket.request, null, next));
 
-    //NOTE: later could rework onto using selective namespaces instead of rooms
-    //NOTE: later check if user registers to the correct room
+    // NOTE: later could rework onto using selective namespaces instead of rooms
+    // NOTE: later check if user registers to the correct room
     this.io
-      //.of(/^\/.+$/)
+      // .of(/^\/.+$/)
       .on('connection', (socket: any) => {
         this.connectCounter++;
         // console.log('connected');
@@ -34,12 +34,12 @@ export default class SocketIOService {
         socket.on('room', (room: string) => {
           // console.log('[room] joining', room);
 
-          //-- leaving any other rooms
+          // -- leaving any other rooms
           Array.from(socket.rooms).forEach((room) => {
             if (room !== socket.id) socket.leave(room);
           });
 
-          //-- joining target room
+          // -- joining target room
           socket.join(room);
         });
 

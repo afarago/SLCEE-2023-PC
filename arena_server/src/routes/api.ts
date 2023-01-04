@@ -219,12 +219,12 @@ app.use(function errorHandler(err: any, req: any, res: any, next: any) {
 
   const status = err.statusCode || 400;
 
-  //-- API error returns either message or data payload
+  // -- API error returns either message or data payload
   if (err instanceof APIError && err.data) {
     return res.status(status).json(err.data);
   }
 
-  //-- other types can return message
+  // -- other types can return message
   if (err.message) {
     res.status(status).json({ error: err.message });
   } else res.sendStatus(status);

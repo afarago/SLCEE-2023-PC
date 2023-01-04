@@ -23,7 +23,7 @@ import GameService from '../services/game.service';
 dotenv.config();
 const apiRetryTimeoutMs = Number(process.env.API_RETRY_TIMEOUT_MS) || 30 * 1000; // wait for 30 sec max //LATER add to dotenv config
 const apiRetryDelayMs = Number(process.env.API_RETRY_DELAY_MS) || 1000; // retry every 1000 ms
-//const apiRetryMaxCount = 1000; // set a meaningful, yet high retry number (above the default 10)
+// const apiRetryMaxCount = 1000; // set a meaningful, yet high retry number (above the default 10)
 const apiRetryMaxCount = Math.floor(apiRetryTimeoutMs / apiRetryDelayMs) + 1;
 
 @Route('/api/matches')
@@ -58,7 +58,7 @@ export default class MatchesController {
     @Query() tags?: string,
     @Query() wait?: BoolLikeString,
     @Query() condensed?: BoolLikeString
-  ): Promise<Array<MatchDTO | MatchHeaderFullDTO>> {
+  ): Promise<(MatchDTO | MatchHeaderFullDTO)[]> {
     // -- normal user is allowed to see its own matches only
     const filterPlayerId = !req.user?.isAdmin ? req.user?.username : null;
     const filterCurrentPlayerId = parseBoolyFromString(active) ? filterPlayerId : null;
@@ -75,7 +75,7 @@ export default class MatchesController {
     // -- tags filter
     const filterTags = tags?.split(',');
 
-    //-- setting up async worker to retrieve the result
+    // -- setting up async worker to retrieve the result
     const fnWorker = async () => {
       const matches = await this.dbaService.getMatchesPromise({
         playerId: filterPlayerId,
@@ -98,9 +98,9 @@ export default class MatchesController {
 
     const result = await matches.reduce(
       async (
-        accPromise: Promise<Array<MatchDTO | MatchHeaderFullDTO>>,
+        accPromise: Promise<(MatchDTO | MatchHeaderFullDTO)[]>,
         match: Match
-      ): Promise<Array<MatchDTO | MatchHeaderFullDTO>> => {
+      ): Promise<(MatchDTO | MatchHeaderFullDTO)[]> => {
         const acc = await accPromise;
         try {
           if (!isCondensed) {
@@ -203,7 +203,7 @@ export default class MatchesController {
     const doShowDebug: boolean = parseBoolyFromString(showdebug);
     const isCondensed: boolean = parseBoolyFromString(condensed);
 
-    //-- setting up async worker to retrieve the result
+    // -- setting up async worker to retrieve the result
     const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForActive, req.user, true);
 
     // -- construct DTO object
@@ -215,7 +215,7 @@ export default class MatchesController {
         user: req.user,
         doReturnAllMoves: doShowEvents,
         doAddDebug: doShowDebug,
-        playerNames: playerNames,
+        playerNames,
       });
     } else {
       const playerObjs = await this.dbaService.getPlayersPromise();
@@ -269,7 +269,7 @@ export default class MatchesController {
     if (!data) throw new APIError(400, 'Invalid useraction input parameter.');
     const doWaitForExecution: boolean = parseBoolyFromString(wait);
 
-    //-- setting up async worker to retrieve the result
+    // -- setting up async worker to retrieve the result
     const match = await this.getMatchWithValidationAndOptionalWait(id, doWaitForExecution, req.user, false);
 
     if (match.isFinished) {
@@ -310,11 +310,11 @@ export default class MatchesController {
     user: IUser,
     doAllowAdmin: boolean
   ): Promise<Match> {
-    let fnWorker = async () => {
+    const fnWorker = async () => {
       return await this.dbaService.getMatchByIdPromise(id);
     };
 
-    //TODO: improvement potential -- use the watch stream to avoid the polling
+    // TODO: improvement potential -- use the watch stream to avoid the polling
 
     // -- retrieve result - if doWaitForActive is false - we only retry once
     const match: Match | undefined = !doWaitForExecution
@@ -371,7 +371,7 @@ export default class MatchesController {
   @Tags('GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(401, 'Not authorized to perform action.')
-  public async watchDogMatches(@Request() req: any, @Query() tags?: string): Promise<Array<MatchDTO>> {
+  public async watchDogMatches(@Request() req: any, @Query() tags?: string): Promise<MatchDTO[]> {
     if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
 
     // -- tags filter
@@ -384,11 +384,11 @@ export default class MatchesController {
       tags: filterTags,
     });
 
-    //-- iterate through (w error handling) all matches where timeout is due
-    const results: Array<MatchDTO> = [];
+    // -- iterate through (w error handling) all matches where timeout is due
+    const results: MatchDTO[] = [];
     for (const match of matches) {
       try {
-        //-- terminate match on watchdog, with default timeout comment
+        // -- terminate match on watchdog, with default timeout comment
         const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
         await executor.actionDeleteMatchPromise(undefined, undefined);
 

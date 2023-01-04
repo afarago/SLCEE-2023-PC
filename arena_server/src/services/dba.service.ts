@@ -155,7 +155,7 @@ export default class DBAService {
     //   const result = Player.constructFromObject(dbitem);
     //   return result;
     // } else {
-    //-- return from the cache
+    // -- return from the cache
     const playerCache = await this.getPlayersCachePromise();
     return playerCache.get(id);
     // }
@@ -166,7 +166,7 @@ export default class DBAService {
    * @param ids
    * @returns players by ids promise
    */
-  async getPlayerByIdsPromise(ids: ObjectIdString[]): Promise<Array<Player>> {
+  async getPlayerByIdsPromise(ids: ObjectIdString[]): Promise<Player[]> {
     // if (!doAllowCachedResponse) {
     //   const oids = ids?.map((id) => new ObjectId(id));
     //   await this.dbService.ensureConnected();
@@ -182,14 +182,14 @@ export default class DBAService {
 
     //   return result;
     // } else {
-    //-- return from the cache
+    // -- return from the cache
     const playerCache = await this.getPlayersCachePromise();
     return ids?.map((pid) => {
       const pobj = playerCache.get(pid);
       if (!pobj) throw new Error(`Player ${pid} is not valid.`);
       return pobj;
     });
-    //}
+    // }
   }
 
   /**
@@ -213,8 +213,8 @@ export default class DBAService {
         }, new Array<Player>()) ?? [];
       return results?.reduce((prev, current) => prev.set(current._id.toString(), current), new Map<string, Player>());
     } else {
-      //-- return from the cache
-      return this.playersCache; //-- avoid im-possible circular loop await this.getPlayersCachePromise();
+      // -- return from the cache
+      return this.playersCache; // -- avoid im-possible circular loop await this.getPlayersCachePromise();
     }
   }
 

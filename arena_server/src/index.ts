@@ -28,7 +28,7 @@ const app = express();
 // -- use passport for authentication
 app.use(passport.initialize());
 
-//-- use ddos speed limiter
+// -- use ddos speed limiter
 app.use(ddosLimiter);
 
 // Configure Express to parse incoming JSON data

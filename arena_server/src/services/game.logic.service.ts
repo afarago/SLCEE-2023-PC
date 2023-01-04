@@ -205,23 +205,23 @@ export default class GameLogicService {
 
     let winnerIdx: number | null;
     if (winnerId !== undefined) {
-      //-- if winner id is explicitely stated
+      // -- if winner id is explicitely stated
       if (winnerId !== null) {
-        //-- determine winner idx from id
+        // -- determine winner idx from id
         winnerIdx = this.match.playerids.findIndex((pobj) => pobj.toString() === winnerId.toString());
         if (winnerIdx < 0) winnerIdx = null;
       } else {
         winnerIdx = null;
       }
     } else {
-      //-- if winner id is not explicitely stated - winner will be the one not active - as active should have mad a move in time
+      // -- if winner id is not explicitely stated - winner will be the one not active - as active should have mad a move in time
       const activePlayerIdx = this.match.getActivePlayerIdx();
       assert(activePlayerIdx !== null);
 
-      //-- winner is "next" player
+      // -- winner is "next" player
       winnerIdx = (activePlayerIdx + 1) % this.match.playerids.length;
 
-      //-- set comment
+      // -- set comment
       const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
       comment = `Forceful termination due to player ${this.match.getActivePlayerId()} inactivity after ${elapsedSec} seconds.`;
     }

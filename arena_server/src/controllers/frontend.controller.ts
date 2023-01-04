@@ -158,8 +158,8 @@ export default class FrontendController {
             user3:  join room user3.match_424242 --> deliver
           */
 
-          //-- emit message in generic room : *.date_ and all players' rooms player1.date_ and player2.date_
-          let emitrooms = ['*']
+          // -- emit message in generic room : *.date_ and all players' rooms player1.date_ and player2.date_
+          const emitrooms = ['*']
             .concat(match.playerids.map((pid) => pid.toString()))
             .filter((val, idx, arr) => arr.findIndex((val2) => val === val2) == idx) // -- unique
             .map((pid) => `${pid.toString()}.${datestr}`);
