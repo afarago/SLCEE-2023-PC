@@ -46,8 +46,7 @@
         //--- date
         `<td class="hide-on-large-and-down" colspan="${match.tags ? 1 : 2}">
             <span class="hide-on-med-and-down grey-text adjustedspan">
-              ${new Date(match.startedat).toLocaleTimeString('hu')} - 
-              <span>${new Date(match.lastmoveat).toLocaleTimeString('hu')}</span>
+              ${new Date(match.lastmoveat).toLocaleTimeString('hu')}
             </span>
           </td>` +
         //--- tags

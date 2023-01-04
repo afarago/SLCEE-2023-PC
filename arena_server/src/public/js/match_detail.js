@@ -78,7 +78,7 @@ function renderPlayArea(matchdto) {
         <div>
           ${
             !!cardsRendered
-              ? `<span>${cardsRendered}<span>`
+              ? `<span>${cardsRendered}</span>`
               : '<span class=empty_placeholder>(no cards on the table)</span>'
           }
           ${
@@ -92,7 +92,7 @@ function renderPlayArea(matchdto) {
       </div>`;
 }
 function renderDrawPile(matchdto) {
-  drawpile_color = isFinished(matchdto) ? 'white grey-text' : 'grey';
+  const drawpile_color = isFinished(matchdto) ? 'white grey-text' : 'grey';
   return `
       <h6 class="drawpile statusbox ${drawpile_color} lighten-4">Draw · 
         <span class='playcards back cardvalue'>${matchdto.drawPileSize}</span>
