@@ -6,7 +6,7 @@ const ddosLimiter = slowDown({
   delayAfter: 1000,
   delayMs: 100,
   maxDelayMs: 10 * 1000,
-  keyGenerator: function (req /*, res*/) {
+  keyGenerator: function (req: any /*, res*/) {
     return req.ip;
   },
 });
