@@ -8,12 +8,11 @@ import swaggerUi from 'swagger-ui-express';
 import { Container } from 'typedi';
 import * as util from 'util';
 
+import * as googleWebApp from './config/google_web_app';
+import { ddosLimiter } from './config/limiter';
 import Logger from './config/logger';
 import api from './routes/api';
 import frontend from './routes/frontend';
-import DbService from './services/db.service';
-import DBAService from './services/dba.service';
-import * as googleWebApp from './config/google_web_app';
 import SocketIOService from './services/socketio.service';
 
 // initialize configuration
@@ -29,9 +28,12 @@ const app = express();
 // -- use passport for authentication
 app.use(passport.initialize());
 
-// // Configure Express to parse incoming JSON data
-// // strict:Enables or disables only accepting arrays and objects; when disabled will accept anything JSON.parse accepts.
-// // reviver: The reviver option is passed directly to JSON.parse as the second argument. You can find more information on this argument in the MDN documentation about JSON.parse.
+//-- use ddos speed limiter
+app.use(ddosLimiter);
+
+// Configure Express to parse incoming JSON data
+// strict:Enables or disables only accepting arrays and objects; when disabled will accept anything JSON.parse accepts.
+// reviver: The reviver option is passed directly to JSON.parse as the second argument. You can find more information on this argument in the MDN documentation about JSON.parse.
 // app.use(express.json());
 
 /// GCLOUD: App Engine terminates HTTPS connections at the load balancer and forwards requests to your application.

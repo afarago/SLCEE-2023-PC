@@ -45,6 +45,8 @@ export default class DBAService {
       count: number;
     };
     sortAscending?: boolean;
+    checkNotFinished?: boolean;
+    checkTimeoutExpired?: boolean;
   }): Promise<Match[]> {
     let filterOption = {
       ...(options?.playerId
@@ -65,6 +67,28 @@ export default class DBAService {
       ...(options?.limit?.startId
         ? {
             _id: { $gt: new ObjectId(options.limit.startId) },
+          }
+        : {}),
+      ...(options?.checkNotFinished
+        ? {
+            currentPlayerIndex: { $ne: null },
+          }
+        : {}),
+      ...(options?.checkTimeoutExpired
+        ? {
+            'creationParams.timeout': { $exists: true },
+            $expr: {
+              $lt: [
+                '$lastMoveAt',
+                {
+                  $dateSubtract: {
+                    startDate: '$$NOW',
+                    unit: 'second',
+                    amount: '$creationParams.timeout',
+                  },
+                },
+              ],
+            },
           }
         : {}),
     };

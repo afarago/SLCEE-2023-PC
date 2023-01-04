@@ -1,6 +1,6 @@
 === TODOs ===
 P1
-* n/a
+* consolidate API /matches, /matches/{matchid} - visibility
 
 P2
 * socket.io -- later could rework onto using selective namespaces instead of rooms

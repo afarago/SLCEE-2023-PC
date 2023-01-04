@@ -14,7 +14,7 @@ export default class PlayersController {
   /**
    * Retrieves the details of all Players.
    * Players can retrieve only own information and details
-   * @summary Retrieves Player information
+   * @summary Retrieves player information
    */
   @Get('/')
   @Tags('Players')
@@ -32,7 +32,7 @@ export default class PlayersController {
    * Retrieves the details of an existing Player.
    * Supply the unique Player ID and receive corresponding Player details.
    * Players can retrieve only own information and details
-   * @summary Retrieves a Player details
+   * @summary Retrieves player details
    * @param id The requested Player Id
    * @returns Player details
    */

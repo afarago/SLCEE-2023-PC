@@ -1,7 +1,8 @@
 import express from 'express';
 import { ValidateError } from 'tsoa';
-
 import * as util from 'util';
+
+import { authedLimiter } from '../config/limiter';
 import Logger from '../config/logger';
 import { authenticate, authenticateOptionally, ensureAdmin } from '../config/passport';
 import FrontendController from '../controllers/frontend.controller';
@@ -10,7 +11,7 @@ import MatchesController from '../controllers/match.controller';
 import PlayersController from '../controllers/players.controller';
 import SessionInfoController from '../controllers/sessioninfo.controller';
 import WhoAmIController from '../controllers/whoami.controller';
-import { BaseError, APIError } from '../dto/utils';
+import { APIError, BaseError } from '../dto/utils';
 import { fnSetMapSerializer } from '../utils/json.utils';
 
 const app = express();
@@ -45,7 +46,7 @@ app.route('/api/hello').get(async (req, res, next) => {
 });
 
 // -- WhoAmI endpoint handler: for any auth user
-app.route('/api/whoami').get(authenticate, async (req, res, next) => {
+app.route('/api/whoami').get(authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new WhoAmIController();
@@ -56,7 +57,7 @@ app.route('/api/whoami').get(authenticate, async (req, res, next) => {
 });
 
 // -- SessionInfo endpoint handler
-app.route('/api/sessioninfo').get(authenticateOptionally, async (req, res, next) => {
+app.route('/api/sessioninfo').get(authenticateOptionally, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new SessionInfoController();
@@ -70,17 +71,17 @@ app.route('/api/sessioninfo').get(authenticateOptionally, async (req, res, next)
 app
   .route('/api/matches')
   // -- Retrieve list of Match handler: for admins show all, for players show only matches with involvement
-  .get(authenticate, async (req: any, res, next) => {
+  .get(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
         const response = await controller.getMatches(
           req,
-          req.query.at,
-          req.query.active,
-          req.query.tags,
-          req.query.wait,
-          req.query.condensed
+          req.query.at as any,
+          req.query.active as any,
+          req.query.tags as any,
+          req.query.wait as any,
+          req.query.condensed as any
         );
         return res.send(response);
       })
@@ -88,7 +89,7 @@ app
   })
 
   // -- Create new Match handler: for both users (when this user is in the list of users) and admins
-  .post(authenticate, async (req: any, res, next) => {
+  .post(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
@@ -100,11 +101,11 @@ app
   });
 
 // TODO: DEVELOPMENT IN PROGRESS temp route for calendar statistics
-app.route('/api/matches/busydays').get(authenticateOptionally, async (req: any, res, next) => {
+app.route('/api/matches/busydays').get(authenticateOptionally, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();
-      const response = await controller.getMatchStatisticsBusyDays(req, req.query.at);
+      const response = await controller.getMatchStatisticsBusyDays(req, req.query.at as any);
       return res.send(response);
     })
     .catch(next); // Errors will be passed to Express.
@@ -114,22 +115,36 @@ app.route('/api/matches/busydays').get(authenticateOptionally, async (req: any, 
 // Csaba: tournament stats: tag+(?date)=>[winnerid,scores]
 // calendar picker: filterset(tags,date+-range,(user)) => day/count
 
+// -- matches/watchdog endpoint
+app
+  .route('/api/matches/watchdog')
+  // -- Delete a Match forcefully: for admin only
+  .post(authenticate, ensureAdmin, async (req, res, next) => {
+    Promise.resolve()
+      .then(async () => {
+        const controller = new MatchesController();
+        const response = await controller.watchDogMatches(req, req.query.tags as any);
+        return res.send(response);
+      })
+      .catch(next); // Errors will be passed to Express.
+  });
+
 // -- Matches/{id} endpoint
 app
   .route('/api/matches/:id')
 
   // -- Retrieve basic info about Match: for admins and participating players only
-  .get(authenticate, async (req: any, res, next) => {
+  .get(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
         const response = await controller.getMatch(
           req,
           req.params.id,
-          req.query.waitactive,
-          req.query.showevents,
-          req.query.showdebug,
-          req.query.condensed
+          req.query.waitactive as any,
+          req.query.showevents as any,
+          req.query.showdebug as any,
+          req.query.condensed as any
         );
         return res.send(response);
       })
@@ -137,11 +152,11 @@ app
   })
 
   // -- Execute action for Match: for participating players only
-  .post(authenticate, async (req: any, res, next) => {
+  .post(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
-        const response = await controller.executeActionForMatch(req, req.params.id, req.body, req.query.wait);
+        const response = await controller.executeActionForMatch(req, req.params.id, req.body, req.query.wait as any);
         return res.send(response);
       })
       .catch(next); // Errors will be passed to Express.
@@ -151,7 +166,7 @@ app
 app
   .route('/api/matches/:id/terminate')
   // -- Delete a Match forcefully: for admin only
-  .delete(authenticate, ensureAdmin, async (req: any, res, next) => {
+  .delete(authenticate, ensureAdmin, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
@@ -165,7 +180,7 @@ app
 app
   .route('/api/players')
   // -- Retrieve all players: for admin only
-  .get(authenticate, ensureAdmin, async (req: any, res: any, next: any) => {
+  .get(authenticate, ensureAdmin, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new PlayersController();
@@ -179,7 +194,7 @@ app
 app
   .route('/api/players/:id')
   // -- Retrieve player by id action for Match: for admin (about any player) and players (about itself)
-  .get(authenticate, async (req: any, res, next) => {
+  .get(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new PlayersController();

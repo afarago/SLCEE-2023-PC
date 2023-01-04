@@ -29,7 +29,11 @@
       },
       {
         "name": "Game",
-        "description": "Game relaeted operations to create/query a match or execute a user action"
+        "description": "Game related operations to create/query a match or execute a user action"
+      },
+      {
+        "name": "GameAdmin",
+        "description": "Game related operations to create/query/terminate a match"
       },
       {
         "name": "Player",

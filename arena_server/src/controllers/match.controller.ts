@@ -4,6 +4,7 @@ import { isTooManyTries, retryAsync } from 'ts-retry';
 import { Body, Delete, Get, Path, Post, Query, Request, Response, Route, Security, SuccessResponse, Tags } from 'tsoa';
 import { Container, Inject } from 'typedi';
 
+import Logger from '../config/logger';
 import { IUser } from '../config/passport';
 import { ErrorResponse } from '../dto/errorresponse';
 import { MatchCreateResponse } from '../dto/matchcreateresponse';
@@ -48,7 +49,7 @@ export default class MatchesController {
    * @example wait 1
    */
   @Get('/')
-  @Tags('Game')
+  @Tags('Game', 'GameAdmin')
   @Security({ basic: [] })
   public async getMatches(
     @Request() req: any,
@@ -129,7 +130,7 @@ export default class MatchesController {
    * @example params { "drawPile": [ ["Oracle", 4], ["Anchor", 4], ["Mermaid", 5] ], "discardPile":[ ["Mermaid", 2], ["Hook", 2] ] }
    */
   @Post('/')
-  @Tags('Game')
+  @Tags('Game', 'GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(400, 'Missing players from input parameters.')
   @Response<ErrorResponse>(
@@ -182,7 +183,7 @@ export default class MatchesController {
    * @returns Match details, with al details when requesting a 'practice' Match
    */
   @Get('{id}')
-  @Tags('Game')
+  @Tags('Game', 'GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(401, 'Match is visible to participating players only.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
@@ -208,10 +209,13 @@ export default class MatchesController {
     // -- construct DTO object
     let dto = null;
     if (!isCondensed) {
+      const playerObjs = await this.dbaService.getPlayersPromise();
+      const playerNames = match.playerids.map((pid) => playerObjs.get(pid.toString())?.name ?? '');
       dto = await this.gameService.getMatchDTOPromise(match, {
         user: req.user,
         doReturnAllMoves: doShowEvents,
         doAddDebug: doShowDebug,
+        playerNames: playerNames,
       });
     } else {
       const playerObjs = await this.dbaService.getPlayersPromise();
@@ -330,14 +334,14 @@ export default class MatchesController {
   }
 
   /**
-   * Forceful deletion of a match by Admin, on a timeout
-   * @summary Forceful central deletion of a Match on a timeout
+   * Forceful central deletion of a Match
+   * @summary Forceful central deletion of a Match
    * @param id game id
    * @param winnerId winning player Id
    * @param [comment] termination comment
    */
   @Delete('{id}/terminate')
-  @Tags('Game')
+  @Tags('GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(401, 'Not authorized to perform action.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
@@ -355,5 +359,46 @@ export default class MatchesController {
     await executor.actionDeleteMatchPromise(new ObjectId(params.winnerId), params.comment);
 
     return;
+  }
+
+  /**
+   * Forceful central deletion of a match using a watchdog on timeout
+   * @summary Forceful central deletion of a match using a watchdog on timeout
+   * @param [tags] optional filter matches with matching tag/comma separated list of tags
+   * @returns
+   */
+  @Post('watchdog')
+  @Tags('GameAdmin')
+  @Security({ basic: [] })
+  @Response<ErrorResponse>(401, 'Not authorized to perform action.')
+  public async watchDogMatches(@Request() req: any, @Query() tags?: string): Promise<Array<MatchDTO>> {
+    if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
+
+    // -- tags filter
+    const filterTags = tags?.split(',');
+
+    // -- retrieve matches
+    const matches = await this.dbaService.getMatchesPromise({
+      checkNotFinished: true,
+      checkTimeoutExpired: true,
+      tags: filterTags,
+    });
+
+    //-- iterate through (w error handling) all matches where timeout is due
+    const results: Array<MatchDTO> = [];
+    for (const match of matches) {
+      try {
+        //-- terminate match on watchdog, with default timeout comment
+        const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
+        await executor.actionDeleteMatchPromise(undefined, undefined);
+
+        const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
+        results.push(dto);
+      } catch (ex) {
+        Logger.info(`Error deleting match [${match?._id}] ${ex.message ?? ex}`);
+      }
+    }
+
+    return results;
   }
 }

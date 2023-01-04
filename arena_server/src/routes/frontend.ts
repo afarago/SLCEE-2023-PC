@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 
+import { authedLimiter } from '../config/limiter';
 import Logger from '../config/logger';
 import { authenticate, authenticateOptionally } from '../config/passport';
 import FrontendController from '../controllers/frontend.controller';
@@ -17,7 +18,7 @@ app.get('/', (req: any, res) => {
   res.redirect('/matches');
 });
 
-app.get('/login', authenticate, async (req: any, res, next) => {
+app.get('/login', authenticate, authedLimiter, async (req, res, next) => {
   return res.redirect(req?.headers?.referer ?? '/matches');
 });
 
@@ -26,16 +27,16 @@ app.get('/logout', async (req: any, res, next) => {
   // return res.status(401).location('/matches').end();
 });
 
-app.get('/matches', authenticateOptionally, async (req: any, res, next) => {
+app.get('/matches', authenticateOptionally, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();
-      await controller.getMatches(req, { at: req.query.at, tags: req.query.tags }, res);
+      await controller.getMatches(req, { at: req.query.at as any, tags: req.query.tags as any }, res);
     })
     .catch(next); // Errors will be passed to Express.
 });
 
-app.get('/matches/:matchId', authenticateOptionally, async (req: any, res, next) => {
+app.get('/matches/:matchId', authenticateOptionally, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();

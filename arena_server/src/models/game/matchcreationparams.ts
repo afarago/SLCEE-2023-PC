@@ -1,6 +1,7 @@
 import { ObjectIdString } from '../../services/dba.service';
 import { Hydrate } from '../../utils/hydration.util';
 import Card from './card';
+import { integer } from './model';
 
 type MatchCreationParamsKeys = keyof MatchCreationParams;
 /**
@@ -18,6 +19,7 @@ export default class MatchCreationParams {
       Hydrate.convertFrom(data, 'discardPile', [Card], obj);
       Hydrate.convertFrom(data, 'banks', [[Card]], obj); // -- important not Bank, rarher a simplified format
       Hydrate.convertFrom(data, 'randomSeed', 'String', obj);
+      Hydrate.convertFrom(data, 'timeout', 'Number', obj);
     }
     return obj;
   }
@@ -61,4 +63,8 @@ export default class MatchCreationParams {
    * @example "norandom"
    */
   randomSeed?: string;
+  /**
+   * Timeout - number of seconds after the match is considered stale and may be terminated
+   */
+  timeout?: integer;
 }

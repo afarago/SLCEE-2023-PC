@@ -63,7 +63,7 @@ export default class GameLogicService {
    * Persists move and match
    */
   private async persistMoveAndMatchPromise(isNewMatch: boolean = false) {
-    assert(this.match && this.match.move);
+    assert(this.match && this.match.move && this.match.state);
 
     const originalMoveAt = this.match.lastMoveAt; // -- this will be the checkpoint to guard potential concurrent writes
 
@@ -71,7 +71,7 @@ export default class GameLogicService {
     this.match.lastMoveAt = this.match.move.at = new Date();
 
     // -- this is to persist the player in the header as well, might be null after matchEnd
-    const currentPlayerIndex = this.match.currentPlayerIndex;
+    const currentPlayerIndex = this.match.state.currentPlayerIndex;
     this.match.currentPlayerIndex = currentPlayerIndex;
     this.match.activePlayerIdCached = this.match.getActivePlayerId();
     this.match.stateCache = this.match.move?.state;
@@ -171,7 +171,6 @@ export default class GameLogicService {
         this.match.state
       );
 
-      // this.match.state.currentPlayerIndex = undefined;
       this.match.state.banks = initialBanks;
       this.match.state.playArea = initialPlayArea;
       this.match.state.discardPile = initialDiscardPile;
@@ -198,22 +197,61 @@ export default class GameLogicService {
    * @param winnerId winning player Id
    * @param [comment] termination comment
    */
-  public async actionDeleteMatchPromise(winnerId: model.PlayerId, comment?: string) {
+  public async actionDeleteMatchPromise(winnerId?: model.PlayerId | null, comment?: string) {
     assert(this.match);
 
     // -- Guard: check not finished match
     if (this.match.isFinished) throw new GameError('No action possible on finished matches.');
 
-    // -- Guard: player id is valid
-    if (!this.match.playerids.some((playerId) => playerId.toString() === winnerId.toString()))
-      throw new GameError('Winning player must not be null and must be one of the players.');
+    let winnerIdx: number | null;
+    if (winnerId !== undefined) {
+      //-- if winner id is explicitely stated
+      if (winnerId !== null) {
+        //-- determine winner idx from id
+        winnerIdx = this.match.playerids.findIndex((pobj) => pobj.toString() === winnerId.toString());
+        if (winnerIdx < 0) winnerIdx = null;
+      } else {
+        winnerIdx = null;
+      }
+    } else {
+      //-- if winner id is not explicitely stated - winner will be the one not active - as active should have mad a move in time
+      const activePlayerIdx = this.match.getActivePlayerIdx();
+      assert(activePlayerIdx !== null);
+
+      //-- winner is "next" player
+      winnerIdx = (activePlayerIdx + 1) % this.match.playerids.length;
+
+      //-- set comment
+      const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
+      comment = `Forceful termination due to player ${this.match.getActivePlayerId()} inactivity after ${elapsedSec} seconds.`;
+    }
+    this.log(`Terminate ${comment}`);
 
     // -- new move
     this.match.move = this.newMove();
-    this.matchEnding(true, winnerId, comment);
+    this.matchEnding(true, winnerIdx, comment);
 
     // -- persist to db
     await this.persistMoveAndMatchPromise();
+  }
+
+  /**
+   * Check if match needs to be tarminated due to timeout
+   * @returns true if termination happened
+   */
+  private checkTimeoutAndAutoTerminate() {
+    assert(this.match);
+
+    const timeout = this.match.creationParams?.timeout;
+    if (timeout) {
+      const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
+      if (elapsedSec > timeout) {
+        this.actionDeleteMatchPromise(undefined, undefined);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -330,7 +368,9 @@ export default class GameLogicService {
       // -- process effects with empty choice without user roundtrip - "autopick" user input
       const autopickedResponse = new model.CardEffectResponse(pendingEffect.effectType, null);
 
-      this.logDebug(`>AutoPicking the pending ${pendingEffect.effectType} effect in response to User action ${data.etype}`);
+      this.logDebug(
+        `>AutoPicking the pending ${pendingEffect.effectType} effect in response to User action ${data.etype}`
+      );
       this.respondToEffectLogic(autopickedResponse, pendingEffect, true);
       pendingEffect = this.match.state?.pendingEffect;
       // -- pending effect is already removed, and if none added, we will exit the loop
@@ -724,7 +764,7 @@ export default class GameLogicService {
    * Match ending event
    * @returns void promise
    */
-  public async matchEnding(isTerminated?: boolean, forcedWinnerId?: model.PlayerId, comment?: string): Promise<void> {
+  public async matchEnding(isTerminated?: boolean, forcedWinnerIdx?: number | null, comment?: string): Promise<void> {
     assert(this.match && this.match.state);
     this.logDebug('MATCH_ENDING');
 
@@ -741,15 +781,14 @@ export default class GameLogicService {
 
     // -- determine winning player idx
     let winnerIdx;
-    if (!forcedWinnerId) {
+    if (!isTerminated) {
       // -- normal ending, check for higher score or tie->null
       // -- handle tie situation on first and second place
       if (scoresDesc[0][1] !== scoresDesc[1][1]) winnerIdx = scoresDesc[0][0];
       else winnerIdx = null;
     } else {
       // -- forced ending, find matching player id
-      winnerIdx = this.match.playerids.findIndex((pobj) => pobj.toString() === forcedWinnerId.toString());
-      if (winnerIdx < 0) winnerIdx = null;
+      winnerIdx = forcedWinnerIdx;
     }
 
     // -- add event

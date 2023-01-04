@@ -388,6 +388,10 @@
 						"type": "string",
 						"description": "[Debug purposes] Optional seed value for pseudorandom generator used for randomization of starting player, card drawing.\r\nMatch creation returns a the input or generated seed so you can recreate any game during development.\r\nTo ignore randomization and pick first item always use \"norandom\".",
 						"example": "20221105HelloWorld"
+					},
+					"timeout": {
+						"$ref": "#/components/schemas/integer",
+						"description": "Timeout - number of seconds after the match is considered stale and may be terminated"
 					}
 				},
 				"type": "object",
@@ -868,7 +872,8 @@
 				"description": "Retrieves the details of all Matches.\r\nPlayers will receive own matches only",
 				"summary": "Retrieves all Matches",
 				"tags": [
-					"Game"
+					"Game",
+					"GameAdmin"
 				],
 				"security": [
 					{
@@ -960,7 +965,8 @@
 				"description": "Creates a new Match using the supplied parameters, leave empty for a default 'practice' Match.",
 				"summary": "Creates a new Match",
 				"tags": [
-					"Game"
+					"Game",
+					"GameAdmin"
 				],
 				"security": [
 					{
@@ -1090,7 +1096,8 @@
 				"description": "Retrieves the details of an existing match.\r\nSupply the unique match ID and receive corresponding match details.",
 				"summary": "Retrieves a Match details",
 				"tags": [
-					"Game"
+					"Game",
+					"GameAdmin"
 				],
 				"security": [
 					{
@@ -1393,10 +1400,10 @@
 						}
 					}
 				},
-				"description": "Forceful deletion of a match by Admin, on a timeout",
-				"summary": "Forceful central deletion of a Match on a timeout",
+				"description": "Forceful central deletion of a Match",
+				"summary": "Forceful central deletion of a Match",
 				"tags": [
-					"Game"
+					"GameAdmin"
 				],
 				"security": [
 					{
@@ -1437,6 +1444,57 @@
 				}
 			}
 		},
+		"/api/matches/watchdog": {
+			"post": {
+				"operationId": "WatchDogMatches",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/MatchDTO"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Not authorized to perform action.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Forceful central deletion of a match using a watchdog on timeout",
+				"summary": "Forceful central deletion of a match using a watchdog on timeout",
+				"tags": [
+					"GameAdmin"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "optional filter matches with matching tag/comma separated list of tags",
+						"in": "query",
+						"name": "tags",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/api/players": {
 			"get": {
 				"operationId": "GetPlayers",
@@ -1466,7 +1524,7 @@
 					}
 				},
 				"description": "Retrieves the details of all Players.\r\nPlayers can retrieve only own information and details",
-				"summary": "Retrieves Player information",
+				"summary": "Retrieves player information",
 				"tags": [
 					"Players"
 				],
@@ -1514,7 +1572,7 @@
 					}
 				},
 				"description": "Retrieves the details of an existing Player.\r\nSupply the unique Player ID and receive corresponding Player details.\r\nPlayers can retrieve only own information and details",
-				"summary": "Retrieves a Player details",
+				"summary": "Retrieves player details",
 				"tags": [
 					"Players"
 				],
@@ -1605,7 +1663,11 @@
 		},
 		{
 			"name": "Game",
-			"description": "Game relaeted operations to create/query a match or execute a user action"
+			"description": "Game related operations to create/query a match or execute a user action"
+		},
+		{
+			"name": "GameAdmin",
+			"description": "Game related operations to create/query/terminate a match"
 		},
 		{
 			"name": "Player",
