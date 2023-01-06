@@ -32,7 +32,8 @@
 					"CardPlacedToPlayArea",
 					"CardRemovedFromBank",
 					"TurnEnded",
-					"MatchEnded"
+					"MatchEnded",
+					"Comment"
 				],
 				"nullable": false
 			},
@@ -212,9 +213,6 @@
 						],
 						"nullable": true
 					},
-					"matchEndedComment": {
-						"type": "string"
-					},
 					"matchEndedTerminated": {
 						"type": "boolean"
 					},
@@ -226,6 +224,9 @@
 					},
 					"turnStartedDelta": {
 						"$ref": "#/components/schemas/IStateDelta"
+					},
+					"comment": {
+						"type": "string"
 					},
 					"playerIndex": {
 						"allOf": [
@@ -467,6 +468,9 @@
 							}
 						],
 						"nullable": true
+					},
+					"timeoutCount": {
+						"$ref": "#/components/schemas/integer"
 					}
 				},
 				"required": [
@@ -1377,7 +1381,14 @@
 				"operationId": "DeleteMatch",
 				"responses": {
 					"200": {
-						"description": ""
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MatchDTO"
+								}
+							}
+						}
 					},
 					"401": {
 						"description": "Not authorized to perform action.",
