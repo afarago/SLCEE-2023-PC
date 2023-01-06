@@ -14,7 +14,7 @@ import UserAction, { IsMatchActionType, OMatchActionType } from '../models/game/
 import RandomGenerator from '../utils/random';
 import DBAService from './dba.service';
 
-//-- number of turn skippping timeout before match is terminated
+// -- number of turn skippping timeout before match is terminated
 const MAX_TIMEOUT_TURNEND = 10;
 
 /**
@@ -254,7 +254,7 @@ export default class GameLogicService {
       const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
       if (elapsedSec > timeout) {
         if ((this.match.state.timeoutCount ?? 0) < MAX_TIMEOUT_TURNEND) {
-          //-- forceful end turn
+          // -- forceful end turn
           // -- TurnStart: check if this is a new turn and increment
           if (!this.match.moveCountInTurn) this.newTurn();
 
@@ -263,7 +263,6 @@ export default class GameLogicService {
 
           // -- add comment event
           {
-            const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
             const comment = `Forceful turn ending due to player ${this.match.getActivePlayerId()} inactivity after ${elapsedSec} seconds.`;
             this.addEvent(new model.MatchEvent(model.OMatchEventType.Comment, { comment }), this.match.state);
             this.match.state.timeoutCount = (this.match.state.timeoutCount ?? 0) + 1;
