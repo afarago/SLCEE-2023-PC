@@ -350,7 +350,7 @@ export default class MatchesController {
     @Request() req: any,
     @Path() id: ObjectIdString,
     @Body() params: { winnerId: ObjectIdString; comment?: string }
-  ): Promise<void> {
+  ): Promise<MatchDTO> {
     if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
     const match = await this.dbaService.getMatchByIdPromise(id);
     if (!match) throw new APIError(404, 'Match does not exist.');
@@ -358,7 +358,8 @@ export default class MatchesController {
     const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
     await executor.actionDeleteMatchPromise(new ObjectId(params.winnerId), params.comment);
 
-    return;
+    const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
+    return dto;
   }
 
   /**
@@ -389,11 +390,12 @@ export default class MatchesController {
     for (const match of matches) {
       try {
         // -- terminate match on watchdog, with default timeout comment
+        // -- this will double check if timeout really happened & also centralize timeout logic
         const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
-        await executor.actionDeleteMatchPromise(undefined, undefined);
-
-        const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
-        results.push(dto);
+        if (await executor.checkTimeoutAndAutoTerminatePromise()) {
+          const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
+          results.push(dto);
+        }
       } catch (ex) {
         Logger.info(`Error deleting match [${match?._id}] ${ex.message ?? ex}`);
       }

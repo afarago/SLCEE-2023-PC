@@ -27,6 +27,7 @@ export default class State {
       Hydrate.convertFrom(data, 'currentPlayerIndex', 'Number', obj);
       Hydrate.convertFrom(data, 'pendingEffect', CardEffect, obj);
       Hydrate.convertFrom(data, 'winnerIdx', 'Number', obj);
+      Hydrate.convertFrom(data, 'timeoutCount', 'Number', obj);
     }
 
     return obj;
@@ -39,6 +40,7 @@ export default class State {
   currentPlayerIndex: integer | null;
   pendingEffect?: CardEffect; // -- e.g. Hook, Map (not Kraken)
   winnerIdx?: integer | null;
+  timeoutCount?: integer;
 
   clearPendingEffect() {
     delete this.pendingEffect;

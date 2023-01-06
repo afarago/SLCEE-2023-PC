@@ -1,0 +1,6 @@
+# gcloud app deploy cron.yaml
+
+cron:
+  # - description: "test cron hello"
+  #   url: /api/hello
+  #   schedule: every 1 mins

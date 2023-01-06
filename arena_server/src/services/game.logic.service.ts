@@ -14,6 +14,9 @@ import UserAction, { IsMatchActionType, OMatchActionType } from '../models/game/
 import RandomGenerator from '../utils/random';
 import DBAService from './dba.service';
 
+//-- number of turn skippping timeout before match is terminated
+const MAX_TIMEOUT_TURNEND = 10;
+
 /**
  * GameController class, main game controller
  */
@@ -197,7 +200,7 @@ export default class GameLogicService {
    * @param winnerId winning player Id
    * @param [comment] termination comment
    */
-  public async actionDeleteMatchPromise(winnerId?: model.PlayerId | null, comment?: string) {
+  public async actionDeleteMatchPromise(winnerId?: model.PlayerId | null, comment?: string): Promise<model.Move> {
     assert(this.match);
 
     // -- Guard: check not finished match
@@ -229,29 +232,62 @@ export default class GameLogicService {
 
     // -- new move
     this.match.move = this.newMove();
-    this.matchEnding(true, winnerIdx, comment);
+    await this.matchEnding(true, winnerIdx, comment);
 
     // -- persist to db
     await this.persistMoveAndMatchPromise();
+
+    // -- return move
+    return this.match.move;
   }
 
   /**
    * Check if match needs to be tarminated due to timeout
    * @returns true if termination happened
    */
-  private checkTimeoutAndAutoTerminate() {
+  public async checkTimeoutAndAutoTerminatePromise(): Promise<model.Move | undefined> {
     assert(this.match);
+    assert(this.match.state);
 
     const timeout = this.match.creationParams?.timeout;
     if (timeout) {
       const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
       if (elapsedSec > timeout) {
-        this.actionDeleteMatchPromise(undefined, undefined);
-        return true;
+        if ((this.match.state.timeoutCount ?? 0) < MAX_TIMEOUT_TURNEND) {
+          //-- forceful end turn
+          // -- TurnStart: check if this is a new turn and increment
+          if (!this.match.moveCountInTurn) this.newTurn();
+
+          // -- add initiator move
+          if (!this.match.move) this.match.move = this.newMove();
+
+          // -- add comment event
+          {
+            const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
+            const comment = `Forceful turn ending due to player ${this.match.getActivePlayerId()} inactivity after ${elapsedSec} seconds.`;
+            this.addEvent(new model.MatchEvent(model.OMatchEventType.Comment, { comment }), this.match.state);
+            this.match.state.timeoutCount = (this.match.state.timeoutCount ?? 0) + 1;
+          }
+
+          // -- autopick processing any pending effects
+          this.guardPendingEffect(new UserAction(OMatchActionType.EndTurn, undefined, true));
+
+          // -- force ending even with emply playarea, handle match ending if needed
+          await this.subactionEndTurnPromise(true);
+
+          // -- persist changes
+          await this.persistMoveAndMatchPromise();
+
+          return this.match.move;
+        } else {
+          // -- forceful end match
+          const move = await this.actionDeleteMatchPromise(undefined, undefined);
+          return move;
+        }
       }
     }
 
-    return false;
+    return undefined;
   }
 
   /**
@@ -271,6 +307,12 @@ export default class GameLogicService {
 
     // -- TurnStart: check if this is a new turn and increment
     if (!this.match.moveCountInTurn) this.newTurn();
+
+    // -- Guard: timeout handling - if timeout happened move will be returned
+    {
+      const move = await this.checkTimeoutAndAutoTerminatePromise();
+      if (move) return move;
+    }
 
     // -- Guard: Pending effect - if there is a pending effect that accepts the current handling (guard invalid responses)
     const pendingEffect = this.guardPendingEffect(data);
@@ -425,15 +467,17 @@ export default class GameLogicService {
    * @param match
    * @returns void promise
    */
-  private async subactionEndTurnPromise(): Promise<void> {
+  private async subactionEndTurnPromise(isForced: boolean = false): Promise<void> {
     assert(this.match && this.match.state);
     this.log('>ENDTURN');
 
     // -- CHECK: are there any cards on the play area
-    const state = this.match.state;
-    if (!state.playArea.length) throw new GameError('Cannot end turn with empty playarea.');
+    if (!isForced) {
+      const state = this.match.state;
+      if (!state.playArea.length) throw new GameError('Cannot end turn with empty playarea.');
+    }
 
-    // -- add initiator
+    // -- add initiator move
     if (!this.match.move) this.match.move = this.newMove();
 
     // -- initiate forced turn end
@@ -791,6 +835,11 @@ export default class GameLogicService {
       winnerIdx = forcedWinnerIdx;
     }
 
+    // -- add comment event
+    if (comment?.length) {
+      this.addEvent(new model.MatchEvent(model.OMatchEventType.Comment, { comment }), this.match.state);
+    }
+
     // -- add event
     const scoresFlat: number[] = Array.from(scores.values()).map((entry) => entry) as number[];
     {
@@ -799,7 +848,6 @@ export default class GameLogicService {
           matchEndedWinnerIdx: winnerIdx,
           matchEndedScores: scoresFlat,
           ...(isTerminated ? { matchEndedTerminated: isTerminated } : {}),
-          ...(comment?.length ? { matchEndedComment: comment } : {}),
         }),
         this.match.state
       );

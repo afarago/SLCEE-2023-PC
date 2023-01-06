@@ -17,6 +17,7 @@ export const OMatchEventType = {
   CardRemovedFromBank: 'CardRemovedFromBank',
   TurnEnded: 'TurnEnded',
   MatchEnded: 'MatchEnded',
+  Comment: 'Comment',
 } as const;
 export type MatchEventType = keyof typeof OMatchEventType;
 
@@ -49,11 +50,11 @@ export interface IMatchEventParameters {
   turnEndedDelta?: IStateDelta;
   matchEndedScores?: number[];
   matchEndedWinnerIdx?: integer | null;
-  matchEndedComment?: string;
   matchEndedTerminated?: boolean;
   responseToEffectType?: CardEffectType;
   responseToEffectCard?: CardOrNull;
   turnStartedDelta?: IStateDelta;
+  comment?: string;
 
   // LATER: rework as
   // turnStarted?: { player: PlayerId };
@@ -89,11 +90,11 @@ export default class MatchEvent implements IMatchEvent {
       Hydrate.convertFrom(data, 'turnEndedDelta', 'IStateDelta', obj);
       Hydrate.convertFrom(data, 'matchEndedScores', ['Number'], obj);
       Hydrate.convertFrom(data, 'matchEndedWinnerIdx', 'Number', obj);
-      Hydrate.convertFrom(data, 'matchEndedComment', 'String', obj);
       Hydrate.convertFrom(data, 'matchEndedTerminated', Boolean, obj);
       Hydrate.convertFrom(data, 'responseToEffectType', 'CardEffectType', obj);
       Hydrate.convertFrom(data, 'responseToEffectCard', Card, obj); // -- oracle can respond with null, still it is handled
       Hydrate.convertFrom(data, 'turnStartedDelta', 'IStateDelta', obj);
+      Hydrate.convertFrom(data, 'comment', 'String', obj);
     }
     return obj;
   }
