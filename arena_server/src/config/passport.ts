@@ -71,6 +71,10 @@ passport.use(
 );
 
 export const authenticate = passport.authenticate(['digest', 'basic'], { session: false });
+export const authenticateWithRedirect = passport.authenticate(['digest', 'basic'], {
+  session: false,
+  failureRedirect: '/login',
+});
 export const authenticateOptionally = passport.authenticate(['digest', 'basic', 'anonymous'], {
   session: false,
 });

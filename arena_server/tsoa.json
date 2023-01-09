@@ -36,7 +36,7 @@
         "description": "Game related operations to create/query/terminate a match"
       },
       {
-        "name": "Player",
+        "name": "Players",
         "description": "Player related operations"
       }
     ]

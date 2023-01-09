@@ -79,23 +79,6 @@ export default class FrontendController {
   }
 
   /**
-   * Return the Busy days for any match exists
-   * @param req
-   * @param input
-   * @returns match statistics busy days
-   */
-  async getMatchStatisticsBusyDays(req: any, input: Date): Promise<string[]> {
-    // TODO: should consider filters as well (tags)
-    // TODO: DEVELOPMENT IN PROGRESS temp route for calendar statistics
-    const adate = new Date(input);
-    const dateFrom = new Date(adate.getFullYear(), adate.getMonth(), 1 - 7);
-    const dateToExcl = new Date(adate.getFullYear(), adate.getMonth() + 1, 1 + 7);
-    const playerid = req.user?.username;
-    const dayCounts = await this.dbaService.getMatchCountForDateRange(dateFrom, dateToExcl, playerid);
-    return dayCounts.map((item) => item.day.toDateString());
-  }
-
-  /**
    * Render match for Frontend
    * @param id
    * @param filter
@@ -137,7 +120,7 @@ export default class FrontendController {
       {
         const emitdata = matchToHeaderDTO(match, playerObjs);
         if (emitdata) {
-          const datestr = `date_${match.startedAt.toLocaleDateString("en-CA")}`;
+          const datestr = `date_${match.startedAt.toLocaleDateString('en-CA')}`;
           // const userprefix = `(${match.playerids.map((pid) => pid.toString()).join('|')})`;
           // const roomstr = `\/${userprefix}\\.date_${datestr}`;
           // const emitnamespaces = new RegExp(roomstr);    // -- todo: add *.

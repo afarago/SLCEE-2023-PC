@@ -1543,6 +1543,55 @@
 				]
 			}
 		},
+		"/api/matches/busydays": {
+			"get": {
+				"operationId": "GetMatchStatisticsBusyDays",
+				"responses": {
+					"200": {
+						"description": "match statistics busy days",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"type": "string"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Not authorized to perform action.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Return the Busy days for any match exists",
+				"tags": [
+					"Game"
+				],
+				"security": [
+					{
+						"basic": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "at",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/api/players": {
 			"get": {
 				"operationId": "GetPlayers",
@@ -1718,7 +1767,7 @@
 			"description": "Game related operations to create/query/terminate a match"
 		},
 		{
-			"name": "Player",
+			"name": "Players",
 			"description": "Player related operations"
 		}
 	]

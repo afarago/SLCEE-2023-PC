@@ -3,7 +3,7 @@ import path from 'path';
 
 import { authedLimiter } from '../config/limiter';
 import Logger from '../config/logger';
-import { authenticate, authenticateOptionally } from '../config/passport';
+import { authenticate, authenticateWithRedirect } from '../config/passport';
 import FrontendController from '../controllers/frontend.controller';
 import { BaseError } from '../dto/utils';
 
@@ -14,20 +14,32 @@ export default app;
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'ejs');
 
-app.get('/', (req: any, res) => {
-  res.redirect('/matches');
+app.get('/', (req: any, res, next) => {
+  Promise.resolve()
+    .then(async () => {
+      res.redirect('/matches');
+    })
+    .catch(next); // Errors will be passed to Express.
 });
 
 app.get('/login', authenticate, authedLimiter, async (req, res, next) => {
-  return res.redirect(req?.headers?.referer ?? '/matches');
+  Promise.resolve()
+    .then(async () => {
+      return res.redirect(req?.headers?.referer ?? '/matches');
+    })
+    .catch(next); // Errors will be passed to Express.
 });
 
 app.get('/logout', async (req: any, res, next) => {
-  return res.redirect(401, req?.headers?.referer ?? '/matches');
-  // return res.status(401).location('/matches').end();
+  Promise.resolve()
+    .then(async () => {
+      return res.redirect(401, '/login'); // req?.headers?.referer ?? '/matches');
+      // return res.status(401).location('/matches').end();
+    })
+    .catch(next); // Errors will be passed to Express.
 });
 
-app.get('/matches', authenticateOptionally, authedLimiter, async (req, res, next) => {
+app.get('/matches', authenticateWithRedirect, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();
@@ -36,7 +48,7 @@ app.get('/matches', authenticateOptionally, authedLimiter, async (req, res, next
     .catch(next); // Errors will be passed to Express.
 });
 
-app.get('/matches/:matchId', authenticateOptionally, authedLimiter, async (req, res, next) => {
+app.get('/matches/:matchId', authenticateWithRedirect, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();

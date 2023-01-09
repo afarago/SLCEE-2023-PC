@@ -426,4 +426,24 @@ export default class MatchesController {
 
     return results;
   }
+
+  /**
+   * Return the Busy days for any match exists
+   * @param req
+   * @param input
+   * @returns match statistics busy days
+   */
+  @Get('busydays')
+  @Tags('Game')
+  @Security({ basic: [] })
+  @Response<ErrorResponse>(401, 'Not authorized to perform action.')
+  public async getMatchStatisticsBusyDays(@Request() req: any, @Query() at?: string): Promise<string[]> {
+    // TODO: should consider filters as well (tags)
+    const adate = at ? new Date(at) : new Date();
+    const dateFrom = new Date(adate.getFullYear(), adate.getMonth(), 1 - 7);
+    const dateToExcl = new Date(adate.getFullYear(), adate.getMonth() + 1, 1 + 7);
+    const playerid = !req.user?.isAdmin ? req.user?.username : undefined;
+    const dayCounts = await this.dbaService.getMatchCountForDateRange(dateFrom, dateToExcl, playerid);
+    return dayCounts.map((item) => item.day.toDateString());
+  }
 }

@@ -837,6 +837,7 @@ export default class GameLogicService {
     // -- add comment event
     if (comment?.length) {
       this.addEvent(new model.MatchEvent(model.OMatchEventType.Comment, { comment }), this.match.state);
+      this.match.state.currentPlayerIndex = null;
     }
 
     // -- add event

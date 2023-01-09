@@ -610,7 +610,7 @@ function updateMatchInsertMoveCSR(payload) {
     $('nav .section[data-section="details"]').addClass('shown');
     $('nav .template[data-template="matchid"]').html(`Match ${matchdto._id.toString().slice(-7)}`);
     const tags =
-      matchdto.creationParams?.tags?.map((tag) => `<div class="chip blue lighten-1 white-text">#${tag}</div>`) ?? '';
+      matchdto.creationParams?.tags?.map((tag) => `<div class="chip blue lighten-1 white-text">#${tag}</div>`).join('') ?? '';
     $('nav .template[data-template="tags"]').html(`${tags}`);
   });
 })();

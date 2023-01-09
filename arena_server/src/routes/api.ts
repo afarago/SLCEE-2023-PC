@@ -104,11 +104,11 @@ app
       .catch(next); // Errors will be passed to Express.
   });
 
-// TODO: DEVELOPMENT IN PROGRESS temp route for calendar statistics
-app.route('/api/matches/busydays').get(authenticateOptionally, authedLimiter, async (req, res, next) => {
+// -- Get calendar statistics for a month for frontend listing
+app.route('/api/matches/busydays').get(authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
-      const controller = new FrontendController();
+      const controller = new MatchesController();
       const response = await controller.getMatchStatisticsBusyDays(req, req.query.at as any);
       return res.send(response);
     })
