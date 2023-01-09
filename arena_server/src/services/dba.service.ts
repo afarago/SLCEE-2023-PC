@@ -156,7 +156,7 @@ export default class DBAService {
     //   return result;
     // } else {
     // -- return from the cache
-    const playerCache = await this.getPlayersCachePromise();
+    const playerCache = await this.getPlayersPromise();
     return playerCache.get(id);
     // }
   }
@@ -183,7 +183,7 @@ export default class DBAService {
     //   return result;
     // } else {
     // -- return from the cache
-    const playerCache = await this.getPlayersCachePromise();
+    const playerCache = await this.getPlayersPromise();
     return ids?.map((pid) => {
       const pobj = playerCache.get(pid);
       if (!pobj) throw new Error(`Player ${pid} is not valid.`);
@@ -211,11 +211,14 @@ export default class DBAService {
           }
           return acc;
         }, new Array<Player>()) ?? [];
-      return results?.reduce((prev, current) => prev.set(current._id.toString(), current), new Map<string, Player>());
-    } else {
-      // -- return from the cache
-      return this.playersCache; // -- avoid im-possible circular loop await this.getPlayersCachePromise();
+      this.playersCache = results?.reduce(
+        (prev, current) => prev.set(current._id.toString(), current),
+        new Map<string, Player>()
+      );
     }
+
+    // -- return from the cache
+    return this.playersCache; // -- avoid im-possible circular loop await this.getPlayersCachePromise();
   }
 
   /**
@@ -385,14 +388,6 @@ export default class DBAService {
     return result;
   }
 
-  /**
-   * Gets players cache and fills it up if needed
-   * @returns
-   */
-  private async getPlayersCachePromise() {
-    if (!this.playersCache) this.playersCache = await this.getPlayersPromise();
-    return this.playersCache;
-  }
   private resetPlayersCache() {
     this.playersCache = null;
   }
@@ -433,7 +428,7 @@ export default class DBAService {
   private async handlePlayersChanged(documentKey: string, operationType: string, item: any) {
     // -- invalidate players' cache, do it even if noone is connected
     this.resetPlayersCache();
-    await this.getPlayersCachePromise();
+    await this.getPlayersPromise();
   }
 
   /**
