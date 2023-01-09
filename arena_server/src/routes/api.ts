@@ -81,7 +81,11 @@ app
           req.query.active as any,
           req.query.tags as any,
           req.query.wait as any,
-          req.query.condensed as any
+          req.query.condensed as any,
+          req.query.limit as any,
+          req.query.offset as any,
+          req.query.sortasc as any,
+          req.query.id as any
         );
         return res.send(response);
       })

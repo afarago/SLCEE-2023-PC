@@ -14,6 +14,7 @@ import { APIError, BoolLikeString, eventToDTO, matchToHeaderDTO, moveToDTO, pars
 import Match from '../models/game/match';
 import MatchCreationParams from '../models/game/matchcreationparams';
 import { OMatchEventType } from '../models/game/matchevent';
+import { integer } from '../models/game/model';
 import { DUMMY_PLAYER_ID } from '../models/game/player';
 import UserAction, { IUserAction } from '../models/game/useraction';
 import DBAService, { ObjectIdString } from '../services/dba.service';
@@ -41,8 +42,13 @@ export default class MatchesController {
    * @summary Retrieves all Matches
    * @param [at] optional filter parameter in the form of ISO date or 'today'
    * @param [active] optional filter matches where player is active at
-   * @param [tags] optional filter matches with matching tag/comma separated list of tags
+   * @param [tags] optional filter for tag - comma separated list of values combined with or logic
    * @param [wait] optionally waits with timeout for any resulting match - useful for polling when the user receives invite for a new match to avoid polling
+   * @param [id] optional filter for list of match ids - comma separated list of values combined with or logic
+   * @param [limit] optional set max number of results returned
+   * @param [offset] optional match id offset used for limiting
+   * @param [sortasc] optional sorting order, default is descending - latest match first
+   * @param [condensed] optional condensed view
    * @returns matches
    * @example at "today"
    * @example active 1
@@ -57,13 +63,24 @@ export default class MatchesController {
     @Query() active?: BoolLikeString,
     @Query() tags?: string,
     @Query() wait?: BoolLikeString,
-    @Query() condensed?: BoolLikeString
+    @Query() condensed?: BoolLikeString,
+    @Query() limit?: integer,
+    @Query() offset?: ObjectIdString,
+    @Query() sortasc?: BoolLikeString,
+    @Query() id?: string
   ): Promise<(MatchDTO | MatchHeaderFullDTO)[]> {
     // -- normal user is allowed to see its own matches only
     const filterPlayerId = !req.user?.isAdmin ? req.user?.username : null;
     const filterCurrentPlayerId = parseBoolyFromString(active) ? filterPlayerId : null;
     const doWaitForNonNull: boolean = parseBoolyFromString(wait);
     const isCondensed: boolean = parseBoolyFromString(condensed);
+    const sortIdAscending: boolean = parseBoolyFromString(sortasc);
+    const limitFilterObj: any = limit
+      ? {
+          count: limit,
+          ...(offset ? { offset: offset } : {}),
+        }
+      : {};
 
     // -- set date filter if available
     let filterDate: Date;
@@ -75,6 +92,9 @@ export default class MatchesController {
     // -- tags filter
     const filterTags = tags?.split(',');
 
+    // -- ids filter
+    const idFilter = id?.split(',');
+
     // -- setting up async worker to retrieve the result
     const fnWorker = async () => {
       const matches = await this.dbaService.getMatchesPromise({
@@ -82,6 +102,9 @@ export default class MatchesController {
         activePlayerId: filterCurrentPlayerId,
         date: filterDate,
         tags: filterTags,
+        limit: limitFilterObj,
+        sortAscending: sortIdAscending,
+        id: idFilter,
       });
       return matches;
     };

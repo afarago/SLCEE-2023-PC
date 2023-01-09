@@ -905,7 +905,7 @@
 						}
 					},
 					{
-						"description": "optional filter matches with matching tag/comma separated list of tags",
+						"description": "optional filter for tag - comma separated list of values combined with or logic",
 						"in": "query",
 						"name": "tags",
 						"required": false,
@@ -923,11 +923,48 @@
 						}
 					},
 					{
+						"description": "optional condensed view",
 						"in": "query",
 						"name": "condensed",
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"description": "optional set max number of results returned",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/integer"
+						}
+					},
+					{
+						"description": "optional match id offset used for limiting",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectIdString"
+						}
+					},
+					{
+						"description": "optional sorting order, default is descending - latest match first",
+						"in": "query",
+						"name": "sortasc",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BoolLikeString"
+						}
+					},
+					{
+						"description": "optional filter for list of match ids - comma separated list of values combined with or logic",
+						"in": "query",
+						"name": "id",
+						"required": false,
+						"schema": {
+							"type": "string"
 						}
 					}
 				]

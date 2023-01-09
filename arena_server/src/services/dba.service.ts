@@ -36,12 +36,13 @@ export default class DBAService {
    * @returns matches promise
    */
   async getMatchesPromise(options: {
+    id?: ObjectIdString[];
     playerId?: ObjectIdString;
     activePlayerId?: ObjectIdString;
     date?: Date;
     tags?: string[];
     limit?: {
-      startId?: ObjectIdString;
+      offset?: ObjectIdString;
       count: number;
     };
     sortAscending?: boolean;
@@ -49,6 +50,11 @@ export default class DBAService {
     checkTimeoutExpired?: boolean;
   }): Promise<Match[]> {
     let filterOption = {
+      ...(options?.id
+        ? {
+            _id: { $in: options.id.map((id) => new ObjectId(id)) },
+          }
+        : {}),
       ...(options?.playerId
         ? {
             playerids: new ObjectId(options.playerId),
@@ -64,9 +70,11 @@ export default class DBAService {
             'creationParams.tags': { $all: options.tags },
           }
         : {}),
-      ...(options?.limit?.startId
+      ...(options?.limit?.offset
         ? {
-            _id: { $gt: new ObjectId(options.limit.startId) },
+            _id: options?.sortAscending
+              ? { $gt: new ObjectId(options.limit.offset) }
+              : { $lt: new ObjectId(options.limit.offset) },
           }
         : {}),
       ...(options?.checkNotFinished
