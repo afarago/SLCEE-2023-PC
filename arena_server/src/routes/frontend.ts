@@ -25,7 +25,7 @@ app.get('/', (req: any, res, next) => {
 app.get('/login', authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
-      return res.redirect(req?.headers?.referer ?? '/matches');
+      return res.redirect(req?.headers?.referer?.startsWith('/matches') ? req?.headers?.referer : '/matches');
     })
     .catch(next); // Errors will be passed to Express.
 });
