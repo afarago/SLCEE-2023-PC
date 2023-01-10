@@ -15,7 +15,7 @@ import RandomGenerator from '../utils/random';
 import DBAService from './dba.service';
 
 // -- number of turn skippping timeout before match is terminated
-const MAX_TIMEOUT_TURNEND = 10;
+const MAX_TIMEOUT_TURNEND = Number(process.env.MAX_TIMEOUT_TURNEND) || 10;
 
 /**
  * GameController class, main game controller
@@ -206,7 +206,7 @@ export default class GameLogicService {
     // -- Guard: check not finished match
     if (this.match.isFinished) throw new GameError('No action possible on finished matches.');
 
-    let winnerIdx: number | null;
+    let winnerIdx: number | null | undefined;
     if (winnerId !== undefined) {
       // -- if winner id is explicitely stated
       if (winnerId !== null) {
@@ -214,15 +214,11 @@ export default class GameLogicService {
         winnerIdx = this.match.playerids.findIndex((pobj) => pobj.toString() === winnerId.toString());
         if (winnerIdx < 0) winnerIdx = null;
       } else {
-        winnerIdx = null;
+        winnerIdx = null; //-- tie
       }
     } else {
-      // -- if winner id is not explicitely stated - winner will be the one not active - as active should have mad a move in time
-      const activePlayerIdx = this.match.getActivePlayerIdx();
-      assert(activePlayerIdx !== null);
-
-      // -- winner is "next" player
-      winnerIdx = (activePlayerIdx + 1) % this.match.playerids.length;
+      // -- if winner id is not explicitely stated - winner will be calculated based on the default logic - more points will win, or tie on equality
+      winnerIdx = undefined; //-- calculate
 
       // -- set comment
       const elapsedSec = (Date.now() - this.match.lastMoveAt.getTime()) / 1000;
@@ -824,7 +820,7 @@ export default class GameLogicService {
 
     // -- determine winning player idx
     let winnerIdx;
-    if (!isTerminated) {
+    if (forcedWinnerIdx === undefined) {
       // -- normal ending, check for higher score or tie->null
       // -- handle tie situation on first and second place
       if (scoresDesc[0][1] !== scoresDesc[1][1]) winnerIdx = scoresDesc[0][0];
