@@ -6,7 +6,7 @@ const ddosLimiter = slowDown({
   delayAfter: 1000,
   delayMs: 100,
   maxDelayMs: 10 * 1000,
-  keyGenerator (req: any /*, res*/) {
+  keyGenerator(req: any /*, res*/) {
     return req.ip;
   },
 });
@@ -17,8 +17,11 @@ const authedLimiter = slowDown({
   delayMs: 100,
   maxDelayMs: 10 * 1000,
   headers: true,
-  keyGenerator (req: any /*, res*/) {
+  keyGenerator(req: any /*, res*/) {
     return req.ip + req.user?.username;
+  },
+  skip(req: any /*, res*/) {
+    return req.user?.isAdmin;
   },
 });
 

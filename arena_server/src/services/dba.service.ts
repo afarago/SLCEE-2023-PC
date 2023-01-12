@@ -119,7 +119,7 @@ export default class DBAService {
       .sort({ startedAt: options.sortAscending ? +1 : -1 })
       // -- A limit() value of 0 (i.e. .limit(0)) is equivalent to setting no limit.
       // -- By passing a negative limit, the client indicates to the server that it will not ask for a subsequent batch via getMore
-      .limit(options?.limit?.count ?? 0 > 0 ? -(options?.limit?.count ?? 0 + 1) : 0);
+      .limit((options?.limit?.count ?? 0) > 0 ? -((options?.limit?.count ?? 0) + 1) : 0);
     const dbitems = await matchesCursor?.toArray();
 
     const results =

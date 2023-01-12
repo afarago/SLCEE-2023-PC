@@ -164,7 +164,7 @@
 
     //-- load data - if requested
     if (loadData) {
-      $.getJSON(`/api/matches${window.location.search || '?'}&condensed=true`, (data) => {
+      $.getJSON(`/api/matches${window.location.search || '?'}&condensed=true&limit=100`, (data) => {
         if (loadData === 'replace') {
           matchesData.splice(0, matchesData.length, ...data);
           renderMatchesCSR(matchesData);

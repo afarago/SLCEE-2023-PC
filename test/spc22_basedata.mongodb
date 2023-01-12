@@ -1,13 +1,20 @@
 // Select the database to use.
-use('spc22dev');
+use('spc22');
 
 db.players.drop();
 
 // Insert a few documents into the sales collection.
 db.players.insertMany([
+  { '_id': ObjectId('000000000000000000000000'), 'name': 'Crash Test Dummy', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be5'), 'name': 'John', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be6'), 'name': 'Jill', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be7'), 'name': 'Ethan', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be8'), 'name': 'Priya', 'passwordhash': 'testpass' },
-  { '_id': ObjectId('000000000000000000000000'), 'name': 'Dummy', 'passwordhash': 'testpass' },
+  { '_id': ObjectId('636438380ef778617e0e5b01'), 'name': 'Csaba-teszt-1', 'passwordhash': 'testpass' },
+  { '_id': ObjectId('636438380ef778617e0e5b02'), 'name': 'Csaba-teszt-2', 'passwordhash': 'testpass' },
+  { '_id': ObjectId('636438380ef778617e0e5b03'), 'name': 'Attila-teszt-1', 'passwordhash': 'testpass' },
+  { '_id': ObjectId('636438380ef778617e0e5b04'), 'name': 'Attila-teszt-2', 'passwordhash': 'testpass' },
 ]);
+
+db.matches.createIndex({'startedAt': 1})
+db.moves.createIndex({'matchId': 1})
