@@ -1,5 +1,12 @@
-use('spc22dev');
+use('spc22');
 
-db.matches.findOne(
-  { "creationParams.tags": {$in: ["tournament1"] } }
+// db.matches.findOne(
+//   { "creationParams.tags": {$in: ["tournament1"] } }
+// )
+
+//--  admin get winners / for a tag / match
+db.matches.find(
+    {}
+    //{ "state.winnerIdx": { $exists: true } },
+    //{ "state.winnerIdx": {$exists:true}, "creationParams.tags": {$in: ["apple"]} },
 )
