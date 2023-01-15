@@ -191,8 +191,8 @@
   });
 
   setNotificationRoom = (datestr) => {
-    if (socket) {
-      const socket_room = `${authenticated_username ?? '*'}.date_${datestr}`;
+    if (socket && authenticated_username) {
+      const socket_room = `${authenticated_username}.date_${datestr}`;
       socket.emit('room', socket_room);
     }
   };
@@ -209,7 +209,7 @@
         : typeof dateOrOffset === 'number'
         ? new Date(new Date(filterDate).getTime() + dateOrOffset * 864e5)
         : new Date();
-    setFilterDate(newdate.toLocaleDateString("en-CA"), 'replace');
+    setFilterDate(newdate.toLocaleDateString('en-CA'), 'replace');
     dateTimePicker.setDate(newdate);
     dateTimePicker.setInputValue();
   }

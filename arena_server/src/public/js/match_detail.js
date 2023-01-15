@@ -106,6 +106,17 @@ function renderDiscardPile(matchdto) {
       </h6>
     `;
 }
+function renderActionBar(matchdto, idx) {
+  if (matchdto.createdByPlayerId !== null && idx == matchdto.activePlayerIndex && isAuthUserIsThisPlayer(idx)) {
+    return `<div class="actions">
+      <a class="btn useraction waves-effect" 
+        data-useraction='${JSON.stringify({ etype: 'Draw' })}'>Draw</a>
+      <a class="btn useraction waves-effect ${!matchdto.state?.playArea?.length ? 'disabled' : ''}"
+        data-useraction='${JSON.stringify({ etype: 'EndTurn' })}'>End Turn</a>
+    </div>`;
+  }
+  return '';
+}
 function renderPlayer(matchdto, idx) {
   const bank = matchdto.state?.banks[idx];
   const playerid = matchdto.playerids?.[idx];
@@ -121,12 +132,7 @@ function renderPlayer(matchdto, idx) {
         ${playername}</span> · €${bankinfo.value}💶
       </h6>
       <div>${renderBank(bank)}</div>
-      <div class="actions ${idx == matchdto.activePlayerIndex && isAuthUserIsThisPlayer(idx) ? '' : 'hide'}">
-        <a class="btn useraction waves-effect" 
-          data-useraction='${JSON.stringify({ etype: 'Draw' })}'>Draw</a>
-        <a class="btn useraction waves-effect ${!matchdto.state?.playArea?.length ? 'disabled' : ''}"
-          data-useraction='${JSON.stringify({ etype: 'EndTurn' })}'>End Turn</a>
-      </div>
+      ${renderActionBar(matchdto, idx)}
     </div>`;
 }
 function isAuthUserIsThisPlayer(idx) {
@@ -140,7 +146,9 @@ function renderMovesTableAppend(moves, doanimate = true) {
 
   //-- update sequence header (last hove is first one due to descending order)
   const lastmove = moves.at(0);
-  $('.template[data-template="sequenceid"]').html(`&nbsp;at turn ${lastmove.turnId}, move ${lastmove.sequenceInTurnId}`);
+  $('.template[data-template="sequenceid"]').html(
+    `&nbsp;at turn ${lastmove.turnId}, move ${lastmove.sequenceInTurnId}`
+  );
 
   $content.prependTo($movescontainer);
   return $content;
@@ -207,7 +215,6 @@ function renderEventRow(event) {
 //=== Helper functions for animations =================================================================================
 const delayFn = (ms) => new Promise((_) => setTimeout(_, ms));
 function animateMoveEventEffect(move, nextFn) {
-  // console.log('animateMoveEventEffect', 0);
   //-- 0. remove pending effect
   const fnAnimateRemoveEffects = (resolve, reject) => {
     if (!matchdto.pendingEffect)
@@ -351,7 +358,6 @@ function animateMoveEventEffect(move, nextFn) {
   };
 
   //-- finally: execute the actual animations
-  // console.log('animateMoveEventEffect', 8, 'resolving');
   return Promise.resolve()
     .then(fnAnimateRemoveEffects)
     .then(fnGetBankRemovalAnimations)
@@ -497,7 +503,6 @@ let isMoveRendering = false;
 let matchRenderingFn = null;
 let lastMoveAtFromMoveRendered = null;
 function updateMatchCSR(payload) {
-  // console.log('updateMatchCSR', 0);
   let newvalue = typeof payload === 'object' ? payload : JSON.parse(payload);
   const newModelAt = new Date(newvalue.lastMoveAt);
   const oldvalue = matchdto;
@@ -505,12 +510,9 @@ function updateMatchCSR(payload) {
   //-- guard match rendering, do not update match until move related animation is completed
   //-- theoretically match update follows the move update, so could do everything here - no delivery order guarantee yet, also animation will delay matchdto usage
   matchRenderingFn = () => {
-    // console.log('matchRenderingFn sub', 0, `hasRenderFn: ${!!matchRenderingFn}`);
     if (!matchRenderingFn) return;
-    // console.log('matchRenderingFn sub', 1, `isMoveRendering: ${isMoveRendering}`);
     if (isMoveRendering) return setTimeout(matchRenderingFn, 100);
     matchRenderingFn = null;
-    // console.log('matchRenderingFn sub', 2, 'start');
 
     //-- make sure no moves are coming in from the match update (should not happen)
     if (!!oldvalue) delete newvalue.moves;
@@ -518,25 +520,15 @@ function updateMatchCSR(payload) {
     //-- merge and update the match
     matchdto = { ...oldvalue, ...newvalue };
     const $content = renderMatchState(matchdto);
-    // console.log('matchRenderingFn sub', 9, 'done');
   };
 
-  // console.log(
-  //   'matchRenderingFn',
-  //   0,
-  //   `isMoveRendering ${isMoveRendering}, move_is_newer:${
-  //     lastMoveAtFromMoveRendered > newModelAt
-  //   }, moveat:${lastMoveAtFromMoveRendered}, matchat:${newModelAt}`
-  // );
   //-- render the match update
   if (isMoveRendering || lastMoveAtFromMoveRendered > newModelAt) {
     //-- move is rendering, this will start a settimeout wait OR
     //-- move has already updated, we just set clearing the stage and adding details not rendered by the animations
-    // console.log('matchRenderingFn', '9b', `isMoveRendering:${isMoveRendering} or exec`);
     matchRenderingFn();
   } else {
     //-- this means that the match update arrived before the move:update, so we should wait with the rendering for a bit just in case it comes within 1s...
-    // console.log('matchRenderingFn', '9', 'delaying');
     setTimeout(matchRenderingFn, 1000);
   }
 }
@@ -548,33 +540,17 @@ function updateMatchInsertMoveCSR(payload) {
   const moveat = new Date(movedto.at);
   let animatePromise = null;
 
-  // console.log(
-  //   'updateMatchInsertMoveCSR',
-  //   0,
-  //   moveat > new Date(matchdto.lastMoveAt),
-  //   moveat,
-  //   new Date(matchdto.lastMoveAt)
-  // );
-
   //-- guard match rendering, see comment above
   if (moveat > new Date(matchdto.lastMoveAt)) {
-    // console.log('updateMatchInsertMoveCSR', 1);
     isMoveRendering = true;
     animatePromise = animateMoveEventEffect(movedto, () => {
-      // console.log('updateMatchInsertMoveCSR', 2);
       lastMoveAtFromMoveRendered = moveat;
       isMoveRendering = false;
       //if (matchRenderingFn) matchRenderingFn();
-      // console.log('updateMatchInsertMoveCSR', 9, 'done');
     });
   } else {
     //-- nothing to do, match update has already rendered, should skip any animations
     animatePromise = $().promise();
-    // console.log(
-    //   'updateMatchInsertMoveCSR',
-    //   '9x',
-    //   'nothing to do, match update has already rendered, should skip any animations'
-    // );
   }
 
   //-- check events in reverse order to give MatchEnded a chance to hoist
@@ -610,7 +586,9 @@ function updateMatchInsertMoveCSR(payload) {
     $('nav .section[data-section="details"]').addClass('shown');
     $('nav .template[data-template="matchid"]').html(`Match ${matchdto._id.toString().slice(-7)}`);
     const tags =
-      matchdto.creationParams?.tags?.map((tag) => `<div class="chip blue lighten-1 white-text">#${tag}</div>`).join('') ?? '';
+      matchdto.creationParams?.tags
+        ?.map((tag) => `<div class="chip blue lighten-1 white-text">#${tag}</div>`)
+        .join('') ?? '';
     $('nav .template[data-template="tags"]').html(`${tags}`);
   });
 })();
