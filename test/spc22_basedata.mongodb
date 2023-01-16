@@ -1,11 +1,11 @@
 // Select the database to use.
-use('spc22');
+use('spc22dev');
 
 db.players.drop();
 
 // Insert a few documents into the sales collection.
 db.players.insertMany([
-  { '_id': ObjectId('000000000000000000000000'), 'name': 'Crash Test Dummy', 'passwordhash': 'testpass' },
+  { '_id': ObjectId('000000000000000000000000'), 'name': 'Crash Test Dummy', 'passwordhash': 'dummypass' },
   { '_id': ObjectId('636438380ef778617e0e5be5'), 'name': 'John', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be6'), 'name': 'Jill', 'passwordhash': 'testpass' },
   { '_id': ObjectId('636438380ef778617e0e5be7'), 'name': 'Ethan', 'passwordhash': 'testpass' },
