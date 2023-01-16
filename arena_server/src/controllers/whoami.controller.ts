@@ -1,11 +1,15 @@
 import { Get, Request, Route, Security, Tags } from 'tsoa';
+import { Container, Inject } from 'typedi';
 
-import { IUser } from '../config/passport';
+import SessionDataService, { SessionData } from '../services/sessiondata.service';
 
-type WhoAmiIResponse = { username: string; name: string | null };
+type WhoAmiIResponse = SessionData;
 
 @Route('/api/whoami')
 export default class WhoAmIController {
+  @Inject()
+  private sessionDataService: SessionDataService = Container.get(SessionDataService);
+
   /**
    * Returns information on authenticated User
    * @summary Returns authenticated User
@@ -15,10 +19,7 @@ export default class WhoAmIController {
   @Tags('Diagnostic')
   @Security({ basic: [] })
   public async getAuthenticatedUser(@Request() req: any): Promise<WhoAmiIResponse> {
-    const user: IUser = req.user;
-    return {
-      username: user?.username,
-      name: user?.name ?? null,
-    };
+    const retval = this.sessionDataService.getSessionData(req);
+    return retval;
   }
 }

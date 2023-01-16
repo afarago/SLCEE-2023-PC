@@ -6,6 +6,7 @@ import * as model from '../models/game/model';
 import DbService from '../services/db.service';
 import DBAService, { ObjectIdString } from '../services/dba.service';
 import GameService from '../services/game.service';
+import SessionDataService from '../services/sessiondata.service';
 import SocketIOService from '../services/socketio.service';
 
 export default class FrontendController {
@@ -17,6 +18,8 @@ export default class FrontendController {
   private gameService: GameService = Container.get(GameService);
   @Inject()
   private socketIOService: SocketIOService = Container.get(SocketIOService);
+  @Inject()
+  private sessionDataService: SessionDataService = Container.get(SessionDataService);
 
   constructor(doRegisterToDbChanges: boolean = false) {
     if (doRegisterToDbChanges) {
@@ -33,7 +36,7 @@ export default class FrontendController {
    * @returns matches
    */
   async getMatches(req: any, filter: { at?: string; tags?: string }, res: any): Promise<void> {
-    res.locals.databaseName = this.dbService?.databaseName;
+    res.locals.sessionData = this.sessionDataService.getSessionData(req);
     res.locals.user = req.user;
 
     let filterDate = new Date(); // -- just today
@@ -86,7 +89,7 @@ export default class FrontendController {
    * @returns match
    */
   async getMatch(req: any, filter: { matchId: ObjectIdString }, res: any): Promise<void> {
-    res.locals.databaseName = this.dbService?.databaseName;
+    res.locals.sessionData = this.sessionDataService.getSessionData(req);
     res.locals.user = req.user;
 
     const match = await this.dbaService.getMatchByIdPromise(filter?.matchId);

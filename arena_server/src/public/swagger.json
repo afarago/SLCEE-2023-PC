@@ -783,21 +783,33 @@
 				],
 				"type": "object"
 			},
-			"WhoAmiIResponse": {
+			"SessionData": {
 				"properties": {
+					"role": {
+						"type": "string",
+						"nullable": true
+					},
 					"name": {
 						"type": "string",
 						"nullable": true
 					},
 					"username": {
 						"type": "string"
+					},
+					"dbname": {
+						"type": "string"
 					}
 				},
 				"required": [
+					"role",
 					"name",
-					"username"
+					"username",
+					"dbname"
 				],
 				"type": "object"
+			},
+			"WhoAmiIResponse": {
+				"$ref": "#/components/schemas/SessionData"
 			}
 		},
 		"securitySchemes": {
@@ -814,7 +826,7 @@
 	"info": {
 		"title": "SLCEE-2023-PC Arena",
 		"version": "1.0.0",
-		"description": "**SAP Labs CEE Hub Programming Competition 2023 Arena server**.\n\nYou can find more information about the game and the competititon rules at [github/SLH_SPC_2022](https://github.com/afarago/SLH_SPC_2022).  \nFor a test run, you can use the crash test dummy user `000000000000000000000000/dummypass`.  \n*Note: All the APIs expect and return application/json*.",
+		"description": "**SAP Labs CEE Hub Programming Competition 2023 Arena server**.\n\nYou can find more information about the game and the competititon rules at [github/SLCEE-2023-PC-public](https://github.com/afarago/SLCEE-2023-PC-public).  \nFor a test run, you can use the crash test dummy user `000000000000000000000000/dummypass`.  \n*Note: All the APIs expect and return application/json*.",
 		"license": {
 			"name": "ISC"
 		},

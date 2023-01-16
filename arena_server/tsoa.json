@@ -8,7 +8,7 @@
     "name": "SLCEE-2023-PC Arena",
     "title": "SLCEE-2023-PC Arena",
     "version": "1.0.0",
-    "description": "**SAP Labs CEE Hub Programming Competition 2023 Arena server**.\n\nYou can find more information about the game and the competititon rules at [github/SLH_SPC_2022](https://github.com/afarago/SLH_SPC_2022).  \nFor a test run, you can use the crash test dummy user `000000000000000000000000/dummypass`.  \n*Note: All the APIs expect and return application/json*.",
+    "description": "**SAP Labs CEE Hub Programming Competition 2023 Arena server**.\n\nYou can find more information about the game and the competititon rules at [github/SLCEE-2023-PC-public](https://github.com/afarago/SLCEE-2023-PC-public).  \nFor a test run, you can use the crash test dummy user `000000000000000000000000/dummypass`.  \n*Note: All the APIs expect and return application/json*.",
     "contact": {
       "email": "DL SLCEE 2023 PC <DL_637A3F6466D808029A65636A@global.corp.sap>"
     },

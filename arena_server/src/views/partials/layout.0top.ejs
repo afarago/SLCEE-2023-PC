@@ -14,10 +14,6 @@
 
 <%- include('header.ejs') %> <%- `
 <script>
-  const sessiondata = ${JSON.stringify(
-    {
-      dbname: locals.databaseName,
-      user: locals.user,
-    })};
+  const sessiondata = ${JSON.stringify(locals.sessionData)};
 </script>
 ` %>

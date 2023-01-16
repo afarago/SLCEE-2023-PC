@@ -123,7 +123,7 @@
     renderMatchesCSR(matchesData);
 
     //-- create a practice match
-    if (!!authenticated_username) {
+    if (!!sessiondata?.username  && sessiondata?.role === 'player') {
       $('#btnCreatePracticeMatch').toggleClass('hide', false);
       $('#btnCreatePracticeMatch').on('click', function () {
         $.post({
@@ -191,8 +191,8 @@
   });
 
   setNotificationRoom = (datestr) => {
-    if (socket && authenticated_username) {
-      const socket_room = `${authenticated_username}.date_${datestr}`;
+    if (socket && sessiondata?.username) {
+      const socket_room = `${sessiondata.username}.date_${datestr}`;
       socket.emit('room', socket_room);
     }
   };

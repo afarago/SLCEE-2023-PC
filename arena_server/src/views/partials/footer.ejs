@@ -1,7 +1,7 @@
 <footer class="page-footer light-blue darken-3">
   <div class="row">
     <div class="col">
-      <a href="https://github.com/afarago/SLCEE-2023-PC-public/#readme" class="breadcrumb"
+      <a href="https://github.com/afarago/SLCEE-2023-PC-public/#readme" class="breadcrumb" target="_blank"
         ><i class="material-icons"> help </i></a
       >
       2022-2023, Attila & Csaba
@@ -14,7 +14,8 @@
   $(() => {
     const footer_info = Array.from(
       new Map([
-        ['user', sessiondata?.user?.name],
+        ['user', sessiondata?.name ?? sessiondata?.username],
+        ['role', sessiondata?.role],
         ['db', sessiondata.dbname],
       ]).entries()
     )

@@ -66,9 +66,9 @@
 
 <script>
   $(() => {
-    $(`nav .authelem[data-auth-value=${!!sessiondata.user}]`).removeClass('hide');
+    $(`nav .authelem[data-auth-value=${!!sessiondata.username}]`).removeClass('hide');
     $('nav .template[data-template="loggedin_user"]').html(
-      `Logged in as ${sessiondata?.user?.name} &lt;${sessiondata?.user?.username}&gt;`
+      `Logged in as ${sessiondata?.name} &lt;${sessiondata?.username}&gt;`
     );
   });
 </script>

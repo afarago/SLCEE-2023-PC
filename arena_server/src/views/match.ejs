@@ -21,8 +21,6 @@ include('partials/layout.0top.ejs') %> <%#=== MAIN
 <%#=== SSR initial render =================================================================================%> <%- `
 <script>
   let matchdto = ${JSON.stringify(matchdto)};
-  const authenticated_username = ${JSON.stringify(locals?.user?.username)};
-  const socket_room = "match_${matchdto._id}";
 </script>
 ` %> <%#=== FOOTER =================================================================================%>
 <script type="text/javascript" src="../js/match_detail.js"></script>

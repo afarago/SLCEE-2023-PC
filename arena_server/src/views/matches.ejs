@@ -35,10 +35,8 @@
 <%#=== SSR initial render =================================================================================%> <%- `
 <script>
   const matchesData = ${JSON.stringify(locals.matchesOnLoad)};
-  const authenticated_username = ${JSON.stringify(locals?.user?.username)};
-  const limit = ${locals.limit};
-  //-- love Canada - they use ISO8601
-  let filterDate = "${filterDate.toLocaleDateString("en-CA")}";
+  const limit = ${locals?.limit};
+  let filterDate = "${filterDate.toLocaleDateString("en-CA")}"; //-- love Canada - they use ISO8601
 </script>
 ` %> <%#=== FOOTER =================================================================================%>
 <script type="text/javascript" src="../js/match_list.js"></script>
