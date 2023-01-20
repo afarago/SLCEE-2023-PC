@@ -761,13 +761,17 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"SessionInfoResponse": {
+			"SessionData": {
 				"properties": {
+					"ip": {
+						"type": "string"
+					},
 					"dbname": {
 						"type": "string"
 					},
-					"ip": {
-						"type": "string"
+					"role": {
+						"type": "string",
+						"nullable": true
 					},
 					"name": {
 						"type": "string",
@@ -778,12 +782,18 @@
 					}
 				},
 				"required": [
+					"ip",
 					"dbname",
-					"ip"
+					"role",
+					"name",
+					"username"
 				],
 				"type": "object"
 			},
-			"SessionData": {
+			"SessionInfoResponse": {
+				"$ref": "#/components/schemas/SessionData"
+			},
+			"SessionUserData": {
 				"properties": {
 					"role": {
 						"type": "string",
@@ -795,21 +805,17 @@
 					},
 					"username": {
 						"type": "string"
-					},
-					"dbname": {
-						"type": "string"
 					}
 				},
 				"required": [
 					"role",
 					"name",
-					"username",
-					"dbname"
+					"username"
 				],
 				"type": "object"
 			},
 			"WhoAmiIResponse": {
-				"$ref": "#/components/schemas/SessionData"
+				"$ref": "#/components/schemas/SessionUserData"
 			}
 		},
 		"securitySchemes": {
