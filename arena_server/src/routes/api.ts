@@ -5,7 +5,6 @@ import * as util from 'util';
 import { authedLimiter } from '../config/limiter';
 import Logger from '../config/logger';
 import { authenticate, authenticateOptionally, ensureAdmin } from '../config/passport';
-import FrontendController from '../controllers/frontend.controller';
 import HelloController from '../controllers/hello.controller';
 import MatchesController from '../controllers/match.controller';
 import PlayersController from '../controllers/players.controller';
@@ -57,7 +56,7 @@ app.route('/api/whoami').get(authenticate, authedLimiter, async (req, res, next)
 });
 
 // -- SessionInfo endpoint handler
-app.route('/api/sessioninfo').get(authenticateOptionally, authedLimiter, async (req, res, next) => {
+app.route('/api/sessioninfo').get(authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new SessionInfoController();

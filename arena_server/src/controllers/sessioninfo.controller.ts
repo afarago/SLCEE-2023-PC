@@ -1,15 +1,14 @@
 import { Get, Request, Route, Security, Tags } from 'tsoa';
 import { Container, Inject } from 'typedi';
 
-import { IUser } from '../config/passport';
-import DbService from '../services/db.service';
+import SessionDataService, { SessionData } from '../services/sessiondata.service';
 
-type SessionInfoResponse = { username?: string; name?: string | null; ip: string; dbname: string };
+type SessionInfoResponse = SessionData;
 
 @Route('/api/sessioninfo')
 export default class SessionInfoController {
   @Inject()
-  private dbService: DbService = Container.get(DbService);
+  private sessionDataService: SessionDataService = Container.get(SessionDataService);
 
   /**
    * Returns generic information on session
@@ -20,12 +19,7 @@ export default class SessionInfoController {
   @Tags('Diagnostic')
   @Security({ basic: [] })
   public async getSessionInfo(@Request() req: any): Promise<SessionInfoResponse> {
-    const user: IUser = req.user;
-    return {
-      username: user?.username,
-      name: user?.name,
-      ip: req.res.locals.clientip,
-      dbname: this.dbService?.databaseName,
-    };
+    const retval = this.sessionDataService.getSessionData(req);
+    return retval;
   }
 }

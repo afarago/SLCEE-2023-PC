@@ -97,10 +97,11 @@ const comparePasswords = (candidate?: string, fact?: string): boolean => {
   return candidate === fact;
 };
 
+/*
 function newFunction(): string | undefined {
   return 'slhpc23';
 }
-/*
+
 const timingSafeEqual = require('crypto').timingSafeEqual
 
 // Credits for the actual algorithm go to github/@Bruce17
