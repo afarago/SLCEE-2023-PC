@@ -39,7 +39,7 @@ app.get('/logout', async (req: any, res, next) => {
     .catch(next); // Errors will be passed to Express.
 });
 
-app.get('/matches', authenticateWithRedirect, authedLimiter, async (req, res, next) => {
+app.get('/matches', authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();
@@ -48,7 +48,7 @@ app.get('/matches', authenticateWithRedirect, authedLimiter, async (req, res, ne
     .catch(next); // Errors will be passed to Express.
 });
 
-app.get('/matches/:matchId', authenticateWithRedirect, authedLimiter, async (req, res, next) => {
+app.get('/matches/:matchId', authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {
       const controller = new FrontendController();
