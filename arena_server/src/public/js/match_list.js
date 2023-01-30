@@ -5,6 +5,24 @@
       doAddTitle ? 'data-tooltip="' + suit + '"' : ''
     } alt="${suit}"/>`;
   }
+  function _dateDifferenceWithUnit(date1, date2) {
+    let diff = (date2 - date1) / 1000;
+    let unit = 'sec';
+    if (diff > 60) {
+      unit = 'min';
+      diff /= 60;
+      if (diff > 60) {
+        unit = 'hour';
+        diff /= 60;
+        if (diff > 24) {
+          unit = 'day';
+          diff /= 24;
+        }
+      }
+    }
+    const result = `${Math.round(diff)}&nbsp;${unit}${diff >= 2 ? 's' : ''}`;
+    return result;
+  }
 
   function renderMatchRowCSR(match) {
     let rowhtml;
@@ -47,6 +65,7 @@
         `<td class="hide-on-large-and-down" colspan="${match.tags ? 1 : 2}">
             <span class="hide-on-med-and-down grey-text adjustedspan">
               ${new Date(match.lastmoveat).toLocaleTimeString('hu')}
+              (${_dateDifferenceWithUnit(new Date(match.startedat), new Date(match.lastmoveat))})
             </span>
           </td>` +
         //--- tags
@@ -123,7 +142,7 @@
     renderMatchesCSR(matchesData);
 
     //-- create a practice match
-    if (!!sessiondata?.username  && sessiondata?.role === 'player') {
+    if (!!sessiondata?.username && sessiondata?.role === 'player') {
       $('#btnCreatePracticeMatch').toggleClass('hide', false);
       $('#btnCreatePracticeMatch').on('click', function () {
         $.post({

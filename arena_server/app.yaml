@@ -12,3 +12,6 @@ env_variables:
 
 inbound_services:
   - warmup
+
+network:
+  session_affinity: true
