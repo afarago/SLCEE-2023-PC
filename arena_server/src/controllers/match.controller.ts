@@ -176,7 +176,10 @@ export default class MatchesController {
     // -- anyone can start a match agains the dummy user
     if (
       !req.user?.isAdmin &&
-      !params.playerids.every((p: ObjectIdString) => p === req.user?.username || p === DUMMY_PLAYER_ID)
+      !(
+        req.user?.username !== DUMMY_PLAYER_ID &&
+        params.playerids.every((p: ObjectIdString) => p === req.user?.username || p === DUMMY_PLAYER_ID)
+      )
     ) {
       throw new APIError(
         400,
