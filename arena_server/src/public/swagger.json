@@ -1192,6 +1192,7 @@
 						}
 					},
 					{
+						"description": "optionally expose additional info not availble for tournament matches such as drawpile, discardpile contents",
 						"in": "query",
 						"name": "showdebug",
 						"required": false,
@@ -1466,9 +1467,10 @@
 						}
 					}
 				},
-				"description": "Forceful central deletion of a Match",
-				"summary": "Forceful central deletion of a Match",
+				"description": "Forceful deletion of a Match",
+				"summary": "Forceful deletion of a Match",
 				"tags": [
+					"Game",
 					"GameAdmin"
 				],
 				"security": [

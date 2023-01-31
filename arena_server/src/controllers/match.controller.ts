@@ -203,6 +203,7 @@ export default class MatchesController {
    * @param id The requested Match Id
    * @param [waitactive] optionally waits with timeout until user becomes active
    * @param [showevents] optionally add events associated with the match
+   * @param [showdebug] optionally expose additional info not availble for tournament matches such as drawpile, discardpile contents
    * @returns Match details, with al details when requesting a 'practice' Match
    */
   @Get('{id}')
@@ -357,14 +358,14 @@ export default class MatchesController {
   }
 
   /**
-   * Forceful central deletion of a Match
-   * @summary Forceful central deletion of a Match
+   * Forceful deletion of a Match
+   * @summary Forceful deletion of a Match
    * @param id game id
    * @param winnerId winning player Id
    * @param [comment] termination comment
    */
   @Delete('{id}/terminate')
-  @Tags('GameAdmin')
+  @Tags('Game', 'GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(401, 'Not authorized to perform action.')
   @Response<ErrorResponse>(404, 'Match does not exist.')
@@ -374,9 +375,21 @@ export default class MatchesController {
     @Path() id: ObjectIdString,
     @Body() params: { winnerId: ObjectIdString; comment?: string }
   ): Promise<MatchDTO> {
-    if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
     const match = await this.dbaService.getMatchByIdPromise(id);
     if (!match) throw new APIError(404, 'Match does not exist.');
+
+    // -- admin can terminate any match
+    // -- player can terminate a practive match (every playerid is either 'me' player or dummy playyer)
+    // -- dummy player cannot terminate any matches
+    if (
+      !req.user?.isAdmin &&
+      !(
+        req.user?.username !== DUMMY_PLAYER_ID &&
+        match.playerids.every((p) => p?.equals(req.user?.username) || p?.equals(DUMMY_PLAYER_ID))
+      )
+    ) {
+      throw new APIError(401, 'Not authorized to perform action.');
+    }
 
     const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
     await executor.actionDeleteMatchPromise(new ObjectId(params.winnerId), params.comment);

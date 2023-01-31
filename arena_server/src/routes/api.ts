@@ -169,7 +169,7 @@ app
 app
   .route('/api/matches/:id/terminate')
   // -- Delete a Match forcefully: for admin only
-  .delete(authenticate, ensureAdmin, async (req, res, next) => {
+  .delete(authenticate, authedLimiter, async (req, res, next) => {
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();

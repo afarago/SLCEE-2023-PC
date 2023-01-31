@@ -1,6 +1,7 @@
 === TODOs ===
 P1
 * consolidate API /matches, /matches/{matchid} - visibility
+* consolidate MatchDTO API /matches -- OpenAPI is too complex returning both condensed and full MatchDTO
 
 P2
 * socket.io -- later could rework onto using selective namespaces instead of rooms
