@@ -15,3 +15,7 @@ export const register = (app: express.Application) => {
     res.sendStatus(200);
   });
 };
+
+
+//TODO: include GAE_VERSION for sessiondata.service.ts
+//consider: process.env.GOOGLE_CLOUD_PROJECT_ID

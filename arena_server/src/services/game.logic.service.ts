@@ -15,7 +15,7 @@ import RandomGenerator from '../utils/random';
 import DBAService from './dba.service';
 
 // -- number of turn skippping timeout before match is terminated
-const MAX_TIMEOUT_TURNEND = Number(process.env.MAX_TIMEOUT_TURNEND) || 10;
+const MAX_TIMEOUT_TURNEND = Number(process.env.MAX_TIMEOUT_TURNEND) || 5;
 
 /**
  * GameController class, main game controller

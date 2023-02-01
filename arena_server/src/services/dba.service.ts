@@ -67,7 +67,7 @@ export default class DBAService {
         : {}),
       ...(options?.tags
         ? {
-            'creationParams.tags': { $all: options.tags },
+            'creationParams.tags': { $in: options.tags },
           }
         : {}),
       ...(options?.limit?.offset

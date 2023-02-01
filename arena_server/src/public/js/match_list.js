@@ -88,14 +88,20 @@
     let storedIdx = matchesData.findIndex((value, index) => value.id === matchdata.id);
     if (storedIdx < 0) {
       //-- created, insert on top
-      //-- do this only if full data received, otherwise it will display as an invalid data
-      //TODO: might not be relevant to the current filter - rework adding new rows....
-      if (matchdata.playerdata) {
-        const $content = $(renderMatchRowCSR(matchdata));
-        $content.hide().show('slow');
+      //-- do this only if full data received (has matchdata.playerdata), otherwise it will display as an invalid data
+      const isFullDTO = matchdata.playerdata;
+      if (isFullDTO) {
+      //-- might not be relevant to the current filter - check this as well
+      const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+        const filterTags = params.get('tags')?.split(',');
+        if (!filterTags || filterTags?.some((tag) => matchdata.tags?.includes(tag))) {
+          const $content = $(renderMatchRowCSR(matchdata));
+          $content.hide().show('slow');
 
-        $matchestable.prepend($content);
-        matchesData.splice(0, 0, matchdata);
+          $matchestable.prepend($content);
+          matchesData.splice(0, 0, matchdata);
+        }
       }
     } else {
       //-- check if it updated compared to the stored one, if same - just return
@@ -183,6 +189,8 @@
 
     //-- load data - if requested
     if (loadData) {
+      //-- window.location.search will add any search criteria e.g. tags
+      //TODO: later on at this point pagination start shall be removed, once implemented e.g. via URLSearchParams above
       $.getJSON(`/api/matches${window.location.search || '?'}&condensed=true&limit=100`, (data) => {
         if (loadData === 'replace') {
           matchesData.splice(0, matchesData.length, ...data);

@@ -78,7 +78,7 @@ export default class FrontendController {
       })
       ?.filter((matchdata) => matchdata);
 
-    res.render('matches', { filterDate, matchesOnLoad, limit });
+    res.render('match_list', { filterDate, matchesOnLoad, limit });
   }
 
   /**
@@ -103,7 +103,7 @@ export default class FrontendController {
       doReturnAllMoves: true,
     });
 
-    res.render('match', { matchdto });
+    res.render('match_detail', { matchdto });
   }
 
   // ------------------------------------------------------------------------------

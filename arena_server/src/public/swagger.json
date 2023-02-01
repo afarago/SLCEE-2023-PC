@@ -763,6 +763,9 @@
 			},
 			"SessionData": {
 				"properties": {
+					"version": {
+						"type": "string"
+					},
 					"ip": {
 						"type": "string"
 					},
@@ -1192,7 +1195,7 @@
 						}
 					},
 					{
-						"description": "optionally expose additional info not availble for tournament matches such as drawpile, discardpile contents",
+						"description": "optionally expose additional info such as drawpile, discardpile contents - not available for tournament matches",
 						"in": "query",
 						"name": "showdebug",
 						"required": false,

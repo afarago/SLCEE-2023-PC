@@ -16,7 +16,8 @@
       new Map([
         ['user', sessiondata?.name ?? sessiondata?.username],
         ['role', sessiondata?.role],
-        ['db', sessiondata.dbname],
+        ['db', sessiondata?.dbname],
+        ['version', sessiondata?.version ]
       ]).entries()
     )
       .filter(([key, val]) => val)

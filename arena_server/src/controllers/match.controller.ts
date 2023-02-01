@@ -206,7 +206,7 @@ export default class MatchesController {
    * @param id The requested Match Id
    * @param [waitactive] optionally waits with timeout until user becomes active
    * @param [showevents] optionally add events associated with the match
-   * @param [showdebug] optionally expose additional info not availble for tournament matches such as drawpile, discardpile contents
+   * @param [showdebug] optionally expose additional info such as drawpile, discardpile contents - not available for tournament matches
    * @returns Match details, with al details when requesting a 'practice' Match
    */
   @Get('{id}')
