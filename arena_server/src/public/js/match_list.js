@@ -71,7 +71,7 @@
         //--- tags
         (Array.isArray(match.tags)
           ? `<td class="hide-on-large-and-down">` +
-            match.tags?.map((tag) => `<div class='chip blue-grey lighten-5 grey-text right'>#${tag}</div>`).join('') +
+            match.tags?.map((tag) => `<div class='chip blue-grey lighten-4 grey-text right'><a href='/matches/statistics?tag=${tag}' target='statistics'>#${tag}</a></div>`).join('') +
             `</td>`
           : '');
     } catch (e) {

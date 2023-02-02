@@ -123,7 +123,9 @@ export default class FrontendController {
     // }
     const filterTag: string = filter.tag;
 
-    const statsOnLoad = filterTag ? await this.dbaService.getMatchStatisticsPromise(filterTag) : [];
+    const statsOnLoad = filterTag
+      ? await this.dbaService.getMatchStatisticsPromise({ tag: filterTag, limit: 100 })
+      : [];
     const players = await this.dbaService.getPlayersPromise();
     res.render('match_stats', { players, statsOnLoad, filterTag });
   }

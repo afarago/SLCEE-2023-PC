@@ -1,7 +1,7 @@
 <%- include('partials/layout.0top.ejs') -%> 
 <% 
   function fillTagMap(stats) {
-    let tagMap = new Map(); // tag1 -> playerpair -> match
+    let tagMap = new Map(); //-- tag1 -> playerpair -> match
     for (const item of stats) {
       let tagElem = tagMap.get(item.nextTag);
       if (!tagElem) { tagElem = new Map(); tagMap.set(item.nextTag, tagElem); }
@@ -18,7 +18,9 @@
   function renderRound(tagElem, tag) { 
     return `
       <tr>
-        <th><div class="chip"><a href="/matches?tags=${tag}">#${tag}</a></div></th>
+        <th>
+          ${tag?`<div class="chip"><a href="/matches?tags=${tag}">#${tag}</a></div>`:''}
+        </th>
         ${Array.from(tagElem).map(([playerpair, item], index) => {
           return `<td>${renderRoundForPlayerPair(item)}</td>`;
         }).join('')}
@@ -27,7 +29,7 @@
 
   function renderRoundForPlayerPair(itemArray) {
     const countSubroundWins = [0, 0];
-    const areMatchesRunning = false;
+    let areMatchesRunning = false;
     itemArray.forEach(item => { 
       if (typeof item.winnerIdx === 'number') { countSubroundWins[item.winnerIdx]++ } 
       if (!item.isFinished) areMatchesRunning = true;

@@ -400,13 +400,13 @@ export default class DBAService {
    * Retrieves match statistics based on a server tag
    * @param filterTag
    */
-  async getMatchStatisticsPromise(tag: string) {
-    const filterTag = tag;
+  async getMatchStatisticsPromise(options: { tag: string; limit: number }) {
+    const filterTag = options?.tag;
 
     await this.dbService.ensureConnected();
     const dbitems = await this.dbService?.collections.matches
       ?.aggregate([
-        { $match: { 'creationParams.tags': filterTag, createdByPlayerId: null } },
+        { $match: { 'creationParams.tags': filterTag } },
         {
           $project: {
             _id: 1,
@@ -441,6 +441,7 @@ export default class DBAService {
           },
         },
         { $sort: { nextTag: 1, playerids: 1, startedAt: 1 } },
+        { $limit: options?.limit },
       ])
       .toArray();
 
