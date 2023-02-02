@@ -19,14 +19,6 @@
   }
 
   @media only screen and (min-width: 601px) {
-    & td {
-      white-space: nowrap;
-
-      :last-child {
-        white-space: normal;
-      }
-    }
-
     & a.btn {
       width: 15em;
     }
@@ -36,6 +28,17 @@
     td {
       color: #aaa !important;
       background-color: #eee;
+    }
+  }
+
+  .chip {
+    white-space: nowrap !important;
+  }
+  @media only screen and (max-width: 1440px) {
+    .chip {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 10em;
     }
   }
 }

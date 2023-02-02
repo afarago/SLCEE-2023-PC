@@ -1,7 +1,7 @@
 runtime: nodejs16
 
 env_variables:
-  MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:OOp874yvUjntNlrg@cluster0.hluotlp.mongodb.net/?retryWrites=true&w=majority"
+  MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:OOp874yvUjntNlrg@cluster0.hluotlp.mongodb.net/?retryWrites=true&w=majority&compressors=snappy,zlib"
   ADMIN_PASSWORD: "blahSecret!"
   MONGODB_DBNAME: "spc22"
   API_RETRY_TIMEOUT_MS: 30000
