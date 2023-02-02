@@ -772,6 +772,9 @@
 					"dbname": {
 						"type": "string"
 					},
+					"country": {
+						"type": "string"
+					},
 					"role": {
 						"type": "string",
 						"nullable": true

@@ -16,6 +16,7 @@ export interface IUser {
   isAdmin: boolean;
   email?: string;
   name?: string;
+  country?: string;
 }
 
 passport.use(new passportAnonymous.Strategy());
@@ -44,7 +45,13 @@ async function httpSecretFunction(
       )
         throw new Error();
 
-      const user = { username, isAdmin: false, email: player.email, name: player.name } as IUser;
+      const user = {
+        username,
+        isAdmin: false,
+        email: player.email,
+        name: player.name,
+        country: player.country,
+      } as IUser;
       return done(null, user, player.passwordhash);
     }
   } catch (e) {

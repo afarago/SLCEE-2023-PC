@@ -15,6 +15,7 @@ export type SessionData = {
   username: string;
   name: string | null;
   role: string | null;
+  country?: string;
   dbname: string;
   ip: string;
   version?: string;
@@ -34,6 +35,7 @@ export default class SessionDataService {
       dbname: this.dbService?.databaseName,
       ip: req.res.locals.clientip,
       version: process.env.GAE_VERSION,
+      country: user?.country,
     };
   }
 

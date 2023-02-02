@@ -40,6 +40,7 @@ Your M2 cluster has three nodes with a 500 connection limit per node. Atlas rese
 read preference to secondary, Atlas can read from the two secondary nodes for a combined 980 connection limit.
 Atlas sets the limits for concurrent incoming connections based on the cluster tier and class. Atlas connection limits apply per node. For 
 sharded clusters, Atlas connection limits apply per mongos router. The number of mongos routers is equal to the number of replica set nodes across all shards.
+* mongodb compression - https://vicuesoft.com/blog/titles/MongoDB_compression_options/
 
 === BUGs KNOWN ===
 * n/a

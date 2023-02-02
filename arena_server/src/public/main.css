@@ -87,6 +87,15 @@ nav .section:not(.shown) {
   pointer-events: none;
 }
 
+.iconflag {
+  width: 1em;
+  border: 1px lightgrey solid;
+  position: relative;
+  line-height: 0;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
 .matchestable thead th,
 .matchestable thead td {
   padding-top: 0px;

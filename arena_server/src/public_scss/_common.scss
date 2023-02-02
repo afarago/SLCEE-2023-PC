@@ -86,3 +86,12 @@ nav {
 .pulse::before {
   pointer-events: none;
 }
+
+.iconflag {
+  width: 1em;
+  border: 1px lightgrey solid;
+  position: relative;
+  line-height: 0;
+  vertical-align: baseline;
+  top: -0.5em;
+}

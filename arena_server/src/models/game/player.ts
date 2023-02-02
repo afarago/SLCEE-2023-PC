@@ -18,6 +18,7 @@ export default class Player {
       Hydrate.convertFrom(data, 'name', 'String', obj);
       Hydrate.convertFrom(data, 'passwordhash', 'String', obj);
       Hydrate.convertFrom(data, 'email', 'String', obj);
+      Hydrate.convertFrom(data, 'country', 'String', obj);
     }
 
     return obj;
@@ -27,4 +28,5 @@ export default class Player {
   name: string;
   passwordhash?: string | null;
   email?: string | null;
+  country?: string | null;
 }

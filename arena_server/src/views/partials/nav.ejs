@@ -80,7 +80,11 @@
   $(() => {
     $(`nav .authelem[data-auth-value=${!!sessiondata.username}]`).removeClass('hide');
     $('nav .template[data-template="loggedin_user"]').html(
-      `Logged in as ${sessiondata?.name} &lt;${sessiondata?.username}&gt;`
+      `Logged in as ${sessiondata?.name} &lt;${sessiondata?.username}&gt; ${renderFlag(sessiondata?.country)}`
     );
   });
+
+  function renderFlag(country) {
+    return country ? `<img class='iconflag' src='/img/flag_${country.toLowerCase()}.png'>` : '';
+  }
 </script>

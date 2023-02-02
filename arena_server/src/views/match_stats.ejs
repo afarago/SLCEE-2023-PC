@@ -1,4 +1,48 @@
+
 <%- include('partials/layout.0top.ejs') -%> 
+
+<%# 
+  Draft implementation for the statisctics page, still with server side rendering 
+  NOTE: further room for improvement
+%>
+
+<%#=== MAIN =================================================================================%>
+
+<style>
+  td {
+    vertical-align: top;
+  }
+</style>
+
+<main>
+  <% if (statsOnLoad.length>0) { %>
+    <table class="striped">
+      <tbody>
+        <% fillTagMap(statsOnLoad).forEach((value, key) => { %>
+          <%- renderRound(value, key) %>
+        <% }) %>
+      </tbody>
+      <% if (statsOnLoad.length>limit) { %>
+        <tr><td colspan="100">More data available, not rendered due to performance reasons...</td></tr>
+      <% } %>
+    </table>
+  <% } else { %> 
+    <div>Select a tag using the url query parameter - e.g. ?tag=Day3</div>
+  <% } %> 
+</main>
+
+<%#=== FOOTER =================================================================================%>
+
+<%-
+`<script>
+  const tags = "<div class='chip blue lighten-1 white-text'>#${filterTag}</div>";
+  $('nav .template[data-template="tags"]').html(tags);
+  $('nav .section[data-section="stats"]').addClass('shown');
+</script>`
+%>
+<%- include('partials/layout.9bottom.ejs') %>
+
+<%#=== UTILS =================================================================================%>
 <% 
   function fillTagMap(stats) {
     let tagMap = new Map(); //-- tag1 -> playerpair -> match
@@ -45,8 +89,10 @@
         <div>
           <nobr>
             ${areMatchesRunning ? '▶︎':''}
-            ${itemArray[0].playerids.map((pid,pidx) => 
-              conditionalBold(players.get(pid.toString())?.name, pidx===majorityWinnderIdx)).join('-')} - 
+            ${itemArray[0].playerids.map((pid, pidx) => {
+                const player = players.get(pid.toString());
+                return conditionalBold(`${player?.name}${renderFlag(player?.country)}`, pidx===majorityWinnderIdx)
+              }).join('-')} - 
             ${countSubroundWins.map((pid,pidx) => conditionalBold(countSubroundWins[pidx], pidx===majorityWinnderIdx)).join(':')}
           </nobr>
         </div>
@@ -70,41 +116,7 @@
   function conditionalBold(value, enable)  {
     return enable ? `<b>${value}</b>` : value;
   }
-%>
-
-<%#=== MAIN =================================================================================%>
-
-<style>
-  td {
-    vertical-align: top;
+  function renderFlag(country) {
+    return country ? `<img class='iconflag' src='/img/flag_${country.toLowerCase()}.png'>` : '';
   }
-</style>
-
-<main>
-  <% if (statsOnLoad.length>0) { %>
-    <table class="striped">
-      <tbody>
-        <% fillTagMap(statsOnLoad).forEach((value, key) => { %>
-          <%- renderRound(value, key) %>
-        <% }) %>
-      </tbody>
-      <% if (statsOnLoad.length>limit) { %>
-        <tr><td colspan="100">More data available, not rendered due to performance reasons...</td></tr>
-      <% } %>
-    </table>
-  <% } else { %> 
-    <div>Select a tag using the url query parameter - e.g. ?tag=Day3</div>
-  <% } %> 
-</main>
-
-<%#=== FOOTER =================================================================================%>
-
-<%-
-`<script>
-  const tags = "<div class='chip blue lighten-1 white-text'>#${filterTag}</div>";
-  $('nav .template[data-template="tags"]').html(tags);
-  $('nav .section[data-section="stats"]').addClass('shown');
-</script>`
 %>
-
-<%- include('partials/layout.9bottom.ejs') %>
