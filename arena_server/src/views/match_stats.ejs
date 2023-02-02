@@ -88,6 +88,9 @@
           <%- renderRound(value, key) %>
         <% }) %>
       </tbody>
+      <% if (statsOnLoad.length>limit) { %>
+        <tr><td colspan="100">More data available, not rendered due to performance reasons...</td></tr>
+      <% } %>
     </table>
   <% } else { %> 
     <div>Select a tag using the url query parameter - e.g. ?tag=Day3</div>

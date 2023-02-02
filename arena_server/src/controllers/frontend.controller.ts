@@ -123,11 +123,12 @@ export default class FrontendController {
     // }
     const filterTag: string = filter.tag;
 
+    const limit = 500;
     const statsOnLoad = filterTag
-      ? await this.dbaService.getMatchStatisticsPromise({ tag: filterTag, limit: 100 })
+      ? await this.dbaService.getMatchStatisticsPromise({ tag: filterTag, limit: limit + 1 })
       : [];
     const players = await this.dbaService.getPlayersPromise();
-    res.render('match_stats', { players, statsOnLoad, filterTag });
+    res.render('match_stats', { players, statsOnLoad, filterTag, limit });
   }
 
   // ------------------------------------------------------------------------------
