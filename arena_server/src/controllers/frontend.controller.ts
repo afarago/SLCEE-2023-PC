@@ -106,6 +106,28 @@ export default class FrontendController {
     res.render('match_detail', { matchdto });
   }
 
+  /**
+   * Render matches for Frontend
+   * @param filter
+   * @param res
+   * @returns matches
+   */
+  async getMatchStatistics(req: any, filter: { at?: string; tag: string }, res: any): Promise<void> {
+    res.locals.sessionData = this.sessionDataService.getSessionData(req);
+    res.locals.user = req.user;
+
+    // let filterDate = new Date(); // -- just today
+    // if (filter.at) {
+    //   const tempdate = new Date(filter.at);
+    //   if (!isNaN(tempdate.valueOf())) filterDate = tempdate;
+    // }
+    const filterTag: string = filter.tag;
+
+    const statsOnLoad = filterTag ? await this.dbaService.getMatchStatisticsPromise(filterTag) : [];
+    const players = await this.dbaService.getPlayersPromise();
+    res.render('match_stats', { players, statsOnLoad, filterTag });
+  }
+
   // ------------------------------------------------------------------------------
   // -- database change stream watch functions
 

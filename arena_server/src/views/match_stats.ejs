@@ -1,0 +1,105 @@
+<%- include('partials/layout.0top.ejs') -%> 
+<% 
+  function fillTagMap(stats) {
+    let tagMap = new Map(); // tag1 -> playerpair -> match
+    for (const item of stats) {
+      let tagElem = tagMap.get(item.nextTag);
+      if (!tagElem) { tagElem = new Map(); tagMap.set(item.nextTag, tagElem); }
+
+      const playerpair = item.playerids.map(pid=>pid.toString()).join('_');
+      let playerpairElem = tagElem.get(playerpair);
+      if (!playerpairElem) { playerpairElem = []; tagElem.set(playerpair, playerpairElem); }
+
+      playerpairElem.push(item);
+    }
+    return tagMap;
+  }
+
+  function renderRound(tagElem, tag) { 
+    return `
+      <tr>
+        <th><div class="chip"><a href="/matches?tags=${tag}">#${tag}</a></div></th>
+        ${Array.from(tagElem).map(([playerpair, item], index) => {
+          return `<td>${renderRoundForPlayerPair(item)}</td>`;
+        }).join('')}
+      </tr>`;
+  }
+
+  function renderRoundForPlayerPair(itemArray) {
+    const countSubroundWins = [0, 0];
+    const areMatchesRunning = false;
+    itemArray.forEach(item => { 
+      if (typeof item.winnerIdx === 'number') { countSubroundWins[item.winnerIdx]++ } 
+      if (!item.isFinished) areMatchesRunning = true;
+    } );
+    
+    const majorityWinnderIdx = 
+      areMatchesRunning ? null :
+      countSubroundWins[0]>countSubroundWins[1] ? 0 : 
+      countSubroundWins[0]<countSubroundWins[1] ? 1 : 
+      null;
+    
+    return `
+        <div>
+          <nobr>
+            ${areMatchesRunning ? '▶︎':''}
+            ${itemArray[0].playerids.map((pid,pidx) => 
+              conditionalBold(players.get(pid.toString())?.name, pidx===majorityWinnderIdx)).join('-')} - 
+            ${countSubroundWins.map((pid,pidx) => conditionalBold(countSubroundWins[pidx], pidx===majorityWinnderIdx)).join(':')}
+          </nobr>
+        </div>
+        <div>${itemArray.map((item, gidx)=>renderMatchElem(item,gidx)).join(', ')}</div>`;
+  }
+  function renderMatchElem(item, gidx) {
+    return `
+      <nobr>
+        <a href="/matches/${item._id}" title="duration: ${item.durationMs/1000} sec">
+          ${!item.isFinished ? '▶︎':''}
+          ${item.bankvalues.map((bv,bidx)=>conditionalBold(bv, bidx===item.winnerIdx)).join(':')}
+        </a>
+        <sup>${
+          [
+            `${Math.round(item.durationMs/1000)}s`,
+            item.timeoutCount>0?`⚠️${item.timeoutCount}`:''
+          ].filter(elem=>elem).join(' | ')
+        }
+      </nobr>`;
+  }
+  function conditionalBold(value, enable)  {
+    return enable ? `<b>${value}</b>` : value;
+  }
+%>
+
+<%#=== MAIN =================================================================================%>
+
+<style>
+  td {
+    vertical-align: top;
+  }
+</style>
+
+<main>
+  <% if (statsOnLoad.length>0) { %>
+    <table class="striped">
+      <tbody>
+        <% fillTagMap(statsOnLoad).forEach((value, key) => { %>
+          <%- renderRound(value, key) %>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %> 
+    <div>Select a tag using the url query parameter - e.g. ?tag=Day3</div>
+  <% } %> 
+</main>
+
+<%#=== FOOTER =================================================================================%>
+
+<%-
+`<script>
+  const tags = "<div class='chip blue lighten-1 white-text'>#${filterTag}</div>";
+  $('nav .template[data-template="tags"]').html(tags);
+  $('nav .section[data-section="stats"]').addClass('shown');
+</script>`
+%>
+
+<%- include('partials/layout.9bottom.ejs') %>

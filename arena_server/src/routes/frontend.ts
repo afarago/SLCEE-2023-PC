@@ -48,6 +48,15 @@ app.get('/matches', authenticate, authedLimiter, async (req, res, next) => {
     .catch(next); // Errors will be passed to Express.
 });
 
+app.get('/matches/statistics', authenticate, authedLimiter, async (req, res, next) => {
+  Promise.resolve()
+    .then(async () => {
+      const controller = new FrontendController();
+      await controller.getMatchStatistics(req, { at: req.query.at as any, tag: req.query.tag as string }, res);
+    })
+    .catch(next); // Errors will be passed to Express.
+});
+
 app.get('/matches/:matchId', authenticate, authedLimiter, async (req, res, next) => {
   Promise.resolve()
     .then(async () => {

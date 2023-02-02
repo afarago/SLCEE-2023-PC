@@ -459,7 +459,7 @@ export default class MatchesController {
     const dateFrom = new Date(adate.getFullYear(), adate.getMonth(), 1 - 7);
     const dateToExcl = new Date(adate.getFullYear(), adate.getMonth() + 1, 1 + 7);
     const playerid = !req.user?.isAdmin ? req.user?.username : undefined;
-    const dayCounts = await this.dbaService.getMatchCountForDateRange(dateFrom, dateToExcl, playerid);
+    const dayCounts = await this.dbaService.getMatchCountForDateRangePromise(dateFrom, dateToExcl, playerid);
     return dayCounts.map((item) => item.day.toDateString());
   }
 }

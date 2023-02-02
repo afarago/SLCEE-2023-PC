@@ -363,7 +363,7 @@ export default class DBAService {
    * @param to
    * @returns match count for date range
    */
-  async getMatchCountForDateRange(
+  async getMatchCountForDateRangePromise(
     from: Date,
     to: Date,
     playerid: ObjectIdString
@@ -396,6 +396,61 @@ export default class DBAService {
     return result;
   }
 
+  /**
+   * Retrieves match statistics based on a server tag
+   * @param filterTag
+   */
+  async getMatchStatisticsPromise(tag: string) {
+    const filterTag = tag;
+
+    await this.dbService.ensureConnected();
+    const dbitems = await this.dbService?.collections.matches
+      ?.aggregate([
+        { $match: { 'creationParams.tags': filterTag, createdByPlayerId: null } },
+        {
+          $project: {
+            _id: 1,
+            playerids: 1,
+            isFinished: { $eq: ['$currentPlayerIndex', null] },
+            winnerIdx: '$state.winnerIdx',
+            timeoutCount: '$state.timeoutCount',
+            startedAt: 1,
+            lastMoveAt: 1,
+            durationMs: { $subtract: ['$lastMoveAt', '$startedAt'] },
+            nextTag: {
+              $arrayElemAt: [
+                { $filter: { input: '$creationParams.tags', as: 'tags', cond: { $ne: ['$$tags', filterTag] } } },
+                0,
+              ],
+            },
+            bankvalues: {
+              $map: {
+                input: '$state.banks',
+                as: 'bank',
+                in: {
+                  $sum: {
+                    $map: {
+                      input: { $objectToArray: '$$bank' },
+                      as: 'cardsuitstack',
+                      in: { $max: '$$cardsuitstack.v' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        { $sort: { nextTag: 1, playerids: 1, startedAt: 1 } },
+      ])
+      .toArray();
+
+    const result = dbitems;
+    return result;
+  }
+
+  /**
+   * Resets the player cache on db change
+   */
   private resetPlayersCache() {
     this.playersCache = null;
   }

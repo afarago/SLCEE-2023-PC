@@ -104,15 +104,33 @@ app
   });
 
 // -- Get calendar statistics for a month for frontend listing
-app.route('/api/matches/busydays').get(authenticate, authedLimiter, async (req, res, next) => {
-  Promise.resolve()
-    .then(async () => {
-      const controller = new MatchesController();
-      const response = await controller.getMatchStatisticsBusyDays(req, req.query.at as any);
-      return res.send(response);
-    })
-    .catch(next); // Errors will be passed to Express.
-});
+app
+  .route('/api/matches/busydays')
+  //-- for any authenticated users
+  .get(authenticate, authedLimiter, async (req, res, next) => {
+    Promise.resolve()
+      .then(async () => {
+        const controller = new MatchesController();
+        const response = await controller.getMatchStatisticsBusyDays(req, req.query.at as any);
+        return res.send(response);
+      })
+      .catch(next); // Errors will be passed to Express.
+  });
+
+// // -- Get calendar statistics for a month for frontend listing
+// app
+//   .route('/api/matches/statistics')
+//   //-- for any authenticated users
+//   .get(authenticate, authedLimiter, async (req, res, next) => {
+//     Promise.resolve()
+//       .then(async () => {
+//         const controller = new MatchesController();
+//         const response = await controller.getMatchStatisticsBusyDays(req, req.query.at as any);
+//         return res.send(response);
+//       })
+//       .catch(next); // Errors will be passed to Express.
+//   });
+
 //  /matches/statistics?from=12/1/2022&to=12/31/2022&tags=alma,korte&status=finished|active
 //    implicit filter by player or admin
 // Csaba: tournament stats: tag+(?date)=>[winnerid,scores]
