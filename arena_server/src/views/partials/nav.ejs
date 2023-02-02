@@ -66,6 +66,11 @@
       ><i class="material-icons"> lock_open </i></a
     >
 
+    <!-- connectivity to socket.io -->
+    <a class="right col" href="#!" style="cursor: default"
+      ><i id="socketio_status" title="no live updates" class="material-icons"> pause_circle_outline </i></a
+    >
+    
     <!-- right logo text -->
     <ul class="right hide-on-med-and-down">
       SAP Labs CEE Hub 2023 Programming Competition
@@ -87,4 +92,10 @@
   function renderFlag(country) {
     return country ? `<img class='iconflag' src='/img/flag_${country.toLowerCase()}.png'>` : '';
   }
+
+  function updateConnectionStatus(isConnected) {
+    $('#socketio_status')
+      .attr('title', isConnected ? 'live updates' : 'disconnected from live updates')
+      .html(isConnected ? 'cloud_done' : 'cloud_off');
+  }        
 </script>
