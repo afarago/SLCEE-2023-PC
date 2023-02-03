@@ -495,8 +495,9 @@
     //-- register socket.io listeners on client side
     socket.on('match:update:details', updateMatchCSR);
     socket.on('move:insert:details', updateMatchInsertMoveCSR);
-    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
     socket.on("connect", () => updateConnectionStatus(socket.connected));
+    socket.on("disconnect", (reason) => updateConnectionStatus(socket.connected));
+    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
 
     //-- join room, so that this browser receives only day specific updates
     setNotificationRoom(matchdto._id);

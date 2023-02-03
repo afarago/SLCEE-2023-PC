@@ -54,7 +54,14 @@ sharded clusters, Atlas connection limits apply per mongos router. The number of
 // Csaba: tournament stats: tag+(?date)=>[winnerid,scores]
 // calendar picker: filterset(tags,date+-range,(user)) => day/count [{}]
 
+===
+PERFORMANCE
 
+db size is significant and connection to mongodb server creates high load
+- change streams progress each small change to N nodes to keep the frontend updated - though this is a nice-to-have
+- database storage could be compressed
+- database communication tested with snappy/zlib
+- storage of all statuses in all events in all moves might not be necessary - could consider dropping the event-status
 
 ===
 DB-DESIGN v2.0 (fields to be persisted):

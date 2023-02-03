@@ -206,14 +206,17 @@
   let socket = null;
   $(() => {
     socket = io();
+    debug_switch.socket = socket;
     socket.onAny((event, ...args) => {
       if (debug_switch?.log_socketio) console.log('socketio', event, args);
     });
 
     //-- remember that this runs on client side
     socket.on('match:update:header', updateMatchCSR);
-    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
     socket.on("connect", () => updateConnectionStatus(socket.connected));
+    socket.on("disconnect", (reason) => updateConnectionStatus(socket.connected));
+    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
+
     //-- join room, so that this browser receives only day specific updates
     if (filterDate) setNotificationRoom(filterDate);
   });
