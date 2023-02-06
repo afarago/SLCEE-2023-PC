@@ -1,15 +1,19 @@
 runtime: nodejs16
 
 env_variables:
-  MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:OOp874yvUjntNlrg@cluster0.hluotlp.mongodb.net/?retryWrites=true&w=majority&compressors=snappy,zlib"
-  ADMIN_PASSWORD: "blahSecret!"
-  MONGODB_DBNAME: "spc22"
+  # MONGODB_CONN_STRING: "mongodb+srv://progiverseny22:MXhfDNq4rzdVVPQH@cluster0.hh1jodm.mongodb.net/?retryWrites=true&w=majority&compressors=snappy,zlib"
+  # ADMIN_PASSWORD: "blahSecret!"
+  # MONGODB_DBNAME: "spc22"
   API_RETRY_TIMEOUT_MS: 30000
   API_RETRY_DELAY_MS: 1000
   NODE_ENV: production
   PORT: 8080
   LOGGING_NO_COLORS: true
   MAX_TIMEOUT_TURNEND: 5
+
+includes:
+  # this will contain the MONGODB_CONN_STRING, ADMIN_PASSWORD and MONGODB_DBNAME files
+  - ./gcp_secret.yaml
 
 inbound_services:
   - warmup
@@ -18,5 +22,10 @@ network:
   session_affinity: true
 
 automatic_scaling:
-  max_instances: 30
-  max_concurrent_requests: 50
+  ## live settings for the competition finals
+  # max_instances: 30
+  # max_concurrent_requests: 50
+
+  ## light testing mode
+  max_instances: 1
+  

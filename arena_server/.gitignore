@@ -8,3 +8,4 @@ bin
 obj
 .vs
 .parcel-cache
+gcp_secret.yaml
