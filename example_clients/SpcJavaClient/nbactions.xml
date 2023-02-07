@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>run</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.0.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.appArgs>-g 63c07298cf69b20693a2549c -p 636438380ef778617e0e5b01 -pw testpass  -p2 636438380ef778617e0e5b02 -pw2 testpass -s https://slhpc2023.appspot.com</exec.appArgs>
+                <exec.mainClass>herebcs.spcjavaclient.SpcJavaClient</exec.mainClass>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.0.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.appArgs>-g 63c07298cf69b20693a2549c -p 636438380ef778617e0e5b01 -pw testpass  -p2 636438380ef778617e0e5b02 -pw2 testpass -s https://slhpc2023.appspot.com</exec.appArgs>
+                <exec.mainClass>herebcs.spcjavaclient.SpcJavaClient</exec.mainClass>
+                <exec.executable>java</exec.executable>
+                <jpda.listen>true</jpda.listen>
+            </properties>
+        </action>
+        <action>
+            <actionName>profile</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.0.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.mainClass>herebcs.spcjavaclient.SpcJavaClient</exec.mainClass>
+                <exec.executable>java</exec.executable>
+                <exec.appArgs>-g 63c07298cf69b20693a2549c -p 636438380ef778617e0e5b01 -pw testpass  -p2 636438380ef778617e0e5b02 -pw2 testpass -s https://slhpc2023.appspot.com</exec.appArgs>
+            </properties>
+        </action>
+    </actions>

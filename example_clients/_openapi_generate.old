@@ -1,0 +1,14 @@
+openapi-generator-cli generate -i http://localhost:8080/swagger.json -g python-legacy -o python2 --global-property=apiTests=false --global-property=modelTests=false --global-property=modelDocs=false --global-property=apiDocs=false
+
+cls && echo ================ && openapi-generator-cli generate -i http://localhost:8080/swagger.json -g python-legacy -o python --global-property=apiTests=false,modelTests=false,modelDocs=false,apiDocs=false,generateAliasAsModel=true --generate-alias-as-model
+
+cls && echo ================ && openapi-generator-cli generate -i http://localhost:8080/swagger.json -g csharp-netcore -o csharp2 --global-property=apiTests=false,modelTests=false,modelDocs=false,apiDocs=false,generateAliasAsModel=true --generate-alias-as-model --additional-properties=targetFramework=v6.0
+
+cls && echo ================ && openapi-generator-cli generate -i http://localhost:8080/swagger.json -g javascript -o javascript/lib --global-property=apiTests=false,modelTests=false,modelDocs=false,apiDocs=false --additional-properties=usePromises=true
+
+
+csharp                  targetFramework=v4.5
+csharp-netcore          targetFramework=v6.0
+typescript-axios
+typescript-node
+python

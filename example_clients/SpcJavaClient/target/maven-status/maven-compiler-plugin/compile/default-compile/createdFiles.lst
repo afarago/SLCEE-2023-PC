@@ -1,0 +1,10 @@
+herebcs\spcjavaclient\Card$Suit.class
+herebcs\spcjavaclient\Card.class
+herebcs\spcjavaclient\Match.class
+herebcs\spcjavaclient\rest\Status.class
+herebcs\spcjavaclient\rest\State.class
+herebcs\spcjavaclient\rest\MatchID.class
+herebcs\spcjavaclient\rest\Pending.class
+herebcs\spcjavaclient\SpcJavaClient.class
+herebcs\spcjavaclient\rest\EffectResponse$Effect.class
+herebcs\spcjavaclient\rest\EffectResponse.class

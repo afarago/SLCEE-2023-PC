@@ -1,6 +1,7 @@
 node_modules
 .cache
 .vscode
+**/.vs/
 /*.code-workspace
 test/**/*.postman_environment*.json
 test/**/*.postman_collection*.json
