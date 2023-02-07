@@ -6,7 +6,7 @@ The goal of each team is to implement a client to ace the [Dead-Man's-Draw](http
 
 During the competition period there are be several practice tournaments, while the competition closes with a grand tournament where teams' solutions compete against each other and the most victorious teams ace the SLCEE-PC-2023.
 
-The tournament is over and the results are available.
+The tournament is over and the results are [available](./data_statistics_charts).
 ![image](./data_statistics_charts/game_Day5_results_results.png)
 
 # Programming Competiton and Game Rules
@@ -33,4 +33,4 @@ For the data savvy colleagues some data analytics and statistical overviews are 
 
 If you are interested on infrastructure and instance load such as the some million calls per day you will find both Google Cloud Platform and MongoDB statistics [`./data_statistics_charts`](./data_statistics_charts) such as GCP server load figures during the tournament days.
 ![image](./data_statistics_charts/site_statistics_GCP_Summary.png)
-![image](./data_statistics_charts/site_statistics_GCP_Stats.png)
+![image](./data_statistics_charts/site_statistics_GCP_stats.png)
