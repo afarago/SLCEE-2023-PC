@@ -395,7 +395,7 @@ export default class MatchesController {
     }
 
     const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
-    await executor.actionDeleteMatchPromise(new ObjectId(params.winnerId), params.comment);
+    await executor.actionDeleteMatchPromise(new ObjectId(params.winnerId), params.comment, undefined);
 
     const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
     return dto;
@@ -405,40 +405,67 @@ export default class MatchesController {
    * Forceful central deletion of a match using a watchdog on timeout
    * @summary Forceful central deletion of a match using a watchdog on timeout
    * @param [tags] optional filter matches with matching tag/comma separated list of tags
+   * @param [repeat] optionally repeat watchdog logic a _repeat_ number of times with a second delay (max 60)
    * @returns
    */
   @Post('watchdog')
   @Tags('GameAdmin')
   @Security({ basic: [] })
   @Response<ErrorResponse>(401, 'Not authorized to perform action.')
-  public async watchDogMatches(@Request() req: any, @Query() tags?: string): Promise<MatchDTO[]> {
+  public async watchDogMatches(
+    @Request() req: any,
+    @Query() tags?: string,
+    @Query() repeat?: integer
+  ): Promise<MatchDTO[]> {
     if (!req.user?.isAdmin) throw new APIError(401, 'Not authorized to perform action.');
 
     // -- tags filter
     const filterTags = tags?.split(',');
 
-    // -- retrieve matches
-    const matches = await this.dbaService.getMatchesPromise({
-      checkNotFinished: true,
-      checkTimeoutExpired: true,
-      tags: filterTags,
-    });
+    //-- setting repeat settings
+    if (!repeat || !(repeat > 0)) repeat = 1;
+    if (repeat > 60) repeat = 60;
 
-    // -- iterate through (w error handling) all matches where timeout is due
+    //-- do this in a loop
     const results: MatchDTO[] = [];
-    for (const match of matches) {
-      try {
-        // -- terminate match on watchdog, with default timeout comment
-        // -- this will double check if timeout really happened & also centralize timeout logic
-        const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
-        if (await executor.checkTimeoutAndAutoTerminatePromise()) {
-          const dto = await this.gameService.getMatchDTOPromise(match, { user: req.user });
-          results.push(dto);
+    let count = repeat;
+    const fnWorker = async () => {
+      // -- retrieve matches
+      const matches = await this.dbaService.getMatchesPromise({
+        checkNotFinished: true,
+        checkTimeoutExpired: true,
+        tags: filterTags,
+      });
+
+      // -- iterate through (w error handling) all matches where timeout is due
+      for (const match of matches) {
+        try {
+          // -- terminate match on watchdog, with default timeout comment
+          // -- this will double check if timeout really happened & also centralize timeout logic
+          const executor = new GameLogicService(match, req.user?.username, req.res.locals.clientip);
+          const retval = await executor.checkTimeoutAndAutoTerminatePromise();
+          if (retval) {
+            const dto = await this.gameService.getMatchDTOPromise(retval.match, { user: req.user });
+
+            const idx = results.findIndex((m) => dto._id == m._id);
+            if (idx < 0) results.push(dto);
+            else results.splice(idx, 1, dto);
+          }
+        } catch (ex) {
+          Logger.info(`Error deleting match [${match?._id}] ${ex.message ?? ex}`);
         }
-      } catch (ex) {
-        Logger.info(`Error deleting match [${match?._id}] ${ex.message ?? ex}`);
       }
-    }
+
+      return --count;
+    };
+
+    //-- execute the call
+    await retryAsync(fnWorker, {
+      // -- retry executing the action
+      delay: 1000,
+      maxTry: repeat,
+      until: (retval) => !(retval > 0),
+    }).catch((e) => (isTooManyTries(e) ? e.getLastResult() : undefined)); // -- do not throw any errors, just default
 
     return results;
   }

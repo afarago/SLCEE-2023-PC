@@ -144,7 +144,7 @@ app
     Promise.resolve()
       .then(async () => {
         const controller = new MatchesController();
-        const response = await controller.watchDogMatches(req, req.query.tags as any);
+        const response = await controller.watchDogMatches(req, req.query.tags as any, req.query.repeat as any);
         return res.send(response);
       })
       .catch(next); // Errors will be passed to Express.

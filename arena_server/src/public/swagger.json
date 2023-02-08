@@ -1565,6 +1565,15 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"description": "optionally repeat watchdog logic a _repeat_ number of times with a second delay (max 60)",
+						"in": "query",
+						"name": "repeat",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/integer"
+						}
 					}
 				]
 			}
