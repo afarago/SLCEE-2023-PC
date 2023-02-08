@@ -24,11 +24,12 @@ export default class SocketIOService {
       // .of(/^\/.+$/)
       .on('connection', (socket: any) => {
         this.connectCounter++;
-        // console.log('connected');
-
-        // // socket.request.headers.authorization
-        // if (socket.request?.user) socket.emit(`Hello ${socket.request.user.name}`);
-        // if (socket.request?.user) socket.join(socket.request?.user.username)
+        
+        //-- auto close connections after 60 mins
+        setTimeout(() => {
+          socket.disconnect(true); //-- kick client
+        }, 60*60*1000);
+        //TODO: add option for client reconnect
 
         // -- request from client side to join a room
         socket.on('room', (room: string) => {
@@ -61,15 +62,9 @@ export default class SocketIOService {
         // //socket.broadcast.emit('hi');
 
         socket.on('disconnect', () => {
-          // console.log('user disconnected');
           this.connectCounter--;
         });
       });
-
-    // app.on('hellox', () => {
-    //   console.log('hellox');
-    //   io.emit('hellox');
-    // });
 
     return [httpServer, this.io];
   }
