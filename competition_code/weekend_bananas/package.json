@@ -1,0 +1,22 @@
+{
+  "name": "bananarama",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build && node ./out/index.js",
+    "startDev": "node ./out/index.js",    
+    "link": "npm link ./lib",
+    "build": "npx tsc --build --force ./tsconfig.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "press-any-key": "^0.1.1",
+    "slcee_2023_pc_arena": "file:lib",
+    "slhpc23_arena": "file:lib",
+    "spc22_arena": "file:lib",
+    "yargs": "^17.6.2"
+  }
+}

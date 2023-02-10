@@ -1,0 +1,1 @@
+* getMatches / getMatch does not take MatchDTO | MatchHeaderFullDTO into account, results to rejection within ApiClient --> workaround: generated with swagger ignoring this/not relevant for sample client
