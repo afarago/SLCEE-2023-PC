@@ -495,12 +495,34 @@
     //-- register socket.io listeners on client side
     socket.on('match:update:details', updateMatchCSR);
     socket.on('move:insert:details', updateMatchInsertMoveCSR);
-    socket.on("connect", () => updateConnectionStatus(socket.connected));
-    socket.on("disconnect", (reason) => updateConnectionStatus(socket.connected));
-    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
+    socket.on('connect', () => {
+      updateConnectionStatus(socket.connected);
 
-    //-- join room, so that this browser receives only day specific updates
-    setNotificationRoom(matchdto._id);
+      //-- reload state
+      reloadData(matchdto._id);
+
+      //-- join room, so that this browser receives only day specific updates
+      setNotificationRoom(matchdto._id);
+    });
+    socket.on('disconnect', (reason) => {
+      updateConnectionStatus(socket.connected, reason);
+      if (reason === 'io server disconnect') {
+        if (document.hasFocus()) {
+          // the disconnection was initiated by the server, you need to reconnect manually
+          socket.connect();
+        }
+      }
+    });
+    socket.on('connect_error', (error) => updateConnectionStatus(socket.connected, error));
+
+    //-- window activation handling
+    window.onfocus = () => {
+      // console.log('focus');
+      if (!socket.connected && document.hasFocus()) {
+        socket.connect();
+      }
+    };
+    // window.onblur = () => console.log('blur');
   });
 
   setNotificationRoom = (matchId) => {
@@ -509,6 +531,12 @@
       socket.emit('room', socket_room);
     }
   };
+
+  function reloadData(matchid) {
+    $.getJSON(`/api/matches/${matchid}?showevents=true`, (data) => {
+      renderMatchCSR(data);
+    });
+  }
 
   let isMoveRendering = false;
   let matchRenderingFn = null;

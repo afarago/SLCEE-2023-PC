@@ -71,7 +71,12 @@
         //--- tags
         (Array.isArray(match.tags)
           ? `<td class="hide-on-large-and-down">` +
-            match.tags?.map((tag) => `<div class='chip blue-grey lighten-4 grey-text right'><a href='/matches/statistics?tag=${tag}' target='statistics'>#${tag}</a></div>`).join('') +
+            match.tags
+              ?.map(
+                (tag) =>
+                  `<div class='chip blue-grey lighten-4 grey-text right'><a href='/matches/statistics?tag=${tag}' target='statistics'>#${tag}</a></div>`
+              )
+              .join('') +
             `</td>`
           : '');
     } catch (e) {
@@ -91,8 +96,8 @@
       //-- do this only if full data received (has matchdata.playerdata), otherwise it will display as an invalid data
       const isFullDTO = matchdata.playerdata;
       if (isFullDTO) {
-      //-- might not be relevant to the current filter - check this as well
-      const url = new URL(window.location.href);
+        //-- might not be relevant to the current filter - check this as well
+        const url = new URL(window.location.href);
         const params = new URLSearchParams(url.search);
         const filterTags = params.get('tags')?.split(',');
         if (!filterTags || filterTags?.some((tag) => matchdata.tags?.includes(tag))) {
@@ -174,7 +179,7 @@
     { once: true }
   );
 
-  function setFilterDate(datestr, loadData) {
+  function setFilterDate(datestr, loadDataOption) {
     filterDate = datestr;
 
     const url = new URL(window.location.href);
@@ -188,18 +193,22 @@
     setNotificationRoom(datestr);
 
     //-- load data - if requested
-    if (loadData) {
-      //-- window.location.search will add any search criteria e.g. tags
-      //TODO: later on at this point pagination start shall be removed, once implemented e.g. via URLSearchParams above
-      $.getJSON(`/api/matches${window.location.search || '?'}&condensed=true&limit=100`, (data) => {
-        if (loadData === 'replace') {
-          matchesData.splice(0, matchesData.length, ...data);
-          renderMatchesCSR(matchesData);
-        } else {
-          data?.reverse().forEach(updateMatchCSR);
-        }
-      });
+    if (!!loadDataOption) {
+      reloadData(loadDataOption);
     }
+  }
+
+  function reloadData(loadDataOption) {
+    //-- window.location.search will add any search criteria e.g. tags
+    //TODO: later on at this point pagination start shall be removed, once implemented e.g. via URLSearchParams above
+    $.getJSON(`/api/matches${window.location.search || '?'}&condensed=true&limit=100`, (data) => {
+      if (loadDataOption === 'replace') {
+        matchesData.splice(0, matchesData.length, ...data);
+        renderMatchesCSR(matchesData);
+      } else {
+        data?.reverse().forEach(updateMatchCSR);
+      }
+    });
   }
 
   //=== Socket.IO ===================================================================================
@@ -213,12 +222,34 @@
 
     //-- remember that this runs on client side
     socket.on('match:update:header', updateMatchCSR);
-    socket.on("connect", () => updateConnectionStatus(socket.connected));
-    socket.on("disconnect", (reason) => updateConnectionStatus(socket.connected));
-    socket.on("connect_error", (error) => updateConnectionStatus(socket.connected));
+    socket.on('connect', () => {
+      updateConnectionStatus(socket.connected);
 
-    //-- join room, so that this browser receives only day specific updates
-    if (filterDate) setNotificationRoom(filterDate);
+      //-- reload state
+      reloadData('replace');
+
+      //-- join room, so that this browser receives only day specific updates
+      if (filterDate) setNotificationRoom(filterDate);
+    });
+    socket.on('disconnect', (reason) => {
+      updateConnectionStatus(socket.connected, reason);
+      if (reason === 'io server disconnect') {
+        if (document.hasFocus()) {
+          // the disconnection was initiated by the server, you need to reconnect manually
+          socket.connect();
+        }
+      }
+    });
+    socket.on('connect_error', (error) => updateConnectionStatus(socket.connected, error));
+
+    //-- window activation handling
+    window.onfocus = () => {
+      // console.log('focus');
+      if (!socket.connected && document.hasFocus()) {
+        socket.connect();
+      }
+    };
+    // window.onblur = () => console.log('blur');
   });
 
   setNotificationRoom = (datestr) => {

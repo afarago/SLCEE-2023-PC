@@ -6,6 +6,9 @@ import { Service } from 'typedi';
 import Logger from '../config/logger';
 import { authenticateOptionally } from '../config/passport';
 
+// -- milliseconds of a session.io session length before terminating and expecting reconnect from client side
+const SOCKETIO_SESSION_LENGTH_MS = Number(process.env.SOCKETIO_SESSION_LENGTH_MS) || 5 * 60 * 1000;
+
 @Service()
 export default class SocketIOService {
   public connectCounter: number = 0;
@@ -24,12 +27,11 @@ export default class SocketIOService {
       // .of(/^\/.+$/)
       .on('connection', (socket: any) => {
         this.connectCounter++;
-        
+
         //-- auto close connections after 60 mins
         setTimeout(() => {
           socket.disconnect(true); //-- kick client
-        }, 60*60*1000);
-        //TODO: add option for client reconnect
+        }, SOCKETIO_SESSION_LENGTH_MS);
 
         // -- request from client side to join a room
         socket.on('room', (room: string) => {
