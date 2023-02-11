@@ -1,0 +1,3775 @@
+{
+	"info": {
+		"_postman_id": "cbdd8588-bbbd-4d67-9999-625d45b0d2d7",
+		"name": "SPC22",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17028852"
+	},
+	"item": [
+		{
+			"name": "central",
+			"item": [
+				{
+					"name": "startmatch misc",
+					"item": [
+						{
+							"name": "startMatch Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [\r\n        \"636438380ef778617e0e5be5\",\r\n        \"636438380ef778617e0e5be6\"\r\n    ],\r\n    \"drawPile\": [\r\n        [\r\n            \"Oracle\",\r\n            4\r\n        ],\r\n        [\r\n            \"Anchor\",\r\n            4\r\n        ],\r\n        [\r\n            \"Mermaid\",\r\n            5\r\n        ]\r\n    ],\r\n    \"discardPile\": [\r\n        [\r\n            \"Mermaid\",\r\n            6\r\n        ],\r\n        [\r\n            \"Hook\",\r\n            2\r\n        ]\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch invalid players",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [42, \"43\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch own+dummy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass42",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [ \"636438380ef778617e0e5be5\", \"000000000000000000000000\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4]\r\n    ], \r\n    \"discardPile\": [],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch own+dummy Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass42",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [ \"636438380ef778617e0e5be5\", \"636438380ef778617e0e5be5\"],\r\n    \"tags\": [\"almax1\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n        [\"Sword\", 3],\r\n        [\"Mermaid\", 5],\r\n        [\"Mermaid\", 6]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 3",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4],\r\n        [\"Sword\", 3]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n        [\"Mermaid\", 5],\r\n        [\"Map\", 3],\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Mermaid\", 4],\r\n        [\"Mermaid\", 5],\r\n\r\n        [\"Kraken\", 5],\r\n        [\"Map\", 5],\r\n        [\"Mermaid\", 7]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 5",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Anchor\", 4],\r\n        [\"Anchor\", 2],\r\n\r\n        [\"Kraken\", 5],\r\n        [\"Anchor\", 5],\r\n        [\"Anchor\", 3],\r\n\r\n        [\"Kraken\", 6],\r\n        [\"Hook\", 6],\r\n        [\"Mermaid\", 6]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 4],\r\n        [\"Mermaid\", 5],\r\n        [\"Sword\", 2],\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Map\", 2],\r\n\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 4] ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 5",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n\r\n        [\"Mermaid\", 5],\r\n\r\n        [\"Hook\", 2],\r\n        [\"Anchor\", 6]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 6] ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 5],\r\n\r\n        [\"Cannon\", 2],\r\n\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 4] ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n\r\n        [\"Sword\", 2],\r\n\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 5] ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Sword\",5],\r\n\r\n        [\"Kraken\",3],[\"Mermaid\",6],[\"Anchor\",7],\r\n        [\"Sword\",7],\r\n        [\"Kraken\",7], [\"Sword\",4], [\"Oracle\",3]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 7] ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 3",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 4],\r\n        \r\n        [\"Anchor\", 5],\r\n\r\n        [\"Anchor\", 6],\r\n        [\"Sword\", 2],\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"discardPile\": [ [\"Mermaid\", 5] ],\r\n    \"comment\": \"Turn 3 should not allow silent Draw or M9 as it would already bust with M6+M5(sw)\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack 2 Copy 3",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 3],\r\n        [\"Map\", 5],\r\n        [\"Sword\", 2],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Oracle\", 2],\r\n        [\"Map\", 6],\r\n\r\n        [\"Kraken\", 5],\r\n        [\"Sword\", 5],\r\n        [\"Map\", 2]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Map\", 2],\r\n        [\"Mermaid\", 4]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 5],\r\n\r\n        [\"Anchor\", 4],\r\n        \r\n        [\"Map\", 4],\r\n\r\n        [\"Mermaid\", 4]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Anchor\", 5]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy 3",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Anchor\", 4],\r\n        \r\n        [\"Map\", 4],\r\n\r\n        [\"Mermaid\", 4]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Oracle\", 5]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Map\", 4],\r\n\r\n        [\"Mermaid\", 4]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Map\", 5]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy 5",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Mermaid\", 8],\r\n\r\n        [\"Mermaid\", 9],\r\n\r\n        [\"Map\", 4],\r\n        [\"Mermaid\", 4],\r\n        [\"Hook\", 4],\r\n        [\"Key\", 4]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Kraken\", 5],\r\n        [\"Kraken\", 6]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch with debug stack Copy 6",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Map\", 4],\r\n        [\"Mermaid\", 4],\r\n        [\"Hook\", 4],\r\n        \r\n        [\"Key\", 4]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Kraken\", 5],\r\n        [\"Kraken\", 6]\r\n    ],\r\n    \"banks\": [\r\n        [ [\"Mermaid\", 8] ],\r\n        [ [\"Mermaid\", 9] ]\r\n    ],\r\n    \"randomSeed\": \"havesomefun\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+twousers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be6\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4],\r\n        [\"Oracle\", 3],\r\n        [\"Anchor\", 4],\r\n        [\"Mermaid\", 5]\r\n    ], \r\n    \"discardPile\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+twousers Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"000000000000000000000000\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4],\r\n        [\"Oracle\", 3],\r\n        [\"Anchor\", 4],\r\n        [\"Mermaid\", 5]\r\n    ], \r\n    \"discardPile\": [],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch empty/user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4]\r\n    ], \r\n    \"discardPile\": [\r\n        [\"Mermaid\", 5]\r\n    ],\r\n    \"banks\": [\r\n        [ [\"Oracle\", 3] ],\r\n        [ ]\r\n    ],\r\n    \"tags\": [\"apple\", \"pear\", \"plums\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch key+chest",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Key\", 3],\r\n        [\"Chest\", 3],\r\n\r\n        [\"Key\", 4],\r\n        [\"Chest\", 4],\r\n        [\"Mermaid\", 6]\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+twousers Copy 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be6\", \"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Anchor\", 2],\r\n        [\"Mermaid\", 4],\r\n        [\"Oracle\", 3],\r\n        [\"Anchor\", 4],\r\n        [\"Mermaid\", 5]\r\n    ], \r\n    \"discardPile\": [],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"players\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Kraken\", 2],\r\n        [\"Oracle\", 4], [\"Mermaid\", 4],\r\n\r\n        [\"Mermaid\", 5]\r\n    ], \r\n    \"discardPile\": [],\r\n    \"banks\": [\r\n        [ ],\r\n        [ ]\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"playerids\": [\"636438380ef778617e0e5be5\",\"636438380ef778617e0e5be5\"],\r\n    \"drawPile\": [\r\n        [\"Anchor\", 3],\r\n        [\"Sword\", 4]\r\n    ], \r\n    \"discardPile\": [],\r\n    \"banks\": [\r\n        [ ],\r\n        [ [\"Mermaid\", 4] ]\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Oracle\", 3],\r\n        [\"Anchor\", 3],\r\n        [\"Sword\", 4]\r\n    ], \r\n    \"banks\": [\r\n        [ ],\r\n        [ [\"Mermaid\", 5] ]\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 3",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Kraken\", 6],\r\n        [\"Oracle\", 6],\r\n        [\"Anchor\", 6],\r\n\r\n        [\"Kraken\", 7],\r\n        [\"Cannon\", 7],\r\n        [\"Anchor\", 7],\r\n\r\n        [\"Kraken\", 3],\r\n        [\"Map\", 4],\r\n        [\"Anchor\", 3],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Sword\", 5],\r\n        [\"Anchor\", 4],\r\n\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 4",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Kraken\", 6],\r\n        [\"Oracle\", 6],\r\n        [\"Anchor\", 6],\r\n\r\n        [\"Kraken\", 7],\r\n        [\"Cannon\", 7],\r\n        [\"Anchor\", 7],\r\n\r\n        [\"Kraken\", 3],\r\n        [\"Map\", 4],\r\n        [\"Anchor\", 3],\r\n\r\n        [\"Kraken\", 4],\r\n        [\"Sword\", 5],\r\n        [\"Anchor\", 4],\r\n\r\n        [\"Mermaid\", 9]\r\n    ], \r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 5",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Oracle\", 2],\r\n        [\"Map\", 6],\r\n        [\"Mermaid\", 9]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Cannon\",4], [\"Mermaid\",8], [\"Oracle\", 6]\r\n    ],\r\n    \"banks\": [\r\n        [ ],\r\n        []\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 6",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Key\", 4],\r\n        [\"Chest\", 4],\r\n\r\n        [\"Key\", 5],\r\n        [\"Chest\", 5],\r\n\r\n        [\"Mermaid\", 9]\r\n    ],\r\n    \"playArea\": [\r\n        [\"Key\", 3],\r\n        [\"Chest\", 3]\r\n    ],\r\n    \"banks\": [\r\n        [],\r\n        []\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 7",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "testpass",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Key\", 4],\r\n        [\"Chest\", 4],\r\n\r\n        [\"Key\", 5],\r\n        [\"Chest\", 5],\r\n\r\n        [\"Mermaid\", 9]\r\n    ],\r\n    \"playArea\": [\r\n        [\"Key\", 3],\r\n        [\"Chest\", 3]\r\n    ],\r\n    \"banks\": [\r\n        [],\r\n        []\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+ownuser*2 Copy 8",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass42",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Oracle\", 4],\r\n        [\"Chest\", 4],\r\n\r\n        [\"Key\", 5],\r\n        [\"Chest\", 5],\r\n\r\n        [\"Mermaid\", 9]\r\n    ],\r\n    \"playArea\": [\r\n        [\"Key\", 3],\r\n        [\"Chest\", 3]\r\n    ],\r\n    \"banks\": [\r\n        [],\r\n        []\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "startMatch stack+mapbust",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"extract and save moveId\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    var matchId = jsonData.id;\r",
+											"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "testpass42",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "636438380ef778617e0e5be5",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"drawPile\": [\r\n        [\"Map\", 3],\r\n\r\n        [\"Mermaid\", 9]\r\n    ],\r\n    \"discardPile\": [\r\n        [\"Map\", 4],\r\n        [\"Map\", 2],\r\n        [\"Map\", 7]\r\n    ],\r\n    \"playArea\": [\r\n    ],\r\n    \"banks\": [\r\n        [],\r\n        []\r\n    ],\r\n    \"randomSeed\": \"norandom\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseurl}}/api/matches",
+									"host": [
+										"{{baseurl}}"
+									],
+									"path": [
+										"api",
+										"matches"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "startMatch",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"playerids\": [\r\n        \"636438380ef778617e0e5be5\",\r\n        \"636438380ef778617e0e5be5\"\r\n    ],\r\n    \"randomSeed\": \"norandom\",\r\n    \"tags\": [\"aa\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch randSeed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"randomSeed\": \"helloworld1\",\r\n    \"tags\": [\"aa\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch timeout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeout\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "startMatch practice",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_matches",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    //pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData[0]._id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/matches?tags=Day2&limit=100",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							],
+							"query": [
+								{
+									"key": "at",
+									"value": "today",
+									"disabled": true
+								},
+								{
+									"key": "active",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "wait",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "condensed",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "tags",
+									"value": "Day2"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "6396f4dd976bdd869e100e27",
+									"disabled": true
+								},
+								{
+									"key": "sortasc",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "id",
+									"value": "63d942cc88c94a03c5a26a1d",
+									"disabled": true
+								},
+								{
+									"key": "at",
+									"value": "2023-01-12",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "terminate_match",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"comment\": \"forceful termination - as match was created only for testing purposes\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id/terminate",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id",
+								"terminate"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "63e388260327e9c1d0a3c4ea"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "watchdog_matches",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/watchdog",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								"watchdog"
+							],
+							"query": [
+								{
+									"key": "repeat",
+									"value": "60",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_players",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/players",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"players"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "draw+end",
+			"item": [
+				{
+					"name": "Draw Copy 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"Draw\",\r\n    \"autopick\": \"all\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Endturn Copy 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"EndTurn\",\r\n    \"autopick\": \"all\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "basic",
+				"basic": [
+					{
+						"key": "username",
+						"value": "000000000000000000000000",
+						"type": "string"
+					},
+					{
+						"key": "password",
+						"value": "testpass",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "client",
+			"item": [
+				{
+					"name": "Draw",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"Draw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"query": [
+								{
+									"key": "wait",
+									"value": "1",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "63e388260327e9c1d0a3c4ea"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Draw Copy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"Draw\",\r\n    \"autopick\": \"all\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"query": [
+								{
+									"key": "wait",
+									"value": "1",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "63e388619a364fdd8216835f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Endturn",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"EndTurn\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "63e388260327e9c1d0a3c4ea"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Endturn Copy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"EndTurn\",\r\n    \"autopick\": \"all\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond Kraken",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Kraken\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": {\r\n            \"suit\": \"Chest\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle alt",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass42",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": [\"Chest\", 4]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle bad",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": [\"Anchor\", 9]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Oracle FlipBack",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Oracle\",\r\n        \"card\": null\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Hook",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Hook\",\r\n        \"card\": {\r\n            \"suit\": \"Kraken\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Hook Bad",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Hook\",\r\n        \"card\": {\r\n            \"suit\": \"Hook\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Cannon",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Cannon\",\r\n        \"card\": [\"Kraken\", 5]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Sword",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Sword\",\r\n        \"card\": {\r\n            \"suit\": \"Mermaid\",\r\n            \"value\": 4\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Sword Copy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Sword\",\r\n        \"card\": null\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond_Map",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"effect\": {\r\n        \"effectType\": \"Map\",\r\n        \"card\": [\"Mermaid\", 5]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond__autopick",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"etype\": \"ResponseToEffect\",\r\n    \"autopick\": \"all\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_player",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/players/:id",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"players",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "636438380ef778617e0e5be5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getMatch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id?showdebug=1",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"query": [
+								{
+									"key": "showdebug",
+									"value": "1"
+								},
+								{
+									"key": "condensed",
+									"value": "1",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "63e034b754f509d2acf1dc81"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getMatch Copy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseurl}}/api/matches/:id?waitactive=1",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches",
+								":id"
+							],
+							"query": [
+								{
+									"key": "waitactive",
+									"value": "1"
+								},
+								{
+									"key": "showdebug",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "showevents",
+									"value": "1",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{targetmatch}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "socket",
+			"item": []
+		},
+		{
+			"name": "startmatch",
+			"item": [
+				{
+					"name": "startMatch timeout Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"extract and save moveId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    var matchId = jsonData.id;\r",
+									"    pm.collectionVariables.set(\"targetmatch\", matchId);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "testpass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "636438380ef778617e0e5be5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"randomSeed\": \"xyz\",\r\n    \"timeout\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseurl}}/api/matches",
+							"host": [
+								"{{baseurl}}"
+							],
+							"path": [
+								"api",
+								"matches"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "busydays",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseurl}}/api/matches/busydays?at=12/2/2022",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"matches",
+						"busydays"
+					],
+					"query": [
+						{
+							"key": "at",
+							"value": "12/2/2022"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sessioninfo",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "testpass42",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "636438380ef778617e0e5be5",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseurl}}/api/sessioninfo",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"sessioninfo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "whoami",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "testpass42",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "636438380ef778617e0e5be8",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseurl}}/api/whoami",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"whoami"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "hello",
+			"request": {
+				"auth": {
+					"type": "digest",
+					"digest": [
+						{
+							"key": "password",
+							"value": "testpass",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "636438380ef778617e0e5be5",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "MD5",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseurl}}/api/hello",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"hello"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "blahSecret42!",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "admin",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "targetmatch",
+			"value": "0",
+			"type": "default"
+		}
+	]
+}
