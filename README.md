@@ -21,7 +21,9 @@ Example clients are available in [`./example_clients`](./example_clients) direct
 # Arena Server Architecture and Source Code
 As the competition period is over and all matches and tournaments are finished the source code and the [rough architecture design](./doc/README_arena_server.md) is published.
 
-Arena server source code is available through `./arena_server` directory.
+Arena server source code is available through [./arena_server/src](./arena_server/src) directory.
+
+![image](/doc/architecture/slceepc2023-overview.drawio.png)
 
 ## Database 
 

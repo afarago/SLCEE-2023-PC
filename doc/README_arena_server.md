@@ -5,15 +5,20 @@ This is the source code for the arena server for the SAP Labs CEE Hub Programmin
 
 # Deployment Landscape
 
+slceepc2023-overview.drawio.png
 ## Arena Server in GCP
 The Arena Server is a node.js 16+ application written in TypeScript.
 It can be deployed locally and for the competition it is deployed as a [Google Cloud Platform](https://console.cloud.google.com/) App Engine WebApp on a free trial account provide easy access.   
 The App runs in limited autoscaling mode, horizontally scaling 5-10 independent instances. As a single express app can serve multiple parallel calls this shall serve the 20 particpating teams well.
 
+![image](/doc/architecture/slceepc2023-overview.drawio.png)
+
 ## Database in MongoDB Atlas
 The webapp connects to the [MongoDB Atlas](https://mongodb.com/) database free M0 instance.   
 
 Due to limitations of the M0 network traffic (10GB/week) there is an temporary update for an inexpensive M5 tier (50GB/week) imposing a mere ~4 USD for the complete competition week.
+
+![image](/doc/architecture/slceepc2023-db.drawio.png)
 
 ## Tournament Application in AWS
 The tournaments are handled is a separate [tournament application](https://spc2023.s3.eu-central-1.amazonaws.com/index.html) based on lambda calls and DynamoDB.   
@@ -36,6 +41,8 @@ Two different and independent express sub-apps are registered on top of the mast
 | http server main entry point for socket.io | /index.ts and /services/socketio.service.ts | 
 | API express app | /routes/api.ts | 
 | Frontend express app | /routes/frontend.ts | 
+
+![image](/doc/architecture/slceepc2023-arena_layers.drawio.png)
 
 ## API BACKEND
 API Backend is responsible for accessing the database and responding to any request on the `/api/**` endpoint.
@@ -128,10 +135,14 @@ Proper way would be adding a Terraform script to support Configuration-as-code y
 
 ### How to Enable GCP
 
-Documentation on [How to Enable GCP](https://cloud.google.com/appengine/docs/standard/nodejs/building-app/creating-project).
+1. Register on https://console.cloud.google.com/appengine
+   * create a new project
 
-* select project 
-* enable billing
-* enable cloud build   
-  _in IMA add Storage Object Viewer to the [0-0]{12}@cloudbuild.gserviceaccount.com	(having Cloud Build Service Account)_
-* deploy `gcloud app deploy --quiet`
+2. [How to Enable GCP](https://cloud.google.com/appengine/docs/standard/nodejs/building-app/creating-project).
+   * select project
+   * in IAM and Admin add *Storage Object Admin* and *Storage Object Viewer* to your user
+   * enable billing
+   * enable cloud build  
+     _in IMA add Storage Object Viewer to the [0-0]{12}@cloudbuild.gserviceaccount.com	(having Cloud Build Service Account)_
+   * use `npm run deploy` or `gcloud app deploy --quiet`
+   * use `npm run browse` to open the frontend page
