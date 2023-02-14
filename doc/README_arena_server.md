@@ -29,8 +29,8 @@ Timeout handling for individual matches are handled in a twofold logic
 1. __passive__: Arena Server checks timeout upon each execute call and upon timeout reject the call and calls turn skip logic, also notifying the opponent via the standard API.  
 2. __active__: tournament application implements a cron based (1 min trigger), adding timed workitems to a Amazon Simple Queue Service (SQS) to achive a 5-10 second API watchdog calls.
 
-(__Update__: passive watchdog feature is equipped with a repeat parameter - that repeats the watchdog call within the server maximum 60 times. Combined with a _cron scheduler_ this yields to a very effective and per-second-precision watchdog feature, that is run one only on instance at a time - leveraging the load balancer.  )
-This makes eliminates the need for additional external queues or components.
+__Update__: passive watchdog feature is equipped with a repeat parameter - that repeats the watchdog call within the server maximum 60 times. Combined with a _cron scheduler_ this yields to a very effective and per-second-precision watchdog feature, that is run one only on instance at a time - leveraging the load balancer.
+This eliminates the need for additional external components.
 
 # Architecture Overview
 
